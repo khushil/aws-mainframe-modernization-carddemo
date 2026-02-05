@@ -45,7 +45,10 @@ app/
 ├── app-authorization-ims-db2-mq/   # Extension: Auth processing with IMS+DB2+MQ
 ├── app-transaction-type-db2/       # Extension: Transaction type management with DB2
 └── app-vsam-mq/                    # Extension: Account extraction with MQ
+prompts/
+└── reverse-engineering/            # AI-driven reverse engineering prompts (RE-000 to RE-011)
 scripts/          # Build and deployment shell scripts
+docs/             # Generated documentation (output from prompts)
 ```
 
 ## Code Architecture
@@ -95,3 +98,40 @@ Each online function follows this pattern:
 - **Transaction Processing**: CICS
 - **Data Storage**: VSAM (KSDS with alternate indexes)
 - **Optional Extensions**: DB2, IMS DB, IBM MQ
+
+## Reverse Engineering Prompts
+
+The `prompts/reverse-engineering/` directory contains a comprehensive AI-driven prompt suite for extracting and documenting knowledge from this mainframe codebase. Execute prompts in the prescribed order to generate full modernization documentation.
+
+### Prompt Inventory
+
+| Prompt | Purpose |
+|--------|---------|
+| RE-000 | Master index generation (run LAST) |
+| RE-001 | Domain model extraction |
+| RE-002 | Data model extraction |
+| RE-003 | Context model mapping |
+| RE-004 | C4 architecture (all 4 levels) |
+| RE-005 | BMS screen flow mapping |
+| RE-006 | JCL batch workflow analysis |
+| RE-007 | Security model analysis |
+| RE-008 | DB2/IMS/MQ integration patterns |
+| RE-009 | Test coverage analysis |
+| RE-010 | Modernization readiness assessment |
+| RE-011 | API candidate identification |
+
+### Execution Order
+
+```
+Phase 1: RE-001 + RE-002 (parallel) → Foundation
+Phase 2: RE-003                     → Context
+Phase 3: RE-004                     → Architecture
+Phase 4: RE-005 to RE-008 (parallel)→ Specialized
+Phase 5: RE-009                     → Quality
+Phase 6: RE-010 + RE-011 (parallel) → Modernization
+Phase 7: RE-000                     → Master Index (LAST)
+```
+
+### Output Location
+
+Generated documentation is written to `docs/reverse-engineering/` with subdirectories for each analysis area. See `prompts/reverse-engineering/README.md` for full output structure.
