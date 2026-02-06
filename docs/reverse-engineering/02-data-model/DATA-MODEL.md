@@ -92,6 +92,13 @@ TOTAL   150 bytes
 | **Alternate Index** | None | - |
 | **Copybook** | CVCUS01Y.cpy | app/cpy/ |
 
+> **Alternate Schema Note (2026-02-06):** A second customer VSAM definition exists in `app/jcl/DEFCUST.jcl` using different parameters:
+> - **DSN:** `AWS.CCDA.CUSTDATA.CLUSTER` and `AWS.CUSTDATA.CLUSTER` (vs `AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS`)
+> - **Key:** `KEYS(10 0)` (10-byte key at offset 0, vs 9-byte in CUSTFILE.jcl)
+> - **SHAREOPTIONS:** `(1 4)` (vs `(2 3)` in CUSTFILE.jcl)
+>
+> This appears to represent an alternate environment configuration or an earlier version of the file layout. The 10-byte vs 9-byte key difference is significant — it suggests a different record format. CUSTFILE.jcl also includes CICS file close/open steps and data load from flat file, while DEFCUST.jcl does not.
+
 **Physical Layout:**
 ```
 Offset  Length  Field                    PIC Clause

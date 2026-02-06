@@ -3,7 +3,7 @@
 **Document Version:** 1.0
 **Generated:** 2026-02-05
 **Prompt Suite:** RE-000 through RE-011
-**Total Documents:** 36 (this index + 35 analysis documents)
+**Total Documents:** 38 (this index + 35 analysis documents + confidence assessment + deep-dive)
 
 ---
 
@@ -15,28 +15,32 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 
 | Finding | Detail |
 |---------|--------|
-| **Application Size** | 29 COBOL programs (19,496 LOC), 29 copybooks (2,748 LOC) |
+| **Application Size** | 44 COBOL programs (30,175 LOC), 58 copybooks across all directories |
+| **Core Programs** | 31 in `app/cbl/` (20,650 LOC); 13 in extension directories (9,525 LOC) |
 | **Bounded Contexts** | 7 identified (Authentication, User Admin, Account, Card, Transaction, Bill Payment, Batch) |
 | **Core Entities** | 6 (Customer, Account, Card, Transaction, CardCrossReference, User) |
 | **Business Rules** | 59+ cataloged across 8 categories |
 | **Domain Events** | 23 identified across 6 aggregates |
-| **API Candidates** | 15 of 18 programs suitable for API exposure; 7 high-priority |
+| **API Candidates** | 15 of 18 core programs suitable for API exposure; 7 high-priority |
 | **Security Findings** | 10 findings (6 critical, 2 high, 2 medium); PCI-DSS at 15% |
 | **Modernization Readiness** | 3.53/5 (Moderate-Good) - ready with phased approach |
 
+> **Important:** See [CONFIDENCE-ASSESSMENT.md](CONFIDENCE-ASSESSMENT.md) for known gaps, validation blind spots, and remediation priorities in this documentation suite.
+
 ### Codebase Statistics
 
-| Metric | Count |
-|--------|-------|
-| COBOL Programs | 29 (19 online + 10 batch) |
-| Copybooks | 29 |
-| BMS Screens | 17 |
-| JCL Files | 33 |
-| VSAM File Clusters | 10 (6 core + 4 reference) |
-| VSAM Alternate Indexes | 3 |
-| GDG Bases | 11 |
-| CICS Transactions | 3 (CC00, CA00, CM00) |
-| Total Lines of Code | 22,244 (programs + copybooks) |
+| Metric | Core | Extensions | Total |
+|--------|------|------------|-------|
+| COBOL Programs | 31 (17 online + 12 batch + 2 utilities) | 13 | **44** |
+| Copybooks | 30 (.cpy) + 17 (.CPY BMS) | 15 | **62** |
+| BMS Screens | 17 | 4 | **21** |
+| JCL Files | 38 (33 .jcl + 5 .JCL) | 8 | **46** |
+| VSAM File Clusters | 10 (6 core + 4 reference) | — | **10** |
+| IMS Databases | — | 4 DBD + 4 PSB | **8** |
+| DB2 Tables | — | 6 DDL | **6** |
+| VSAM Alternate Indexes | 3 | — | **3** |
+| GDG Bases | 11 | — | **11** |
+| Total Lines of Code | 20,650 | 9,525 | **30,175** |
 
 ---
 
@@ -107,10 +111,18 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 
 | # | Document | Path | Description |
 |---|----------|------|-------------|
-| 32 | **Program Inventory** | [appendices/PROGRAM-INVENTORY.md](appendices/PROGRAM-INVENTORY.md) | All 29 COBOL programs with LOC, complexity, context |
-| 33 | **Copybook Inventory** | [appendices/COPYBOOK-INVENTORY.md](appendices/COPYBOOK-INVENTORY.md) | All 29 copybooks with purpose and dependencies |
+| 32 | **Program Inventory** | [appendices/PROGRAM-INVENTORY.md](appendices/PROGRAM-INVENTORY.md) | All 44 COBOL programs (core + extensions) with LOC, complexity |
+| 33 | **Copybook Inventory** | [appendices/COPYBOOK-INVENTORY.md](appendices/COPYBOOK-INVENTORY.md) | All 58 copybooks with purpose and dependencies |
 | 34 | **File Inventory** | [appendices/FILE-INVENTORY.md](appendices/FILE-INVENTORY.md) | VSAM clusters, AIX, GDG specifications |
 | 35 | **Transaction Inventory** | [appendices/TRANSACTION-INVENTORY.md](appendices/TRANSACTION-INVENTORY.md) | CICS transactions, BMS mapsets, navigation |
+
+### Quality Assurance
+
+| # | Document | Path | Description |
+|---|----------|------|-------------|
+| 36 | **Confidence Assessment** | [CONFIDENCE-ASSESSMENT.md](CONFIDENCE-ASSESSMENT.md) | Honest assessment of gaps, blind spots, and remediation priorities |
+| 37 | **COACTUPC Deep-Dive** | [deep-dives/COACTUPC-ANALYSIS.md](deep-dives/COACTUPC-ANALYSIS.md) | Line-by-line analysis of the 4,236-line monolith |
+| 38 | **SME Validation Strategy** | [08-validation-strategy/SME-VALIDATION-STRATEGY.md](08-validation-strategy/SME-VALIDATION-STRATEGY.md) | Interview playbook, question bank, confidence framework for SME validation |
 
 ---
 
@@ -125,9 +137,12 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 | 05-specialized | 4 | 4 | Complete |
 | 06-quality | 3 | 3 | Complete |
 | 07-modernization | 4 | 4 | Complete |
-| appendices | 4 | 4 | Complete |
-| index | 1 | 1 | Complete |
-| **Total** | **36** | **36** | **Complete** |
+| appendices | 4 | 4 | Complete (inventory updated to v2.0) |
+| validation | 7 | 7 | Complete (VL-006 revised) |
+| deep-dives | 1 | 1 | New — COACTUPC analysis |
+| confidence assessment | 1 | 1 | New — quality assurance |
+| index | 1 | 1 | Complete (updated) |
+| **Total** | **45** | **45** | **Complete** |
 
 ---
 
@@ -181,6 +196,14 @@ Start with readiness and roadmap:
 2. [Migration Roadmap](07-modernization/MIGRATION-ROADMAP.md) - Wave planning, dependencies
 3. [Program Inventory](appendices/PROGRAM-INVENTORY.md) - Scope overview
 
+### For Quality/Risk Teams
+
+Start with confidence assessment and validation:
+1. [Confidence Assessment](CONFIDENCE-ASSESSMENT.md) - Known gaps, blind spots, remediation priorities
+2. [VL-006 Batch Workflow Report](validation/VL-006-batch-workflow-report.md) - Lowest-scoring validation (76.6/100)
+3. [VL-007 Security Model Report](validation/VL-007-security-model-report.md) - Security validation
+4. [COACTUPC Deep-Dive](deep-dives/COACTUPC-ANALYSIS.md) - Highest-risk program analysis
+
 ---
 
 ## Prompt Execution Summary
@@ -207,14 +230,15 @@ Start with readiness and roadmap:
 | Attribute | Value |
 |-----------|-------|
 | Generator | Claude Code (RE-000 prompt) |
-| Date | 2026-02-05 |
+| Initial Date | 2026-02-05 |
+| Last Updated | 2026-02-06 (confidence assessment + remediation) |
 | Source Repository | aws-mainframe-modernization-carddemo |
-| COBOL Programs Analyzed | 29 |
-| Copybooks Analyzed | 29 |
-| BMS Screens Analyzed | 17 |
-| JCL Jobs Analyzed | 33 |
-| Documents Generated | 36 |
-| Total Documentation Lines | ~8,000+ |
+| COBOL Programs Analyzed | 44 (31 core + 13 extension) |
+| Copybooks Analyzed | 58 (46 core + 12 extension) |
+| BMS Screens Analyzed | 23 (19 core + 4 extension) |
+| JCL Jobs Analyzed | 46 (38 core + 8 extension) |
+| Documents Generated | 45 (36 original + 7 validation + 2 new) |
+| Total Lines of Code | 30,175 |
 
 ---
 

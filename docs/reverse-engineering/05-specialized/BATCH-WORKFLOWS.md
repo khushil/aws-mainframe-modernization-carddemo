@@ -9,14 +9,17 @@
 
 ## 1. Executive Summary
 
-This document provides a comprehensive analysis of the 33 JCL batch workflows in the CardDemo mainframe credit card processing application. The analysis covers job-step specifications, inter-job dependencies, data flow diagrams, restart/recovery procedures, and modernization recommendations.
+This document provides a comprehensive analysis of the JCL batch workflows in the CardDemo mainframe credit card processing application. The analysis covers job-step specifications, inter-job dependencies, data flow diagrams, restart/recovery procedures, and modernization recommendations.
+
+> **Count Correction (2026-02-06):** Original document stated 33 JCL jobs and 10 batch programs. Actual counts are 38 JCL files in `app/jcl/` (33 .jcl + 5 .JCL) and 12 batch COBOL programs in `app/cbl/` (10 .cbl + 2 .CBL). An additional 8 JCL files exist in extension directories. See [CONFIDENCE-ASSESSMENT.md](../CONFIDENCE-ASSESSMENT.md) for details.
 
 ### Key Findings
 
 | Metric | Value |
 |--------|-------|
-| Total JCL Jobs | 33 |
-| Batch COBOL Programs | 10 |
+| Total JCL Jobs (core) | 38 (33 lowercase + 5 uppercase extension) |
+| Total JCL Jobs (with extensions) | 46 |
+| Batch COBOL Programs (core) | 12 (10 .cbl + 2 .CBL) |
 | VSAM Clusters Defined | 15 |
 | GDG Bases Defined | 11 |
 | Scheduler Workflows | 5 (Control-M) |

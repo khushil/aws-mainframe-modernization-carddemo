@@ -6,11 +6,25 @@ CardDemo includes three optional extension directories that demonstrate enterpri
 
 ### Extension Directory Inventory
 
-| Extension Directory | Purpose | Technologies | Programs |
+> **Inventory Correction (2026-02-06):** Original document listed 8 programs. Actual count is 13 COBOL programs across extensions, plus IMS DBD/PSB, DB2 DDL, CTL, CSD, and JCL artifacts. See [PROGRAM-INVENTORY.md](../appendices/PROGRAM-INVENTORY.md) for the complete listing.
+
+| Extension Directory | Purpose | Technologies | Programs (Updated) |
 |---------------------|---------|--------------|----------|
-| `app-authorization-ims-db2-mq` | Real-time authorization processing with fraud detection | IMS DB + DB2 + MQ | COPAUA0C, COPAUS2C, CBPAUP0C |
-| `app-transaction-type-db2` | Transaction type reference data management | DB2 | COTRTLIC, COTRTUPC, COBTUPDT |
-| `app-vsam-mq` | Account data extraction via messaging | VSAM + MQ | COACCT01, CODATE01 |
+| `app-authorization-ims-db2-mq` | Real-time authorization processing with fraud detection | IMS DB + DB2 + MQ | **8 programs:** COPAUA0C, COPAUS0C, COPAUS1C, COPAUS2C, CBPAUP0C, PAUDBUNL.CBL, DBUNLDGS.CBL, PAUDBLOD.CBL |
+| `app-transaction-type-db2` | Transaction type reference data management | DB2 | 3 programs: COTRTLIC, COTRTUPC, COBTUPDT |
+| `app-vsam-mq` | Account data extraction via messaging | VSAM + MQ | 2 programs: COACCT01, CODATE01 |
+
+### Previously Undocumented Programs (Added 2026-02-06)
+
+| Program | Ext | LOC | Type | Purpose | Key Operations |
+|---------|-----|-----|------|---------|----------------|
+| COPAUS0C | .cbl | 1,032 | CICS+IMS | Pending authorization summary list browse | IMS GU/GNP on PAUTSUM0/PAUTDTL1; BMS COPAU00 |
+| COPAUS1C | .cbl | 604 | CICS+IMS | Authorization detail view with fraud toggle | IMS GU/GNP/REPL; LINK to COPAUS2C; SYNCPOINT/ROLLBACK |
+| PAUDBUNL | .CBL | 317 | Batch+IMS | IMS database unload to sequential files | CBLTDLI GN/GNP on PAUTSUM0/PAUTDTL1; writes OPFILE1/OPFILE2 |
+| DBUNLDGS | .CBL | 366 | Batch+IMS+GSAM | IMS database unload to GSAM files | CBLTDLI GN/GNP; ISRT to GSAM via PASFLPCB/PADFLPCB |
+| PAUDBLOD | .CBL | 369 | Batch+IMS | IMS database load from sequential files | Reads INFILE1/INFILE2; CBLTDLI ISRT/GU on PAUTSUM0/PAUTDTL1 |
+
+**Migration significance:** The unload/load utilities (PAUDBUNL, DBUNLDGS, PAUDBLOD) are critical for **data migration planning** — they define the exact process for extracting data from and loading data into the IMS hierarchical database. Any migration from IMS to a relational database must replicate the parent-child segment relationships these programs handle.
 
 ---
 

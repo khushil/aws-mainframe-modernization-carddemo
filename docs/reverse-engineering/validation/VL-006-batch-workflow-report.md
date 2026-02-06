@@ -11,7 +11,7 @@
 
 ## 1. Verdict
 
-**FAIL** — Score: **73.8 / 100**
+**FAIL** — Score: **76.6 / 100** (revised from 73.8 after MNTTRDB2 reclassification)
 
 The RE-006 Batch Workflow documentation demonstrates strong factual accuracy for the jobs it covers — EXEC PGM= values, VSAM key specifications, record sizes, DD statement DSN values, and CICS file mappings are overwhelmingly correct when verified against actual JCL source. The program-to-job mapping in Appendix A is accurate for all 10 documented programs, and the run_full_batch.sh workflow in section 3.3 matches the actual script exactly.
 
@@ -23,14 +23,16 @@ However, the documentation has significant completeness gaps. Six of 38 JCL file
 
 | # | Category | Weight | Raw Score | Weighted Score | Key Evidence |
 |---|----------|--------|-----------|----------------|--------------|
-| 1 | Source Reference Accuracy | 35% | 82 | 28.7 | All 15 documented EXEC PGM= correct; phantom MNTTRDB2 node; WAITSTEP PARM vs SYSIN minor inaccuracy |
+| 1 | Source Reference Accuracy | 35% | 90 | 31.5 | All 15 documented EXEC PGM= correct; MNTTRDB2 reclassified as valid (was -8); WAITSTEP PARM vs SYSIN minor inaccuracy |
 | 2 | Factual Accuracy | 25% | 85 | 21.3 | VSAM specs, DD statements, CICS mappings all verified correct for documented jobs |
 | 3 | Completeness | 20% | 55 | 11.0 | 6/38 JCL files missing (15.8%); 2/12 batch programs missing; 2/3 scripts undocumented |
 | 4 | Quantitative Accuracy | 10% | 40 | 4.0 | JCL count 33 vs 38 (wrong); batch count 10 vs 12 (wrong) |
 | 5 | Documentation Quality | 10% | 88 | 8.8 | Well-structured; valid Mermaid diagrams; good appendices; minor formatting issues |
-| | **TOTAL** | **100%** | | **73.8** | |
+| | **TOTAL** | **100%** | | **76.6** | |
 
-**Verdict: FAIL** (threshold: 100 = PASS; score 73.8 indicates significant gaps requiring remediation)
+**Verdict: FAIL** (threshold: 100 = PASS; score 76.6 indicates significant gaps requiring remediation)
+
+**Score Revision (2026-02-06):** Original score was 73.8. After reclassifying HAL-001 (MNTTRDB2) from phantom to valid, Source Reference Accuracy improved from 82 to 90 (+8 points × 35% weight = +2.8 weighted). Revised total: 76.6.
 
 ---
 
@@ -96,19 +98,22 @@ These counts appear in three locations:
 
 ## 4. Major Findings
 
-### MAJ-001: Phantom Node MNTTRDB2 in WEEKLY Control-M Workflow
+### MAJ-001: ~~Phantom Node~~ MNTTRDB2 in WEEKLY Control-M Workflow — RECLASSIFIED
 
 **Affected Section**: 3.1 (WEEKLY-DisclosureGroupsRefresh, line 458)
-**Source Evidence**: No `MNTTRDB2.jcl` file exists in `app/jcl/`
+**Source Evidence**: `app/app-transaction-type-db2/jcl/MNTTRDB2.jcl` **exists** in extension directory
+
+**CORRECTION (2026-02-06):** The original validation searched only `app/jcl/` and did not check extension directories. MNTTRDB2.jcl exists at `app/app-transaction-type-db2/jcl/MNTTRDB2.jcl` and runs `COBTUPDT` to maintain the DB2 transaction type table.
 
 The WEEKLY-DisclosureGroupsRefresh Control-M workflow diagram includes a node `MNTTRDB2` as the first step:
 ```
 MNTTRDB2 -> CLOSEFIL -> DISCGRP -> WAITSTEP -> OPENFIL
 ```
 
-No JCL file named MNTTRDB2 exists in the repository. This is a hallucinated reference. The workflow should start from CLOSEFIL.
+This is a **valid reference** to a real JCL job in the extension directory. The batch documentation was **more correct** than the validation gave it credit for.
 
-**Impact**: Automated dependency extraction from this document would reference a non-existent job.
+**Status**: Reclassified from "phantom hallucination" to "valid — found in extension directory"
+**Impact on score**: This was a Major finding worth -8 points on Source Reference Accuracy. Removing this penalty improves the score.
 
 ### MAJ-002: MONTHLY Control-M Workflow Missing TRANBKP and TRANIDX Steps
 
@@ -200,11 +205,13 @@ The document states: "Skip STEP10 if any prior step has RC > 4". The JCL conditi
 
 | ID | Type | Location | Hallucinated Content | Reality |
 |----|------|----------|---------------------|---------|
-| HAL-001 | Phantom node | Section 3.1, line 458 | MNTTRDB2 in WEEKLY workflow | No MNTTRDB2.jcl exists in repository |
+| ~~HAL-001~~ | ~~Phantom node~~ **RECLASSIFIED** | Section 3.1, line 458 | MNTTRDB2 in WEEKLY workflow | **VALID**: `app/app-transaction-type-db2/jcl/MNTTRDB2.jcl` exists in extension directory |
 | HAL-002 | Inflated count | Lines 12, 18 | "33 JCL batch workflows" | Actual: 38 JCL files |
 | HAL-003 | Inflated count | Lines 19, 893 | "10 Batch COBOL Programs" | Actual: 12 batch programs |
 
-**Total hallucinations: 3** (1 phantom reference, 2 quantitative fabrications)
+**Total hallucinations: 2** (~~1 phantom reference reclassified as valid~~, 2 quantitative fabrications)
+
+**Note (2026-02-06):** HAL-001 was reclassified after discovering the validator did not search extension directories (`app/app-*/`). MNTTRDB2.jcl exists at `app/app-transaction-type-db2/jcl/MNTTRDB2.jcl`. The original hallucination count of 3 has been reduced to 2.
 
 ---
 
@@ -359,7 +366,7 @@ The document states: "Skip STEP10 if any prior step has RC > 4". The JCL conditi
 | P0 | CRT-001 | Add documentation for 6 missing JCL files (CREASTMT, FTPJCL, INTRDRJ1, INTRDRJ2, TXT2PDF1, DEFCUST) | 2.1, 2.8, new sections |
 | P0 | CRT-002 | Add CBSTM03A.CBL and CBSTM03B.CBL to program inventory and Appendix A | Appendix A, new section |
 | P0 | CRT-003 | Correct JCL count from 33 to 38 and batch program count from 10 to 12 | 1 (Executive Summary), 8 (Metadata) |
-| P1 | MAJ-001 | Remove phantom MNTTRDB2 node from WEEKLY workflow or document as external dependency | 3.1 |
+| ~~P1~~ | ~~MAJ-001~~ | ~~Remove phantom MNTTRDB2 node~~ **RESOLVED**: MNTTRDB2.jcl exists in extension directory | 3.1 |
 | P1 | MAJ-002 | Add TRANBKP and TRANIDX to MONTHLY-InterestCalculation Control-M workflow | 3.1 |
 | P1 | MAJ-003 | Add dedicated sections for run_posting.sh and run_interest_calc.sh workflows | 3.3 (expand) |
 | P1 | MAJ-004 | Document DEFCUST.jcl alternate DSN schema and key spec difference | New subsection |
@@ -415,7 +422,7 @@ The document states: "Skip STEP10 if any prior step has RC > 4". The JCL conditi
 - SORT control statements verified for COMBTRAN, TRANREPT, PRTCATBL
 
 **Negative factors**:
-- Phantom MNTTRDB2 node in Control-M workflow (-8 points)
+- ~~Phantom MNTTRDB2 node in Control-M workflow (-8 points)~~ RECLASSIFIED: valid reference to extension directory
 - MONTHLY workflow missing TRANBKP/TRANIDX steps (-5 points)
 - WAITSTEP PARM vs SYSIN delivery mechanism (-2 points)
 - CARDFILE/CUSTFILE embedded CICS steps not fully detailed (-3 points)
@@ -468,14 +475,16 @@ The document states: "Skip STEP10 if any prior step has RC > 4". The JCL conditi
 
 | Category | Weight | Raw | Weighted |
 |----------|--------|-----|----------|
-| Source Reference Accuracy | 35% | 82 | 28.70 |
+| Source Reference Accuracy | 35% | 90 | 31.50 |
 | Factual Accuracy | 25% | 85 | 21.25 |
 | Completeness | 20% | 55 | 11.00 |
 | Quantitative Accuracy | 10% | 40 | 4.00 |
 | Documentation Quality | 10% | 88 | 8.80 |
-| **Total** | **100%** | | **73.75** |
+| **Total** | **100%** | | **76.55** |
 
-**Rounded: 73.8 / 100 → FAIL**
+**Rounded: 76.6 / 100 → FAIL**
+
+**Revision note (2026-02-06):** Source Reference Accuracy increased from 82 to 90 after MNTTRDB2 was reclassified as a valid reference (found in `app/app-transaction-type-db2/jcl/`). Original total was 73.75.
 
 ---
 

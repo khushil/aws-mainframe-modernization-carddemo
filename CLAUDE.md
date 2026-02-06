@@ -34,10 +34,11 @@ scripts/run_posting.sh         # Transaction posting only
 
 ```
 app/
-├── cbl/          # COBOL programs (39 files)
-├── cpy/          # Copybooks - shared data structures (41 files)
-├── bms/          # BMS mapsets - CICS screen definitions (21 files)
-├── jcl/          # JCL batch job control (38 files)
+├── cbl/          # COBOL programs (31 files: 29 .cbl + 2 .CBL)
+├── cpy/          # Copybooks - shared data structures (29 files)
+├── cpy-bms/      # BMS-generated copybooks (17 .CPY files)
+├── bms/          # BMS mapsets - CICS screen definitions (17 files)
+├── jcl/          # JCL batch job control (38 files: 33 .jcl + 5 .JCL)
 ├── asm/          # Assembler utilities
 ├── data/
 │   ├── ASCII/    # Reference data in text format

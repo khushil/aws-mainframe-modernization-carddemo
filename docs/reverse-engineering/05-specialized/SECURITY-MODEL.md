@@ -198,8 +198,27 @@ Different error messages enable **user enumeration attacks** - attackers can det
 | **User Add** | COUSR01C | Yes | No | Menu only (COADM01C) | Admin menu restriction |
 | **User Update** | COUSR02C | Yes | No | Menu only (COADM01C) | Admin menu restriction |
 | **User Delete** | COUSR03C | Yes | No | Menu only (COADM01C) | Admin menu restriction |
+| **Batch Wait** | COBSWAIT | N/A | N/A | JCL submission only | No CICS session; batch utility |
 
-### 3.3 Menu Authorization Check
+### 3.3 Privilege Reset Pattern
+
+**Severity: High** — Five online programs silently execute `SET CDEMO-USRTYP-USER TO TRUE`, which resets the COMMAREA user type from Admin ('A') to User ('U'):
+
+| Program | Function | Effect |
+|---------|----------|--------|
+| COACTVWC | Account View | Admin demoted to User on entry |
+| COACTUPC | Account Update | Admin demoted to User on entry |
+| COCRDLIC | Card List | Admin demoted to User on entry |
+| COCRDSLC | Card Detail View | Admin demoted to User on entry |
+| COCRDUPC | Card Update | Admin demoted to User on entry |
+
+**Impact:** An admin navigating through any of these programs loses admin rights in the COMMAREA. On returning to the menu via PF3, they would see the User Menu instead of the Admin Menu. This is either:
+- **A bug:** The programs incorrectly reset the privilege flag, or
+- **An undocumented security feature:** Intended to enforce least-privilege during data operations
+
+Either interpretation creates **unpredictable session behavior** that must be resolved during modernization.
+
+### 3.4 Menu Authorization Check
 
 **Source:** `app/cbl/COMEN01C.cbl:136-143`
 
@@ -216,7 +235,7 @@ END-IF
 
 **Critical Flaw:** This check occurs only at the menu selection level in COMEN01C. Once a user bypasses the menu (e.g., direct CICS transaction invocation), no further authorization validation occurs.
 
-### 3.4 Menu Option Configurations
+### 3.5 Menu Option Configurations
 
 **User Menu (COMEN02Y.cpy):**
 
@@ -278,7 +297,7 @@ END-IF
       10 CDEMO-LAST-MAPSET             PIC X(7).
 ```
 
-**Total Size:** ~130 bytes
+**Total Size:** 160 bytes (4+8+4+8+8+1+1+9+25+25+25+11+1+16+7+7)
 
 ### 4.2 Session Lifecycle
 

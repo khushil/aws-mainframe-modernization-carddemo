@@ -26,7 +26,7 @@
 
 ### The Validation Gap
 
-The AI-driven reverse engineering of CardDemo produced 43 documents (~21,500 lines) across 7 analysis domains. The AI validation suite (VL-001 through VL-007) confirmed **zero hallucinations** in 6 of 7 reports and high factual accuracy, with scores ranging from 73.8 to 96.8 out of 100.
+The AI-driven reverse engineering of CardDemo produced 45 documents across 7 analysis domains covering 44 COBOL programs (30,175 LOC). The AI validation suite (VL-000 through VL-008, 9 reports) confirmed **zero hallucinations** in 7 of 8 applicable reports, with scores ranging from 71.0 to 96.8 out of 100. VL-006 originally reported 3 hallucinations but this was revised to 2 after MNTTRDB2 was reclassified as valid.
 
 However, AI validation can only verify **what the code says** — not **what the code means**, **what's missing from the code**, or **whether interpretations are correct**.
 
@@ -62,10 +62,14 @@ This documentation serves four purposes. Each imposes different confidence requi
 | VL-003 | Context Model | 80.6 | FAIL | 0 | 5/17 BMS names wrong, TransID table 17.6% complete |
 | VL-004 | C4 Architecture | 90.0 | FAIL | 0 | 3 programs missing, numeric tallies wrong |
 | VL-005 | Screen Flows | 90.6 | FAIL | 0 | Missing BMS copybook refs, 2 PF key gaps |
-| VL-006 | Batch Workflows | 73.8 | FAIL | 3 | 6/38 JCL missing, phantom MNTTRDB2, wrong counts |
-| VL-007 | Security Model | 90.0 | PASS | 0 | COMMAREA size wrong (~130 vs 160 bytes) |
+| VL-006 | Batch Workflows | **76.6** | FAIL | **2** | 6/38 JCL missing, wrong counts (MNTTRDB2 reclassified as valid) |
+| VL-007 | Security Model | 90.0 | PASS | 0 | COMMAREA size corrected from ~130 to 160 bytes |
+| VL-008 | Integration Patterns | **82.4** | COND. PASS | 0 | 5/13 extension programs missing; IMS DBD/PSB not analyzed |
+| VL-000 | Cross-Doc Consistency | **71.0** | FAIL | — | Program counts vary 29–44 across docs; COMMAREA size inconsistent |
 
-**The weakest areas requiring priority SME attention are VL-006 (Batch Workflows, 73.8) and VL-003 (Context Model, 80.6).**
+> **Updated 2026-02-06:** VL-006 score revised from 73.8 to 76.6 after MNTTRDB2 was reclassified from "phantom hallucination" to "valid — found in `app/app-transaction-type-db2/jcl/MNTTRDB2.jcl`." COMMAREA size in SECURITY-MODEL.md corrected to 160 bytes. VL-008 and VL-000 added. See [CONFIDENCE-ASSESSMENT.md](../CONFIDENCE-ASSESSMENT.md) for full details.
+
+**The weakest areas requiring priority SME attention are VL-000 (Cross-Document Consistency, 71.0), VL-006 (Batch Workflows, 76.6), and VL-003 (Context Model, 80.6).**
 
 ---
 
@@ -106,7 +110,7 @@ This is the ideal SME team for reference. In practice, 1–2 people will cover m
 **Role 5: JCL/Batch Operations Specialist**
 - **Experience:** 5+ years batch scheduling, JCL, operations
 - **Validates:** Batch workflows (VL-006, scored 73.8 — weakest area), job dependencies, restart/recovery procedures, SLAs
-- **Key question areas:** What are the 6 missing JCL files (CREASTMT, FTPJCL, INTRDRJ1/2, TXT2PDF1, DEFCUST)? Is the phantom MNTTRDB2 a real external job? What are the batch scheduling SLAs?
+- **Key question areas:** What are the 6 missing JCL files (CREASTMT, FTPJCL, INTRDRJ1/2, TXT2PDF1, DEFCUST)? Were the extension modules (IMS/DB2/MQ) deployed in production? What are the batch scheduling SLAs?
 
 **Role 6: Security / Compliance Specialist**
 - **Experience:** PCI-DSS audit, mainframe security (RACF/ACF2/Top Secret)
@@ -398,22 +402,26 @@ This matrix maps each RE document to the primary SME role, recommended validatio
 | RE-003 | Context Model | 80.6 | FAIL | Technical Architect | CICS Sys Programmer | Blind Validation + Code Walkthrough | 4 |
 | RE-004 | C4 Architecture | 90.0 | FAIL | Technical Architect | Modernization Architect | Blind Validation + Contradiction Detection | 4 |
 | RE-005 | Screen Flows | 90.6 | FAIL | CICS Sys Programmer | End User | Targeted Probes + Code Walkthrough | 4 |
-| RE-006 | Batch Workflows | 73.8 | FAIL | JCL/Batch Specialist | Technical Architect | Tacit Knowledge + Targeted Probes | 5 |
+| RE-006 | Batch Workflows | 76.6 | FAIL | JCL/Batch Specialist | Technical Architect | Tacit Knowledge + Targeted Probes | 5 |
 | RE-007 | Security Model | 90.0 | PASS | CICS Sys Programmer | Security Specialist | Contradiction Detection + Tacit Knowledge | 5 |
+| RE-008 | Integration Patterns | 82.4 | COND. PASS | Technical Architect | VSAM Data Architect | Code Walkthrough + Tacit Knowledge | 4 |
 | — | Business Rules | 88.0* | PASS* | Domain Expert | Technical Architect | Targeted Probes + Tacit Knowledge | 4 |
+| VL-000 | Cross-Doc Consistency | 71.0 | FAIL | Technical Architect | — | Cross-Reference Validation | 4 |
 
 *Business rules are part of the RE-001 domain model validation.
 
 **Priority order for limited SME time:**
 
-1. **VL-006 Batch Workflows (73.8)** — Lowest score, 3 hallucinations found, 6 missing JCL files, critical for modernization scope
-2. **VL-003 Context Model (80.6)** — Second-lowest score, 5 BMS name errors, TransID table only 17.6% complete
-3. **VL-007 Security Model (90.0)** — High score but security findings require human judgment on exploitability
-4. **Business Rules (BR-*)** — AI cannot validate meaning or completeness of business rules
-5. **VL-004 Architecture (90.0)** — Bounded context decisions drive microservice boundaries
-6. **VL-001 Domain Model (88.0)** — Domain language accuracy affects all downstream work
-7. **VL-005 Screen Flows (90.6)** — Important for knowledge preservation, lower priority for modernization
-8. **VL-002 Data Model (96.8)** — Highest AI score, lowest SME validation urgency
+1. **VL-000 Cross-Document Consistency (71.0)** — Lowest score; program counts vary 29–44 across docs; structural credibility issue
+2. **VL-006 Batch Workflows (76.6)** — Second-lowest; 6 missing JCL files; critical for modernization scope
+3. **VL-003 Context Model (80.6)** — 5 BMS name errors, TransID table only 17.6% complete
+4. **VL-008 Integration Patterns (82.4)** — Extension programs are largest knowledge gap; IMS/MQ patterns critical for strangler fig
+5. **VL-007 Security Model (90.0)** — High score but security findings require human judgment on exploitability
+6. **Business Rules (BR-*)** — AI cannot validate meaning or completeness of business rules
+7. **VL-004 Architecture (90.0)** — Bounded context decisions drive microservice boundaries
+8. **VL-001 Domain Model (88.0)** — Domain language accuracy affects all downstream work
+9. **VL-005 Screen Flows (90.6)** — Important for knowledge preservation, lower priority for modernization
+10. **VL-002 Data Model (96.8)** — Highest AI score, lowest SME validation urgency
 
 ---
 
@@ -630,12 +638,12 @@ These are the minimum viable validation set. If you only get one 4-hour session,
 - **Concerning answer looks like:** "I don't recognize those" — they may be post-tenure additions.
 - **Priority:** Tier 1
 
-**Q-O02: Phantom MNTTRDB2** (Targeted Probe)
-- **Question:** "The batch workflow documentation includes a job called MNTTRDB2 in the WEEKLY Control-M workflow, but no JCL file exists for it. Is MNTTRDB2 a real job from an external system, a DB2 utility, or an error in the documentation?"
-- **Validates:** VL-006 MAJ-001 (hallucination finding)
+**Q-O02: MNTTRDB2 and Extension Module Deployment** (Targeted Probe)
+- **Question:** "MNTTRDB2.jcl exists in the DB2 extension directory (`app/app-transaction-type-db2/jcl/`) and runs COBTUPDT to maintain the transaction type table. Was this DB2 extension module deployed in production? Were the IMS and MQ extension modules (`app-authorization-ims-db2-mq`, `app-vsam-mq`) also deployed, or were they development-only?"
+- **Validates:** Extension module deployment status; previously VL-006 MAJ-001 (reclassified — MNTTRDB2 is real)
 - **Method:** Targeted Probe
-- **Correct answer looks like:** "MNTTRDB2 was a DB2 maintenance job defined in [other system]" (explains the phantom) or "That doesn't exist" (confirms hallucination).
-- **Concerning answer looks like:** Ambiguity.
+- **Correct answer looks like:** Clear statement about which extensions were in production use.
+- **Concerning answer looks like:** "Those are demo-only modules" — changes the documentation scope significantly.
 - **Priority:** Tier 1
 
 **Q-O03: Batch Restart Procedures** (Tacit Knowledge)
@@ -1044,7 +1052,7 @@ This section is designed so that a **project manager or analyst with NO mainfram
 >
 > **Data files:** ACCTDAT (accounts), CARDDAT (cards), CUSTDAT (customers), TRANSACT (transactions), CCXREF (card-to-account cross-reference), USRSEC (user security), plus reference data files for transaction types, categories, and disclosure groups.
 >
-> **Technology:** COBOL (31 programs), BMS (17 mapsets), JCL (38 jobs), VSAM KSDS with alternate indexes, optional DB2/IMS/MQ extensions.
+> **Technology:** COBOL (44 programs: 31 core + 13 extension), BMS (21 mapsets), JCL (46 jobs: 38 core + 8 extension), VSAM KSDS with alternate indexes, optional DB2/IMS/MQ extensions.
 
 ### 9.2 Session Agendas
 
@@ -1492,16 +1500,22 @@ All references in this strategy document mapped to source files:
 | VL-003 Score: 80.6 | `docs/reverse-engineering/validation/VL-003-context-model-report.md:14` | Yes |
 | VL-004 Score: 90.0 | `docs/reverse-engineering/validation/VL-004-c4-architecture-report.md:14` | Yes |
 | VL-005 Score: 90.6 | `docs/reverse-engineering/validation/VL-005-screen-flow-report.md:17` | Yes |
-| VL-006 Score: 73.8 | `docs/reverse-engineering/validation/VL-006-batch-workflow-report.md:14` | Yes |
+| VL-006 Score: 76.6 (revised from 73.8) | `docs/reverse-engineering/validation/VL-006-batch-workflow-report.md:14` | Yes |
 | VL-007 Score: 90.0 | `docs/reverse-engineering/validation/VL-007-security-model-report.md:14` | Yes |
-| VL-006 HAL-001: MNTTRDB2 | `VL-006-batch-workflow-report.md:101-109` | Yes |
+| VL-006 HAL-001: MNTTRDB2 (reclassified as valid) | `VL-006-batch-workflow-report.md:101-109` | Revised |
 | VL-006 CRT-001: 6 missing JCL | `VL-006-batch-workflow-report.md:39-59` | Yes |
 | VL-003 MAJ-001: 5 BMS errors | `VL-003-context-model-report.md:47-64` | Yes |
-| VL-007 M-001: COMMAREA ~130 vs 160 | `VL-007-security-model-report.md:49-74` | Yes |
+| VL-007 M-001: COMMAREA ~130 vs 160 (corrected to 160) | `VL-007-security-model-report.md:49-74` | Remediated |
 | VL-007 M-003: SET CDEMO-USRTYP-USER | `VL-007-security-model-report.md:104-126` | Yes |
 | SEC-001 through SEC-010 | `docs/reverse-engineering/05-specialized/SECURITY-MODEL.md:354-699` | Yes |
 | BR-V001 through BR-R005 | `docs/reverse-engineering/01-domain-model/BUSINESS-RULES.md` | Yes |
 | 58 business rules total | `BUSINESS-RULES.md` (25 validation + 8 calc + 6 state + 5 auth + 4 temporal + 3 limit + 3 sequence + 5 rejection = 59*) | Yes |
+
+| VL-008 Score: 82.4 | `docs/reverse-engineering/validation/VL-008-integration-patterns-report.md` | Yes |
+| VL-000 Score: 71.0 | `docs/reverse-engineering/validation/VL-000-cross-document-consistency-report.md` | Yes |
+| Confidence Assessment | `docs/reverse-engineering/CONFIDENCE-ASSESSMENT.md` | Yes |
+| COACTUPC Deep-Dive | `docs/reverse-engineering/deep-dives/COACTUPC-ANALYSIS.md` | Yes |
+| Program Inventory v2.0 (44 programs) | `docs/reverse-engineering/appendices/PROGRAM-INVENTORY.md` | Yes |
 
 *Note: The count of 58 referenced in the plan is approximate; the catalog contains ~59 individually identified rules depending on counting method.
 
@@ -1512,6 +1526,7 @@ All references in this strategy document mapped to source files:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-02-06 | Claude Code | Initial SME validation strategy |
+| 1.1 | 2026-02-06 | Validation Review | Updated scores (VL-006: 73.8→76.6), added VL-008/VL-000, reclassified MNTTRDB2, fixed program counts (44 total), reframed Q-O02, added new deliverable references |
 
 ---
 
