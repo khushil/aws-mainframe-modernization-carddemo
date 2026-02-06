@@ -310,6 +310,14 @@ END-IF
 | COACTUPC.cbl | Account/Customer Validation | 10+ |
 | COBIL00C.cbl | Payment Validation, Calculation | 5 |
 | CBTRN02C.cbl | Batch Validation, Rejection | 8 |
+| CBACT01C.cbl | Account batch creation | - |
+| CBACT02C.cbl | Account batch refresh | - |
+| CBACT03C.cbl | Account batch update | - |
+| CBACT04C.cbl | Account batch maintenance | - |
+| CBEXPORT.cbl | Data export processing | - |
+| CBIMPORT.cbl | Data import processing | - |
+| CBSTM03A.CBL | Statement generation (part A) | - |
+| CBSTM03B.CBL | Statement generation (part B) | - |
 | COCOM01Y.cpy | Authorization, State | 4 |
 | CSLKPCDY.cpy | Reference Data Validation | 3 |
 | CVACT01Y.cpy | Account State | 1 |

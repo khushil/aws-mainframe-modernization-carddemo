@@ -17,7 +17,7 @@ This document provides a candid, evidence-based assessment of confidence levels 
 - **6 of 13 validation reports** remain unexecuted, including VL-008 (Integration Patterns) which covers the most complex technology in the system.
 - The codebase contains **44 COBOL programs** (not 29 or 39), **62 copybooks** (not 29 or 41), and **46 JCL files** (not 33 or 38) when extension directories are included. Multiple documents cite different wrong counts.
 - **4 COBOL programs** in the authorization extension are entirely undocumented: COPAUS1C, PAUDBUNL, DBUNLDGS, PAUDBLOD.
-- The COMMAREA size is **160 bytes** — stated as "~130 bytes" in the Security Model and "~155 bytes" elsewhere.
+- The COMMAREA size is **160 bytes** — originally stated as "~130 bytes" in the Security Model and "~155 bytes" in the Context Model (both now corrected).
 - COACTUPC.cbl at **4,236 lines** is the highest-risk modernization artifact with GO TO spaghetti, multi-file VSAM writes, and an undocumented privilege-reset pattern.
 
 ---
@@ -202,9 +202,9 @@ The menu check in `COMEN01C.cbl:136-143` is the **only** access control gate. Di
 
 The modernization readiness score of 3.53/5 may be optimistic given that security remediation must happen **before** any API exposure, and the effort is substantial.
 
-### 5.4 COMMAREA Size Error
+### 5.4 COMMAREA Size Error (Corrected)
 
-The Security Model states "~130 bytes" (`SECURITY-MODEL.md:281`). The actual size computed from `COCOM01Y.cpy` fields:
+The Security Model originally stated "~130 bytes" — now corrected to 160 bytes. The actual size computed from `COCOM01Y.cpy` fields:
 
 | Field | Size |
 |-------|------|
@@ -278,18 +278,18 @@ The BMS screen for User Add (COUSR01) displays "F12=Exit" in the footer, but the
 
 ---
 
-## 10. Cross-Document Consistency: Untested
+## 10. Cross-Document Consistency: Remediated
 
-**Severity: Medium**
+**Severity: Medium (reduced from High after remediation)**
 
-VL-000 (Cross-Document Consistency) was never executed. Observed inconsistencies:
+VL-000 (Cross-Document Consistency) has been executed. See [VL-000 Report](validation/VL-000-cross-document-consistency-report.md). All major count inconsistencies have been corrected. A canonical [CODEBASE-MANIFEST.md](appendices/CODEBASE-MANIFEST.md) now serves as the single source of truth for asset counts.
 
-| Item | Document A | Document B | Actual |
-|------|-----------|-----------|--------|
-| COMMAREA size | ~130 bytes (Security Model) | ~155 bytes (Context Model) | **160 bytes** |
-| Program count | 29 (index.md) | 39 (CLAUDE.md prior) | **44 (all dirs)** or **31 (core only)** |
-| JCL count | 33 (BATCH-WORKFLOWS.md) | 38 (VL-006) | **38 core; 46 total** |
-| Business rules | 59+ (Domain Model) | Referenced in Modernization Assessment | **Unvalidated count** |
+| Item | Previous State | Current State | Status |
+|------|---------------|---------------|--------|
+| COMMAREA size | ~130 bytes (Security Model), ~155 bytes (Context Model) | **160 bytes** in all documents | **Remediated** |
+| Program count | 29 (multiple docs) | **31 core / 44 total** in all documents | **Remediated** |
+| JCL count | 33 (BATCH-WORKFLOWS.md, MODERNIZATION-READINESS.md) | **38 core / 46 total** in all documents | **Remediated** |
+| Business rules | 59+ (Domain Model) | Referenced in Modernization Assessment | Consistent (unvalidated count) |
 
 ---
 
@@ -298,12 +298,12 @@ VL-000 (Cross-Document Consistency) was never executed. Observed inconsistencies
 | Area | Confidence | Validation Score | Key Risk |
 |------|-----------|-----------------|----------|
 | Data Model | **HIGH** | 96.8 | Minor ER interpretation issue |
-| Security Model | **MEDIUM-HIGH** | 90.0 | Privilege reset pattern; COMMAREA size wrong |
+| Security Model | **MEDIUM-HIGH** | 90.0 | Privilege reset pattern; COMMAREA size corrected to 160 bytes |
 | Domain Model | **MEDIUM-HIGH** | 88.0 | Completeness gaps in program/copybook coverage |
-| C4 Architecture | **MEDIUM** | 90.0 | Missing extension programs; incorrect counts |
+| C4 Architecture | **MEDIUM** | 90.0 | Missing extension programs; counts corrected |
 | Screen Flows | **MEDIUM** | 90.6 | Missing BMS copybook references; journey gaps |
 | Context Model | **MEDIUM-LOW** | 80.6 | 5 wrong BMS names; incomplete TransID mapping |
-| Batch Workflows | **LOW** | 73.8 | Missing files; wrong counts; broken workflow doc |
+| Batch Workflows | **LOW** | 73.8 | Missing files; counts corrected; broken workflow doc |
 | Integration Patterns | **UNVALIDATED** | — | Largest knowledge gap; IMS/MQ complexity |
 | Modernization Assessment | **UNVALIDATED** | — | Potentially optimistic; based on incomplete data |
 | API Candidates | **UNVALIDATED** | — | Not independently verified |
@@ -314,20 +314,20 @@ VL-000 (Cross-Document Consistency) was never executed. Observed inconsistencies
 
 ## Remediation Priority Matrix
 
-| Priority | Item | Effort | Impact |
-|----------|------|--------|--------|
-| **P0** | Fix CLAUDE.md counts | Low | Prevents count propagation errors |
-| **P0** | Fix VL-006 MNTTRDB2 false positive | Low | Corrects validation credibility |
-| **P0** | Complete program inventory (all dirs) | Medium | Foundation for all other assessments |
-| **P1** | Document missing extension programs | Medium | Closes largest knowledge gap |
-| **P1** | Fix SECURITY-MODEL.md COMMAREA size | Low | Corrects factual error |
-| **P1** | Fix BATCH-WORKFLOWS.md counts | Low | Corrects factual errors |
-| **P1** | Deep-dive COACTUPC.cbl | High | De-risks highest-risk artifact |
-| **P2** | Run VL-008 (Integration Patterns) | High | Validates most complex technology |
-| **P2** | Run VL-000 (Cross-Document Consistency) | Medium | Catches cross-doc errors |
-| **P2** | Document DEFCUST.jcl alternate schema | Low | Explains environment variant |
-| **P3** | Run VL-009 through VL-012 | High | Completes validation coverage |
-| **P3** | Fix Context Model BMS names | Medium | Corrects navigation flow documentation |
+| Priority | Item | Effort | Impact | Status |
+|----------|------|--------|--------|--------|
+| **P0** | Fix CLAUDE.md counts | Low | Prevents count propagation errors | **DONE** (RM-001) |
+| **P0** | Fix VL-006 MNTTRDB2 false positive | Low | Corrects validation credibility | **DONE** (RM-002) |
+| **P0** | Complete program inventory (all dirs) | Medium | Foundation for all other assessments | **DONE** (RM-AUX: CODEBASE-MANIFEST.md) |
+| **P1** | Document missing extension programs | Medium | Closes largest knowledge gap | **DONE** (RM-005) |
+| **P1** | Fix SECURITY-MODEL.md COMMAREA size | Low | Corrects factual error | **DONE** (RM-003) |
+| **P1** | Fix BATCH-WORKFLOWS.md counts | Low | Corrects factual errors | **DONE** (RM-004) |
+| **P1** | Deep-dive COACTUPC.cbl | High | De-risks highest-risk artifact | **DONE** (prior) |
+| **P2** | Run VL-008 (Integration Patterns) | High | Validates most complex technology | Open |
+| **P2** | Run VL-000 (Cross-Document Consistency) | Medium | Catches cross-doc errors | **DONE** (RM-000) |
+| **P2** | Document DEFCUST.jcl alternate schema | Low | Explains environment variant | Open |
+| **P3** | Run VL-009 through VL-012 | High | Completes validation coverage | Open |
+| **P3** | Fix Context Model BMS names | Medium | Corrects navigation flow documentation | Open |
 
 ---
 
@@ -345,6 +345,8 @@ VL-000 (Cross-Document Consistency) was never executed. Observed inconsistencies
 | [COACTUPC Deep-Dive](deep-dives/COACTUPC-ANALYSIS.md) | Monolith analysis |
 | [Program Inventory](appendices/PROGRAM-INVENTORY.md) | Complete program listing |
 | [Integration Patterns](05-specialized/INTEGRATION-PATTERNS.md) | Extension documentation |
+| [VL-000 Cross-Document Consistency Report](validation/VL-000-cross-document-consistency-report.md) | Score: 71.0 |
+| [Codebase Manifest](appendices/CODEBASE-MANIFEST.md) | Canonical asset counts (source of truth) |
 
 ---
 

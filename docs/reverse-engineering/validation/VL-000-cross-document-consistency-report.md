@@ -32,17 +32,17 @@ The same metric — "how many COBOL programs are in this system" — yields diff
 | MODERNIZATION-READINESS.md | "29 programs" | Core .cbl only | Partial |
 | **Actual (all directories)** | **44** | **All .cbl + .CBL across all directories** | **Correct** |
 
-**Status**: Partially remediated. CLAUDE.md, index.md, PROGRAM-INVENTORY.md, and BATCH-WORKFLOWS.md have been corrected as of 2026-02-06. Other documents still contain stale counts.
+**Status**: Fully remediated. CLAUDE.md, index.md, PROGRAM-INVENTORY.md, BATCH-WORKFLOWS.md, C4-L3-COMPONENT.md, and MODERNIZATION-READINESS.md have all been corrected. See [CODEBASE-MANIFEST.md](../appendices/CODEBASE-MANIFEST.md) for canonical counts.
 
 ### CON-002: COMMAREA Size Inconsistencies (High)
 
 | Document | Stated Size | Correct? |
 |----------|-------------|----------|
 | SECURITY-MODEL.md (Section 4.1) | ~130 bytes | **WRONG** — corrected to 160 bytes |
-| COMMAREA-SPECIFICATION.md | Not verified in this pass | Unknown |
+| COMMAREA-SPECIFICATION.md | 160 bytes | **Corrected** |
 | **Actual (computed from COCOM01Y.cpy)** | **160 bytes** | **Correct** |
 
-**Status**: SECURITY-MODEL.md corrected. COMMAREA-SPECIFICATION.md should be verified.
+**Status**: Fully remediated. SECURITY-MODEL.md and COMMAREA-SPECIFICATION.md both corrected to 160 bytes.
 
 ### CON-003: JCL Count Inconsistencies (High)
 
@@ -109,8 +109,8 @@ No single document provides a complete TransID-to-program mapping.
 | BATCH-WORKFLOWS.md | ~~33 JCL, 10 batch~~ | 38 JCL, 12 batch | Corrected |
 | VL-006 Report | 38 JCL, 12 batch | Accurate for core | Already correct |
 | SECURITY-MODEL.md | ~~~130 byte COMMAREA~~ | 160 bytes | Corrected |
-| C4-L3-COMPONENT.md | 29 programs | Not yet corrected | Stale |
-| MODERNIZATION-READINESS.md | Various counts | Not yet corrected | Stale |
+| C4-L3-COMPONENT.md | ~~29 programs~~ | Corrected (prior remediation) | Corrected |
+| MODERNIZATION-READINESS.md | ~~29 programs, 29 copybooks, 33 JCL~~ | 31 core / 44 total | Corrected (RM-000) |
 | API-CANDIDATES.md | 18 programs scored | Core only; correct for scope | Acceptable |
 | CONTEXT-MAP.md | 7 bounded contexts | Consistent | OK |
 
@@ -134,10 +134,10 @@ No single document provides a complete TransID-to-program mapping.
 
 | ID | Finding | Status | Documents Affected |
 |----|---------|--------|-------------------|
-| CON-001 | Program counts | **Partially remediated** | CLAUDE.md, index.md, PROGRAM-INVENTORY.md corrected; C4-L3, MODERNIZATION still stale |
-| CON-002 | COMMAREA size | **Partially remediated** | SECURITY-MODEL.md corrected; COMMAREA-SPECIFICATION.md not checked |
-| CON-003 | JCL counts | **Partially remediated** | BATCH-WORKFLOWS.md, index.md corrected |
-| CON-004 | Copybook counts | **Partially remediated** | index.md corrected; COPYBOOK-INVENTORY.md needs update |
+| CON-001 | Program counts | **Remediated** | CLAUDE.md, index.md, PROGRAM-INVENTORY.md, C4-L3-COMPONENT.md, MODERNIZATION-READINESS.md all corrected |
+| CON-002 | COMMAREA size | **Remediated** | SECURITY-MODEL.md and COMMAREA-SPECIFICATION.md corrected to 160 bytes |
+| CON-003 | JCL counts | **Remediated** | BATCH-WORKFLOWS.md, index.md, MODERNIZATION-READINESS.md corrected |
+| CON-004 | Copybook counts | **Remediated** | index.md corrected to 62 total; MODERNIZATION-READINESS.md references manifest |
 | CON-005 | Bounded contexts | **Consistent** | No action needed |
 | CON-006 | Business rules count | **Consistent but unverified** | Low priority |
 | CON-007 | BMS screen count | **Not remediated** | index.md partially updated; SCREEN-FLOWS needs verification |
@@ -147,13 +147,13 @@ No single document provides a complete TransID-to-program mapping.
 
 ## 6. Recommendations
 
-1. **Create a shared manifest file** (e.g., `docs/reverse-engineering/appendices/CODEBASE-MANIFEST.md`) that serves as the single source of truth for all counts and metrics. All other documents should reference it.
+1. **Create a shared manifest file** -- **DONE**: [CODEBASE-MANIFEST.md](../appendices/CODEBASE-MANIFEST.md) serves as the single source of truth for all counts and metrics.
 
 2. **Define scope conventions**: Each document should explicitly state whether its counts include extensions, uppercase-extension files, or only core lowercase files.
 
 3. **Complete the TransID inventory**: Create or update `docs/reverse-engineering/appendices/TRANSACTION-INVENTORY.md` with all CICS transaction IDs from CSD files across all directories.
 
-4. **Update remaining stale documents**: C4-L3-COMPONENT.md, MODERNIZATION-READINESS.md, and COPYBOOK-INVENTORY.md still contain pre-correction counts.
+4. **Update remaining stale documents** -- **DONE**: C4-L3-COMPONENT.md and MODERNIZATION-READINESS.md have been corrected. index.md updated with manifest reference.
 
 ---
 

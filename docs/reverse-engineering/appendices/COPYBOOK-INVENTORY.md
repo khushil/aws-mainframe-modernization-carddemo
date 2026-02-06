@@ -1,9 +1,9 @@
 # CardDemo Copybook Inventory
 
-**Document Version:** 1.0
-**Generated:** 2026-02-05
-**Total Copybooks:** 29
-**Total Lines of Code:** 2,748
+**Document Version:** 1.1
+**Updated:** 2026-02-06
+**Total Copybooks:** 30 (29 .cpy + 1 .CPY)
+**Total Lines of Code:** 2,748+
 
 ---
 
@@ -14,10 +14,11 @@
 | Data Record Layouts (CV*) | 13 | 694 | VSAM file record definitions |
 | Communication/Session (CO*) | 3 | 210 | COMMAREA and menu definitions |
 | Common Services (CS*) | 8 | 1,608 | Shared utilities, validation, messages |
+| Statement Processing (CO*) | 1 | 39 | Statement report record layout |
 | Program-Specific (CU*, CV*) | 3 | 88 | Individual program support |
 | Deprecated | 1 | 10 | Unused artifacts |
 | Other | 1 | 138 | Export record structure |
-| **Total** | **29** | **2,748** | |
+| **Total** | **30** | **2,787** | |
 
 ---
 
@@ -70,12 +71,13 @@ These copybooks define the VSAM file record structures used across programs.
 
 ## Other Copybooks
 
-| # | Copybook | LOC | Purpose | Used By |
-|---|----------|-----|---------|---------|
-| 25 | CVEXPORT | 103 | Multi-record export layout | CBEXPORT, CBIMPORT |
-| 26 | COTTL01Y | 27 | Screen title constants | All online programs (header display) |
-| 27 | CSSETATY | 30 | Screen attribute setting template | Online programs (field highlighting) |
-| 28 | CSUSR01Y | 26 | User security record layout | COSGN00C, COUSR00C-03C |
+| # | Copybook | Ext | LOC | Purpose | Used By |
+|---|----------|-----|-----|---------|---------|
+| 25 | CVEXPORT | .cpy | 103 | Multi-record export layout | CBEXPORT, CBIMPORT |
+| 26 | COTTL01Y | .cpy | 27 | Screen title constants | All online programs (header display) |
+| 27 | CSSETATY | .cpy | 30 | Screen attribute setting template | Online programs (field highlighting) |
+| 28 | CSUSR01Y | .cpy | 26 | User security record layout | COSGN00C, COUSR00C-03C |
+| 29 | COSTM01 | **.CPY** | 39 | Transaction record layout for statement reporting (TRNX-RECORD) | CBSTM03A.CBL |
 
 ---
 
@@ -83,7 +85,7 @@ These copybooks define the VSAM file record structures used across programs.
 
 | # | Copybook | LOC | Purpose | Status |
 |---|----------|-----|---------|--------|
-| 29 | UNUSED1Y | 10 | Placeholder data structure (ID, name, password, type) | Unused - candidate for removal |
+| 30 | UNUSED1Y | 10 | Placeholder data structure (ID, name, password, type) | Unused - candidate for removal |
 
 ---
 
@@ -93,7 +95,7 @@ These copybooks define the VSAM file record structures used across programs.
 COCOM01Y (Session)
 ├── Used by ALL 17 online programs
 ├── Defines: User ID, Type, Account, Card context
-└── Size: 47 lines (~130 bytes COMMAREA)
+└── Size: 47 lines (160 bytes COMMAREA)
 
 CSLKPCDY (Lookups)
 ├── Used by COACTUPC only

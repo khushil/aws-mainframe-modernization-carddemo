@@ -135,6 +135,7 @@ This glossary defines the ubiquitous language used throughout the CardDemo appli
 | **Transaction Add** | Screen for creating transactions | Navigation | `COMEN02Y.cpy:70` |
 | **Transaction Reports** | Reporting interface | Navigation | `COMEN02Y.cpy:76` |
 | **Bill Payment** | Screen for paying account balance | Navigation | `COMEN02Y.cpy:82` |
+| **Pending Authorization View** | Screen for viewing pending authorization transactions | Navigation | `COMEN02Y.cpy:86-90` (option 11, program `COPAUS0C`) |
 | **User List** | Admin screen showing system users | Navigation | `COADM02Y.cpy:28` |
 | **User Add** | Admin screen for creating users | Navigation | `COADM02Y.cpy:33` |
 | **User Update** | Admin screen for modifying users | Navigation | `COADM02Y.cpy:38` |
@@ -147,10 +148,10 @@ This glossary defines the ubiquitous language used throughout the CardDemo appli
 | Term | Definition | Domain Area | Source Reference |
 |------|------------|-------------|------------------|
 | **Input OK** | Validation passed successfully | Validation | `COCRDUPC.cbl:643` |
-| **Input Error** | Validation failed | Validation | `COCRDUPC.cbl:173` |
+| **Input Error** | Validation failed | Validation | `COCRDUPC.cbl:53-55` |
 | **Not Numeric** | Value contains non-numeric characters | Validation | `COCRDUPC.cbl:784` |
 | **Blank** | Required field not provided | Validation | `COCRDUPC.cbl:815` |
-| **Invalid Key** | Unrecognized function key pressed | Validation | `CSMSG01Y.cpy:22` |
+| **Invalid Key** | Unrecognized function key pressed | Validation | `CSMSG01Y.cpy:20-21` |
 | **Not Found** | Record lookup returned no results | Validation | `COSGN00C.cbl:249` |
 | **Duplicate** | Attempting to create existing record | Validation | `COBIL00C.cbl:533` |
 | **Rejection Code** | Numeric code indicating validation failure reason | Validation | `CBTRN02C.cbl:181` |
@@ -181,6 +182,10 @@ This glossary defines the ubiquitous language used throughout the CardDemo appli
 | **Validation Trailer** | Error information appended to rejected records | Batch Processing | `CBTRN02C.cbl:178` |
 | **Transaction Count** | Running total of processed records | Batch Processing | `CBTRN02C.cbl:185` |
 | **Reject Count** | Running total of failed records | Batch Processing | `CBTRN02C.cbl:186` |
+| **Account Batch Processing** | Batch maintenance of account master file records | Batch Processing | `CBACT01C.cbl` - `CBACT04C.cbl` |
+| **Data Export** | Export VSAM file data to sequential format for external processing | Batch Processing | `CBEXPORT.cbl` |
+| **Data Import** | Import sequential data into VSAM files | Batch Processing | `CBIMPORT.cbl` |
+| **Statement Generation** | Batch production of account statements | Batch Processing | `CBSTM03A.CBL`, `CBSTM03B.CBL` |
 
 ---
 
@@ -242,8 +247,15 @@ This glossary defines the ubiquitous language used throughout the CardDemo appli
 | CBTRN01C | CardDemo Batch Trans Post | Basic transaction posting |
 | CBTRN02C | CardDemo Batch Trans Post | Posting with validation |
 | CBTRN03C | CardDemo Interest Calc | Calculate interest |
-| CBACT01C-04C | CardDemo Account Batch | Account file maintenance |
+| CBACT01C | CardDemo Account Batch | Account file creation/seeding |
+| CBACT02C | CardDemo Account Batch | Account file data refresh |
+| CBACT03C | CardDemo Account Batch | Account file record update |
+| CBACT04C | CardDemo Account Batch | Account file maintenance utility |
 | CBCUS01C | CardDemo Customer Batch | Customer file maintenance |
+| CBEXPORT | CardDemo Data Export | Export VSAM data to sequential file |
+| CBIMPORT | CardDemo Data Import | Import sequential data to VSAM files |
+| CBSTM03A.CBL | CardDemo Statement Batch | Statement generation (part A) |
+| CBSTM03B.CBL | CardDemo Statement Batch | Statement generation (part B) |
 
 ---
 

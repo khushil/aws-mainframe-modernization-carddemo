@@ -1,5 +1,30 @@
 # CardDemo Domain Model
 
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [Domain Model Overview](#domain-model-overview)
+- [Core Domain Entities](#core-domain-entities)
+  - [1. Account (Aggregate Root)](#1-account-aggregate-root)
+  - [2. Customer (Aggregate Root)](#2-customer-aggregate-root)
+  - [3. Card (Entity - Child of Account)](#3-card-entity---child-of-account)
+  - [4. Transaction (Event Entity)](#4-transaction-event-entity)
+  - [5. User (Security Entity)](#5-user-security-entity)
+  - [6. Card Cross-Reference (Junction Entity)](#6-card-cross-reference-junction-entity)
+- [Supporting Entities (Reference Data)](#supporting-entities-reference-data)
+  - [Transaction Category Balance](#transaction-category-balance)
+  - [Disclosure Group (Interest Rates)](#disclosure-group-interest-rates)
+  - [Transaction Type](#transaction-type)
+  - [Transaction Category](#transaction-category)
+- [Value Objects](#value-objects)
+- [Aggregate Boundaries](#aggregate-boundaries)
+- [Data File Mapping](#data-file-mapping)
+- [Entity Lifecycle States](#entity-lifecycle-states)
+  - [Batch Program Inventory](#batch-program-inventory)
+- [Source File References](#source-file-references)
+
+---
+
 ## Executive Summary
 
 This document presents the domain model extracted from the CardDemo COBOL mainframe application. CardDemo is a credit card processing demonstration system that manages accounts, cards, customers, transactions, and user authentication through CICS online transactions and batch processing.
@@ -334,10 +359,15 @@ Configures interest rates by billing group, transaction type, and category.
 ## Value Objects
 
 ### Money
-Represented as signed packed decimal: `PIC S9(10)V99`
+Represented as signed packed decimal with 2 decimal places.
+- Account-level amounts (balances, limits, cycle totals): `PIC S9(10)V99` (from `CVACT01Y.cpy`)
+  - Range: -9,999,999,999.99 to +9,999,999,999.99
+- Transaction-level amounts and category balances: `PIC S9(09)V99` (from `CVTRA05Y.cpy`, `CVTRA01Y.cpy`)
+  - Range: -999,999,999.99 to +999,999,999.99
 - Used for: balances, limits, amounts
 - Precision: 2 decimal places
-- Range: -9,999,999,999.99 to +9,999,999,999.99
+
+> **Note**: The PIC width difference (`S9(10)` vs `S9(09)`) between account and transaction amounts is an intentional design choice in the original COBOL source, not a documentation error.
 
 ### Date
 Represented as: `PIC X(10)` in format `YYYY-MM-DD`
@@ -452,23 +482,56 @@ graph TB
 - **Posted** - Successfully written to transaction file
 - **Rejected** - Failed validation, written to rejects file
 
+### Batch Program Inventory
+
+| Program | Purpose | Primary Data Files |
+|---------|---------|-------------------|
+| CBACT01C.cbl | Account file creation/seeding | ACCTDAT |
+| CBACT02C.cbl | Account file data refresh | ACCTDAT |
+| CBACT03C.cbl | Account file record update | ACCTDAT |
+| CBACT04C.cbl | Account file maintenance utility | ACCTDAT |
+| CBCUS01C.cbl | Customer file maintenance | CUSTDAT |
+| CBTRN01C.cbl | Basic transaction posting | DALYTRAN, TRANSACT |
+| CBTRN02C.cbl | Transaction posting with validation | DALYTRAN, TRANSACT, ACCTDAT, TCATBAL |
+| CBTRN03C.cbl | Interest calculation | ACCTDAT, TCATBAL, DISCGRP |
+| CBEXPORT.cbl | Data export (VSAM to sequential) | All VSAM files |
+| CBIMPORT.cbl | Data import (sequential to VSAM) | All VSAM files |
+| CBSTM03A.CBL | Statement generation (part A) | TRANSACT, ACCTDAT |
+| CBSTM03B.CBL | Statement generation (part B) | TRANSACT, ACCTDAT |
+
 ---
 
 ## Source File References
 
 | Copybook | Purpose | Lines |
 |----------|---------|-------|
-| COCOM01Y.cpy | COMMAREA - Session state contract | 48 |
-| CVACT01Y.cpy | Account record structure | 21 |
-| CVACT02Y.cpy | Card record structure | 15 |
-| CVACT03Y.cpy | Card cross-reference structure | 12 |
-| CVCUS01Y.cpy | Customer record structure | 27 |
-| CSUSR01Y.cpy | User security record structure | 27 |
-| CVTRA01Y.cpy | Transaction category balance | 14 |
-| CVTRA02Y.cpy | Disclosure group (rates) | 14 |
-| CVTRA03Y.cpy | Transaction type | 11 |
-| CVTRA04Y.cpy | Transaction category | 13 |
-| CVTRA05Y.cpy | Transaction record | 22 |
-| CVTRA06Y.cpy | Daily transaction (staging) | 22 |
-| COMEN02Y.cpy | Main menu options | 102 |
-| COADM02Y.cpy | Admin menu options | 63 |
+| COCOM01Y.cpy | COMMAREA - Session state contract | 47 |
+| CVACT01Y.cpy | Account record structure | 20 |
+| CVACT02Y.cpy | Card record structure | 14 |
+| CVACT03Y.cpy | Card cross-reference structure | 11 |
+| CVCUS01Y.cpy | Customer record structure | 26 |
+| CSUSR01Y.cpy | User security record structure | 26 |
+| CVTRA01Y.cpy | Transaction category balance | 13 |
+| CVTRA02Y.cpy | Disclosure group (rates) | 13 |
+| CVTRA03Y.cpy | Transaction type | 10 |
+| CVTRA04Y.cpy | Transaction category | 12 |
+| CVTRA05Y.cpy | Transaction record | 21 |
+| CVTRA06Y.cpy | Daily transaction (staging) | 21 |
+| COMEN02Y.cpy | Main menu options | 101 |
+| COADM02Y.cpy | Admin menu options | 62 |
+| CVCRD01Y.cpy | Card edit working storage (AID keys, navigation, search fields) | 46 |
+| CUSTREC.cpy | Customer record variant (alternate customer data structure) | 26 |
+| CVTRA07Y.cpy | Transaction reporting structures (report headers, detail lines, totals) | 73 |
+| CVEXPORT.cpy | Multi-record export layout (customer, account, transaction, card) | 103 |
+| CODATECN.cpy | Date conversion utilities | 52 |
+| COTTL01Y.cpy | Title line definitions for screen formatting | 27 |
+| CSDAT01Y.cpy | Date formatting utilities | 58 |
+| CSLKPCDY.cpy | Lookup validation data (phone area codes, state codes, ZIP codes) | 1318 |
+| CSMSG01Y.cpy | Common application messages (thank you, invalid key) | 24 |
+| CSMSG02Y.cpy | Additional common messages | 35 |
+| CSSETATY.cpy | BMS attribute setting constants | 30 |
+| CSSTRPFY.cpy | String processing flags and utilities | 85 |
+| CSUTLDPY.cpy | Utility display working storage | 375 |
+| CSUTLDWY.cpy | Utility work area | 89 |
+| COSTM01.CPY | Transaction altered layout for reporting (TRNX-RECORD) | 38 |
+| UNUSED1Y.cpy | Unused (reserved placeholder) | 10 |

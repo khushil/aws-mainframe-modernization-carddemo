@@ -25,7 +25,7 @@
 
 ### Overview
 
-This assessment evaluates the CardDemo mainframe application's readiness for modernization based on code complexity analysis, technical debt inventory, security posture, and architectural patterns. The assessment covers all 29 COBOL programs (19,496 LOC), 29 copybooks (2,748 LOC), 17 BMS screens, and 33 JCL batch jobs.
+This assessment evaluates the CardDemo mainframe application's readiness for modernization based on code complexity analysis, technical debt inventory, security posture, and architectural patterns. The assessment covers all 31 core COBOL programs (44 total including extensions), 30 core copybooks (41 total .cpy), 17 core BMS screens (21 total), and 38 core JCL files (46 total). See [CODEBASE-MANIFEST.md](../appendices/CODEBASE-MANIFEST.md) for canonical counts.
 
 ### Key Findings
 
@@ -399,6 +399,7 @@ Score Range    Classification        CardDemo Status
 | [DOMAIN-MODEL.md](../01-domain-model/DOMAIN-MODEL.md) | Entity definitions and relationships |
 | [BUSINESS-RULES.md](../01-domain-model/BUSINESS-RULES.md) | Complete business rules catalog |
 | [MIGRATION-ROADMAP.md](./MIGRATION-ROADMAP.md) | Phased migration plan |
+| [CODEBASE-MANIFEST.md](../appendices/CODEBASE-MANIFEST.md) | Canonical asset counts (source of truth) |
 
 ---
 

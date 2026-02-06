@@ -39,6 +39,8 @@ flowchart TB
 
     subgraph CICS["CICS Transaction Processing"]
         COPAUA0C["COPAUA0C<br/>Authorization Decision"]
+        COPAUS0C["COPAUS0C<br/>Auth Summary Browse"]
+        COPAUS1C["COPAUS1C<br/>Auth Detail View"]
         COPAUS2C["COPAUS2C<br/>Fraud Reporting"]
         COTRTLIC["COTRTLIC<br/>Transaction Type List"]
         COTRTUPC["COTRTUPC<br/>Transaction Type Update"]
@@ -49,6 +51,16 @@ flowchart TB
     subgraph Batch["Batch Processing"]
         CBPAUP0C["CBPAUP0C<br/>Purge Expired Auth"]
         COBTUPDT["COBTUPDT<br/>Batch Transaction Type Update"]
+        PAUDBUNL["PAUDBUNL<br/>IMS DB Unload"]
+        DBUNLDGS["DBUNLDGS<br/>IMS GSAM Unload"]
+        PAUDBLOD["PAUDBLOD<br/>IMS DB Load"]
+    end
+
+    subgraph SeqFiles["Sequential Files"]
+        ROOTFILE["ROOT File<br/>(PAUTSUM0 segments)"]
+        CHILDFILE["CHILD File<br/>(PAUTDTL1 segments)"]
+        GSAMROOT["GSAM ROOT<br/>(PASFLDBD)"]
+        GSAMCHILD["GSAM CHILD<br/>(PADFLDBD)"]
     end
 
     subgraph IMS["IMS Database"]
@@ -81,8 +93,31 @@ flowchart TB
     COTRTUPC --> TRTYPE
     COBTUPDT --> TRTYPE
 
+    COPAUS0C --> PAUTSUM0
+    COPAUS0C --> PAUTDTL1
+    COPAUS0C --> ACCTDAT
+    COPAUS0C --> CCXREF
+    COPAUS1C --> PAUTSUM0
+    COPAUS1C --> PAUTDTL1
+    COPAUS1C -.->|LINK| COPAUS2C
+
     CBPAUP0C --> PAUTSUM0
     CBPAUP0C --> PAUTDTL1
+
+    PAUDBUNL --> PAUTSUM0
+    PAUDBUNL --> PAUTDTL1
+    PAUDBUNL --> ROOTFILE
+    PAUDBUNL --> CHILDFILE
+
+    DBUNLDGS --> PAUTSUM0
+    DBUNLDGS --> PAUTDTL1
+    DBUNLDGS --> GSAMROOT
+    DBUNLDGS --> GSAMCHILD
+
+    PAUDBLOD --> PAUTSUM0
+    PAUDBLOD --> PAUTDTL1
+    ROOTFILE --> PAUDBLOD
+    CHILDFILE --> PAUDBLOD
 
     MQ_IN --> COACCT01
     COACCT01 --> ACCTDAT
@@ -102,13 +137,15 @@ flowchart TB
 
 **Purpose**: Reference table for transaction type codes
 
-**DDL Definition** (from `DCLTRTYP.dcl`):
+**DDL Definition** (from `app/app-transaction-type-db2/ddl/TRNTYPE.ddl` via `DB2CREAT.ctl`):
 ```sql
 CREATE TABLE CARDDEMO.TRANSACTION_TYPE
 ( TR_TYPE          CHAR(2) NOT NULL,
-  TR_DESCRIPTION   VARCHAR(50) NOT NULL
-);
+  TR_DESCRIPTION   VARCHAR(50) NOT NULL,
+  PRIMARY KEY(TR_TYPE))
 ```
+
+**DCLGEN Copybook** (from `app/app-transaction-type-db2/dcl/DCLTRTYP.dcl`): Generated COBOL host variable declarations used in embedded SQL programs. DCLGEN output contains both an `EXEC SQL DECLARE TABLE` statement and the corresponding COBOL `01` level structure.
 
 **COBOL Host Variable Declaration**:
 ```cobol
@@ -130,14 +167,16 @@ CREATE TABLE CARDDEMO.TRANSACTION_TYPE
 
 **Purpose**: Transaction type categorization for reporting
 
-**DDL Definition** (from `DCLTRCAT.dcl`):
+**DDL Definition** (from `app/app-transaction-type-db2/ddl/TRNTYCAT.ddl` via `DB2CREAT.ctl`):
 ```sql
 CREATE TABLE CARDDEMO.TRANSACTION_TYPE_CATEGORY
 ( TRC_TYPE_CODE      CHAR(2) NOT NULL,
   TRC_TYPE_CATEGORY  CHAR(4) NOT NULL,
-  TRC_CAT_DATA       VARCHAR(50) NOT NULL
-);
+  TRC_CAT_DATA       VARCHAR(50) NOT NULL,
+  PRIMARY KEY(TRC_TYPE_CODE, TRC_TYPE_CATEGORY))
 ```
+
+**DCLGEN Copybook** (from `app/app-transaction-type-db2/dcl/DCLTRCAT.dcl`): Generated COBOL host variable declarations for embedded SQL.
 
 **COBOL Host Variable Declaration**:
 ```cobol
@@ -155,7 +194,7 @@ CREATE TABLE CARDDEMO.TRANSACTION_TYPE_CATEGORY
 
 **Purpose**: Track authorization fraud reports with full transaction context
 
-**DDL Definition** (from `AUTHFRDS.dcl`):
+**DDL Definition** (from `app/app-authorization-ims-db2-mq/ddl/AUTHFRDS.ddl`; DCLGEN copybook in `app/app-authorization-ims-db2-mq/dcl/AUTHFRDS.dcl`):
 ```sql
 CREATE TABLE CARDDEMO.AUTHFRDS
 ( CARD_NUM                CHAR(16) NOT NULL,
@@ -389,6 +428,53 @@ DBPAUTP0 (HIDAM - Hierarchical Indexed Direct Access Method)
     ├── Key: AUTH_DATE_9C + AUTH_TIME_9C (Composite)
     └── Contains: Full authorization transaction details
 ```
+
+### IMS DBD/PSB Definitions
+
+The IMS database structure is formally defined by **DBD** (Database Definition) and **PSB** (Program Specification Block) definitions in `app/app-authorization-ims-db2-mq/ims/`. These confirm the database structure described above and define access permissions.
+
+#### Database Definitions (DBD)
+
+| DBD File | DBD Name | Access Method | Storage | Purpose |
+|----------|----------|---------------|---------|---------|
+| `DBPAUTP0.dbd` | DBPAUTP0 | HIDAM,VSAM | DD: DDPAUTP0 (4096 byte blocks) | Primary authorization database |
+| `DBPAUTX0.dbd` | DBPAUTX0 | INDEX,VSAM | DD: DDPAUTX0 (4096 byte blocks) | Secondary index for DBPAUTP0 |
+| `PASFLDBD.DBD` | PASFLDBD | GSAM,BSAM | DD: PASFILIP/PASFILOP | GSAM file for root segment unload (RECFM=F, LRECL=100) |
+| `PADFLDBD.DBD` | PADFLDBD | GSAM,BSAM | DD: PADFILIP/PADFILOP | GSAM file for child segment unload (RECFM=F, LRECL=200) |
+
+**DBPAUTP0 Structure** (from `DBPAUTP0.dbd`):
+- Root segment `PAUTSUM0`: 100 bytes, key field `ACCNTID` at position 1, length 6, type Packed (P). Uses TWINBWD pointer for bidirectional twin chain traversal.
+- Child segment `PAUTDTL1`: 200 bytes, parent=PAUTSUM0, key field `PAUT9CTS` at position 1, length 8, type Character (C).
+- Has `LCHILD` link to index segment `PAUTINDX` in `DBPAUTX0`.
+
+**DBPAUTX0 Structure** (from `DBPAUTX0.dbd`):
+- Index segment `PAUTINDX`: 6 bytes, key field `INDXSEQ` at position 1, length 6, type Packed (P). Frequency estimate: 100,000 entries.
+- `LCHILD` points back to `PAUTSUM0` in `DBPAUTP0`, indexing on `ACCNTID`. This provides direct keyed access to authorization summaries by account ID.
+
+#### Program Specification Blocks (PSB)
+
+| PSB File | PSB Name | Language | PCBs | Processing Options | Used By |
+|----------|----------|----------|------|-------------------|---------|
+| `PSBPAUTB.psb` | PSBPAUTB | COBOL | 1 DB PCB (DBPAUTP0) | `AP` (All Processing: GISRD) | COPAUA0C, COPAUS0C, COPAUS1C, CBPAUP0C, PAUDBLOD |
+| `PSBPAUTL.psb` | PSBPAUTL | ASSEM | 1 DB PCB (DBPAUTP0) | `L` (Load only: ISRT) | Initial database load utility |
+| `PAUTBUNL.PSB` | PAUTBUNL | COBOL | 1 DB PCB (DBPAUTP0) | `GOTP` (Get/read only) | PAUDBUNL (sequential unload) |
+| `DLIGSAMP.PSB` | DLIGSAMP | COBOL | 1 DB PCB + 2 GSAM PCBs | `GOTP` (DB) + `LS` (GSAM) | DBUNLDGS (GSAM unload) |
+
+**Processing Option Codes**:
+
+| Code | Meaning |
+|------|---------|
+| `A` | All processing (Get, Insert, Replace, Delete) |
+| `AP` | All processing including path calls |
+| `G` | Get (read) only |
+| `GOTP` | Get, path call, with position |
+| `I` | Insert |
+| `R` | Replace |
+| `D` | Delete |
+| `L` | Load (initial database load) |
+| `LS` | Load Sequential (GSAM output) |
+
+**Segment Sensitivity**: All PSBs define sensitivity to both `PAUTSUM0` (root) and `PAUTDTL1` (child of PAUTSUM0), meaning every program can navigate both levels of the hierarchy. The DLIGSAMP PSB additionally includes two GSAM PCBs for PASFLDBD and PADFLDBD, enabling the DBUNLDGS program to simultaneously read from the IMS database and write to GSAM sequential files.
 
 ---
 
@@ -651,6 +737,89 @@ IF PSB-SCHEDULED-MORE-THAN-ONCE
         NODHABEND
    END-EXEC
 END-IF
+```
+
+---
+
+### Batch DL/I API: CBLTDLI Call Interface
+
+The patterns above (Patterns 1-10) use the **EXEC DLI** syntax, which is the CICS/DL/I interface for online programs. The batch IMS programs (PAUDBUNL, DBUNLDGS, PAUDBLOD) use a distinct API: the **CBLTDLI** call-level interface. This is a materially different pattern for modernization because it uses explicit PCB masks in the LINKAGE SECTION and passes SSA (Segment Search Argument) structures as separate data items.
+
+**Key Differences**:
+
+| Aspect | EXEC DLI (Online) | CBLTDLI (Batch) |
+|--------|-------------------|-----------------|
+| Syntax | `EXEC DLI GU USING PCB(n) SEGMENT(name) INTO(area) WHERE(key=value) END-EXEC` | `CALL 'CBLTDLI' USING func-code pcb-mask io-area ssa` |
+| PCB Reference | By ordinal number `PCB(n)` | By explicit PCB mask variable in LINKAGE SECTION |
+| SSA Handling | `WHERE` clause embedded in EXEC DLI | Separate SSA data structure passed as parameter |
+| Status Code | `DIBSTAT` | PCB status field (e.g., `PAUT-PCB-STATUS`) |
+| Program Entry | Standard CICS program entry | `PROCEDURE DIVISION USING pcb-list` with `ENTRY 'DLITCBL' USING pcb-list` |
+| PSB Scheduling | `EXEC DLI SCHD PSB(name)` | Provided by IMS region controller (DFSRRC00) |
+
+#### Batch Pattern: Unqualified GN with CBLTDLI (PAUDBUNL.CBL:213-216)
+
+```cobol
+CALL 'CBLTDLI'            USING  FUNC-GN
+                              PAUTBPCB
+                              PENDING-AUTH-SUMMARY
+                              ROOT-UNQUAL-SSA.
+```
+
+Where `ROOT-UNQUAL-SSA` is defined as:
+```cobol
+01 ROOT-UNQUAL-SSA.
+   05 FILLER                 PIC X(08) VALUE 'PAUTSUM0'.
+   05 FILLER                 PIC X(01) VALUE ' '.
+```
+
+#### Batch Pattern: GNP with CBLTDLI (PAUDBUNL.CBL:257-260)
+
+```cobol
+CALL 'CBLTDLI'            USING  FUNC-GNP
+                              PAUTBPCB
+                              PENDING-AUTH-DETAILS
+                              CHILD-UNQUAL-SSA.
+```
+
+#### Batch Pattern: ISRT to GSAM (DBUNLDGS.CBL:302-304)
+
+```cobol
+CALL 'CBLTDLI'       USING  FUNC-ISRT
+                              PASFLPCB
+                              PENDING-AUTH-SUMMARY.
+```
+
+GSAM (Generalized Sequential Access Method) PCBs are used to write IMS data to sequential files. DBUNLDGS uses two GSAM PCBs: `PASFLPCB` for root segments and `PADFLPCB` for child segments.
+
+#### Batch Pattern: Qualified SSA with CBLTDLI (PAUDBLOD.CBL:296-299)
+
+```cobol
+CALL 'CBLTDLI'       USING  FUNC-GU
+                              PAUTBPCB
+                              PENDING-AUTH-SUMMARY
+                              ROOT-QUAL-SSA.
+```
+
+Where `ROOT-QUAL-SSA` includes a key qualification:
+```cobol
+01 ROOT-QUAL-SSA.
+   05 QUAL-SSA-SEG-NAME      PIC X(08) VALUE 'PAUTSUM0'.
+   05 FILLER                 PIC X(01) VALUE '('.
+   05 QUAL-SSA-KEY-FIELD     PIC X(08) VALUE 'ACCNTID '.
+   05 QUAL-SSA-REL-OPER      PIC X(02) VALUE 'EQ'.
+   05 QUAL-SSA-KEY-VALUE     PIC S9(11) COMP-3.
+   05 FILLER                 PIC X(01) VALUE ')'.
+```
+
+This is a qualified SSA that specifies a key value for direct segment retrieval, equivalent to the `WHERE (ACCNTID = value)` clause in EXEC DLI syntax.
+
+#### Batch Pattern: ISRT with CBLTDLI (PAUDBLOD.CBL:321-324)
+
+```cobol
+CALL 'CBLTDLI' USING  FUNC-ISRT
+                       PAUTBPCB
+                       PENDING-AUTH-DETAILS
+                       CHILD-UNQUAL-SSA.
 ```
 
 ---
@@ -963,6 +1132,145 @@ sequenceDiagram
 
 ---
 
+## Program-Level Integration Pattern Details
+
+### COPAUS0C - Pending Authorization Summary List (CICS + IMS)
+
+**Source**: `app/app-authorization-ims-db2-mq/cbl/COPAUS0C.cbl` (1,032 lines)
+**Transaction**: CPVS
+**BMS Map**: COPAU00 (COPAU0A)
+**PSB**: PSBPAUTB (PROCOPT=AP)
+
+**Integration Pattern**: CICS online program that provides a paginated browse of pending authorization detail records for a given account. Uses IMS DL/I via `EXEC DLI` syntax.
+
+**DL/I Calls**:
+| Call | Segment | Purpose | Location |
+|------|---------|---------|----------|
+| `SCHD` PSB(PSBPAUTB) | - | Schedule PSB with NODHABEND; handles TC status by TERM + re-SCHD | Lines 1001-1031 |
+| `GU` PAUTSUM0 WHERE(ACCNTID=PA-ACCT-ID) | Root | Position to account's authorization summary | Lines 973-977 |
+| `GNP` PAUTDTL1 | Child | Browse next authorization detail under parent | Lines 461-464 |
+| `GNP` PAUTDTL1 WHERE(PAUT9CTS=key) | Child | Reposition to specific auth detail by composite key | Lines 493-497 |
+
+**VSAM Reads**: CXACAIX (card cross-reference by account), ACCTDAT (account master), CUSTDAT (customer master).
+
+**Screen Flow**: Displays 5 authorization details per page with PF7/PF8 pagination. Selecting a record with 'S' invokes XCTL to COPAUS1C for detail view.
+
+**Key Pattern - IMS Pagination with COMMAREA Key Tracking**:
+The program tracks page positions using an array of authorization keys (`CDEMO-CPVS-PAUKEY-PREV-PG`, 20 entries) stored in the CICS COMMAREA. This enables PF7 (page back) by saving the first key of each page and re-issuing a qualified GNP to reposition.
+
+---
+
+### COPAUS1C - Authorization Detail View with Fraud Toggle (CICS + IMS)
+
+**Source**: `app/app-authorization-ims-db2-mq/cbl/COPAUS1C.cbl` (604 lines)
+**Transaction**: CPVD
+**BMS Map**: COPAU01 (COPAU1A)
+**PSB**: PSBPAUTB (PROCOPT=AP)
+
+**Integration Pattern**: CICS online program that displays a single authorization detail record and allows fraud status toggling. Uses IMS DL/I (`EXEC DLI`) for read/update, CICS LINK for DB2 fraud reporting, and CICS SYNCPOINT/ROLLBACK for transaction integrity.
+
+**DL/I Calls**:
+| Call | Segment | Purpose | Location |
+|------|---------|---------|----------|
+| `SCHD` PSB(PSBPAUTB) | - | Schedule PSB | Lines 574-603 |
+| `GU` PAUTSUM0 WHERE(ACCNTID=PA-ACCT-ID) | Root | Position to account summary | Lines 439-443 |
+| `GNP` PAUTDTL1 WHERE(PAUT9CTS=key) | Child | Fetch specific auth detail by composite key | Lines 465-469 |
+| `GNP` PAUTDTL1 (unqualified) | Child | Read next auth detail (PF8 navigation) | Lines 495-498 |
+| `REPL` PAUTDTL1 | Child | Update auth detail after fraud toggle | Lines 525-528 |
+
+**Cross-Program Integration**:
+- **PF5 (Fraud Toggle)**: Toggles `PA-AUTH-FRAUD` between 'F' (fraud confirmed) and 'R' (fraud removed). Then uses `EXEC CICS LINK PROGRAM(COPAUS2C)` to invoke the fraud reporting program, passing fraud data via a COMMAREA structure.
+- COPAUS2C inserts/updates the `AUTHFRDS` DB2 table (see DB2 Pattern 4/5 above).
+- On success, COPAUS1C issues `EXEC DLI REPL` to update the IMS detail segment, then `EXEC CICS SYNCPOINT`.
+- On failure, issues `EXEC CICS SYNCPOINT ROLLBACK` to roll back both DB2 and IMS changes.
+
+**Decline Reason Lookup Table** (lines 57-73): Contains 10 entries mapping reason codes to descriptions (e.g., 3100=INVALID CARD, 4100=INSUFFICNT FUND, 5100=CARD FRAUD, 5300=LOST CARD). This extends the response code table documented in the MQ section.
+
+---
+
+### PAUDBUNL - IMS Database Unload to Sequential Files (Batch + IMS)
+
+**Source**: `app/app-authorization-ims-db2-mq/cbl/PAUDBUNL.CBL` (317 lines)
+**PSB**: PAUTBUNL (PROCOPT=GOTP -- read only)
+**API**: CBLTDLI (batch call-level DL/I interface)
+
+**Integration Pattern**: Batch program that reads the entire IMS DBPAUTP0 database sequentially and writes root and child segments to two separate sequential output files. This is an **IMS database unload utility** for data extraction/backup.
+
+**DL/I Calls (via CBLTDLI)**:
+| Call | PCB | SSA | Purpose | Location |
+|------|-----|-----|---------|----------|
+| `GN` | PAUTBPCB | ROOT-UNQUAL-SSA (PAUTSUM0) | Read next root segment | Lines 213-216 |
+| `GNP` | PAUTBPCB | CHILD-UNQUAL-SSA (PAUTDTL1) | Read next child under current root | Lines 257-260 |
+
+**Output Files**:
+| DD Name | File | Record Format | Content |
+|---------|------|---------------|---------|
+| OUTFIL1 | OPFILE1 | FB, LRECL=100 | Root segments (PAUTSUM0 -- authorization summary) |
+| OUTFIL2 | OPFILE2 | FB, LRECL=206 | Child segments prefixed with root key (6-byte COMP-3 PA-ACCT-ID + 200-byte PAUTDTL1) |
+
+**Processing Logic**: Iterates root segments with GN until GB (end of database). For each root, iterates child segments with GNP until GE (end of parent). Writes each root to OPFILE1 and each child (prefixed with the parent's account key) to OPFILE2.
+
+**PCB Entry**: Uses `PROCEDURE DIVISION USING PAUTBPCB` with `ENTRY 'DLITCBL' USING PAUTBPCB`. The PCB mask is defined in the LINKAGE SECTION via `COPY PAUTBPCB`.
+
+---
+
+### DBUNLDGS - IMS Database Unload to GSAM Files (Batch + IMS + GSAM)
+
+**Source**: `app/app-authorization-ims-db2-mq/cbl/DBUNLDGS.CBL` (366 lines)
+**PSB**: DLIGSAMP (1 DB PCB with PROCOPT=GOTP + 2 GSAM PCBs with PROCOPT=LS)
+**API**: CBLTDLI (batch call-level DL/I interface)
+
+**Integration Pattern**: Batch program that reads the IMS database and writes to **GSAM** (Generalized Sequential Access Method) files instead of standard sequential files. GSAM is an IMS-managed sequential access method that uses IMS PCBs for I/O, allowing the output to be managed within the IMS framework.
+
+**DL/I Calls (via CBLTDLI)**:
+| Call | PCB | SSA | Purpose | Location |
+|------|-----|-----|---------|----------|
+| `GN` | PAUTBPCB | ROOT-UNQUAL-SSA | Read next root segment from DB | Lines 222-225 |
+| `GNP` | PAUTBPCB | CHILD-UNQUAL-SSA | Read next child segment from DB | Lines 267-270 |
+| `ISRT` | PASFLPCB | (none) | Write root segment to GSAM summary file | Lines 302-304 |
+| `ISRT` | PADFLPCB | (none) | Write child segment to GSAM detail file | Lines 321-323 |
+
+**GSAM PCBs**:
+| PCB | DBD | DD Names | Record Size | Purpose |
+|-----|-----|----------|-------------|---------|
+| PASFLPCB | PASFLDBD | PASFILIP (input) / PASFILOP (output) | 100 bytes | Root segment GSAM file |
+| PADFLPCB | PADFLDBD | PADFILIP (input) / PADFILOP (output) | 200 bytes | Child segment GSAM file |
+
+**Key Difference from PAUDBUNL**: Instead of using COBOL `WRITE` statements to sequential files, DBUNLDGS uses `CALL 'CBLTDLI' USING FUNC-ISRT` with GSAM PCBs. This keeps all I/O within the IMS framework, which is significant for environments where IMS logging and recovery are required for output files.
+
+---
+
+### PAUDBLOD - IMS Database Load from Sequential Files (Batch + IMS)
+
+**Source**: `app/app-authorization-ims-db2-mq/cbl/PAUDBLOD.CBL` (369 lines)
+**PSB**: PSBPAUTB (PROCOPT=AP -- all processing)
+**API**: CBLTDLI (batch call-level DL/I interface)
+
+**Integration Pattern**: Batch program that reads sequential files (produced by PAUDBUNL) and loads them into the IMS database. This is the **IMS database reload utility**, the counterpart to PAUDBUNL.
+
+**DL/I Calls (via CBLTDLI)**:
+| Call | PCB | SSA | Purpose | Location |
+|------|-----|-----|---------|----------|
+| `ISRT` | PAUTBPCB | ROOT-UNQUAL-SSA | Insert root segment into IMS database | Lines 244-247 |
+| `GU` | PAUTBPCB | ROOT-QUAL-SSA (with key) | Position to parent before inserting child | Lines 296-299 |
+| `ISRT` | PAUTBPCB | CHILD-UNQUAL-SSA | Insert child segment under positioned parent | Lines 321-324 |
+
+**Input Files**:
+| DD Name | File | Content |
+|---------|------|---------|
+| INFILE1 | Root segment file | 100-byte root records (PAUTSUM0) |
+| INFILE2 | Child segment file | 206-byte records (6-byte root key + 200-byte child PAUTDTL1) |
+
+**Processing Logic**:
+1. Phase 1: Reads INFILE1 sequentially. For each root record, issues CBLTDLI ISRT with unqualified SSA to insert root segments. Handles 'II' (duplicate) by logging and continuing.
+2. Phase 2: Reads INFILE2 sequentially. For each child record, extracts the root key, issues CBLTDLI GU with a **qualified SSA** (ROOT-QUAL-SSA with ACCNTID EQ key-value) to position to the parent, then issues CBLTDLI ISRT to insert the child segment.
+
+**Qualified SSA Pattern**: This is the only program that uses a qualified SSA with CBLTDLI. The SSA structure includes the segment name, opening parenthesis, key field name, relational operator, key value, and closing parenthesis -- all in a single 01-level structure.
+
+**PCB Entry**: Uses `PROCEDURE DIVISION USING IO-PCB-MASK PAUTBPCB` -- note that PAUDBLOD receives an I/O PCB mask (for IMS system services) in addition to the database PCB.
+
+---
+
 ## COBOL-to-Modern Type Mappings
 
 ### DB2 Types
@@ -1102,6 +1410,48 @@ API Gateway → Lambda (Full Processing) → DynamoDB
 
 ---
 
+## DB2 Utility Control Files (CTL)
+
+The `app/app-transaction-type-db2/ctl/` directory contains 7 DB2 utility control card files. These are input to DB2 batch utilities and define database creation, data loading, and plan management operations.
+
+| CTL File | Purpose | Utility | Key Operations |
+|----------|---------|---------|----------------|
+| `DB2CREAT.ctl` | Create CARDDEMO database, tablespaces, tables, and indexes | DSNTIAD | Creates DATABASE CARDDEMO; TABLESPACE CARDSPC1 + CARDSTTC; TABLE TRANSACTION_TYPE + TRANSACTION_TYPE_CATEGORY with PKs and unique indexes; FOREIGN KEY on TRANSACTION_TYPE_CATEGORY referencing TRANSACTION_TYPE; GRANTs to PUBLIC |
+| `DB2LTTYP.ctl` | Load TRANSACTION_TYPE reference data | DSNTEP4 | INSERT of 7 transaction types (01=PURCHASE through 07=ADJUSTMENT) using SELECT...UNION ALL from SYSIBM.SYSDUMMY1 |
+| `DB2LTCAT.ctl` | Load TRANSACTION_TYPE_CATEGORY reference data | DSNTEP4 | INSERT of 18 category records (e.g., 01/0001=REGULAR SALES DRAFT, 02/0001=CASH PAYMENT) using SELECT...UNION ALL |
+| `DB2FREE.ctl` | Free DB2 plans and packages | DSN FREE | Frees PLAN(CARDDEMO), PLAN(COTRTLIC), PACKAGE(COTRTLIC.*) on subsystem DAZ1 |
+| `DB2TEP41.ctl` | Run DSNTEP4 dynamic SQL processor | DSN RUN | Executes DSNTEP4 with PARMS('/ALIGN(LHS) MIXED') for processing SQL input |
+| `DB2TIAD1.ctl` | Run DSNTIAD batch SQL processor | DSN RUN | Executes DSNTIAD with PARMS('RC0') for DDL execution |
+| `REPROCT.ctl` | IDCAMS REPRO utility control | IDCAMS | `REPRO INFILE(FILEIN) OUTFILE(FILEOUT)` -- copies dataset contents |
+
+**Execution Context**: These CTL files are referenced by the CREADB21.jcl job, which orchestrates DB2 database creation in a multi-step sequence: free existing plans (DB2FREE) -> create database objects (DB2CREAT via DB2TIAD1) -> load transaction types (DB2LTTYP via DB2TEP41) -> load categories (DB2LTCAT via DB2TEP41).
+
+---
+
+## Extension JCL Files
+
+Eight JCL files across the extension directories define batch job execution for IMS and DB2 operations.
+
+### Authorization Extension JCL (`app/app-authorization-ims-db2-mq/jcl/`)
+
+| JCL File | Job Name | Purpose | Program/Utility | Key Details |
+|----------|----------|---------|-----------------|-------------|
+| `CBPAUP0J.jcl` | CBPAUP0J | Execute IMS batch purge of expired authorizations | DFSRRC00 -> CBPAUP0C (BMP mode, PSB=PSBPAUTB) | Runs as IMS BMP (Batch Message Processing); accepts parameters via SYSIN (expiry days, checkpoint frequency, debug flag) |
+| `DBPAUTP0.jcl` | DBPAUTP0 | IMS database unload using DFSURGU0 utility | DFSRRC00 -> DFSURGU0 (ULU mode, DBD=DBPAUTP0) | Uses IMS HD Reorganization Unload utility; outputs variable-length records (LRECL=27990, RECFM=VB); references DDPAUTP0 and DDPAUTX0 DDs for database and index |
+| `UNLDPADB.JCL` | UNLDPADB | IMS database unload to sequential files via custom program | DFSRRC00 -> PAUDBUNL (DLI mode, PSB=PAUTBUNL) | Step 0: deletes previous output; Step 1: runs PAUDBUNL with OUTFIL1 (LRECL=100, FB) for root segments and OUTFIL2 (LRECL=206, FB) for child segments |
+| `UNLDGSAM.JCL` | UNLDGSAM | IMS database unload to GSAM files via custom program | DFSRRC00 -> DBUNLDGS (DLI mode, PSB=DLIGSAMP) | Runs DBUNLDGS with GSAM output DDs: PASFILOP (root GSAM) and PADFILOP (child GSAM); also references DDPAUTP0/DDPAUTX0 for IMS database access |
+| `LOADPADB.JCL` | LOADPADB | IMS database load from sequential files via custom program | DFSRRC00 -> PAUDBLOD (BMP mode, PSB=PSBPAUTB) | Reads INFILE1 (root segments) and INFILE2 (child segments) produced by UNLDPADB; uses PSBPAUTB with AP processing option for insert capability |
+
+### Transaction Type Extension JCL (`app/app-transaction-type-db2/jcl/`)
+
+| JCL File | Job Name | Purpose | Program/Utility | Key Details |
+|----------|----------|---------|-----------------|-------------|
+| `CREADB21.jcl` | CREADB2 | Create and populate DB2 CARDDEMO database | IKJEFT01 (TSO) -> multiple DB2 utilities | Multi-step: FREEPLN (free plans via DB2FREE.ctl) -> CRCRDDB (create DB via DB2CREAT.ctl/DB2TIAD1.ctl) -> RUNTEP2 (load types via DB2LTTYP.ctl/DB2TEP41.ctl) -> LDTCCAT (load categories via DB2LTCAT.ctl/DB2TEP41.ctl) |
+| `MNTTRDB2.jcl` | MNTTRDB2 | Batch maintenance of DB2 TRANSACTION_TYPE table | IKJEFT01 -> COBTUPDT (PLAN=CARDDEMO) | Input file format: Col 1 = A(dd)/D(elete)/U(pdate)/*(comment); Cols 2-3 = type code; Cols 4-53 = description |
+| `TRANEXTR.jcl` | TRANEXTR | Extract DB2 reference data to sequential files | IKJEFT01 -> DSNTIAUL | Multi-step: backup previous files to GDG -> delete old files -> extract TRANSACTION_TYPE to TRANTYPE.PS -> extract TRANSACTION_TYPE_CATEGORY to TRANCATG.PS; runs daily to feed transaction report generation |
+
+---
+
 ## Cross-References
 
 | Reference | Document | Relationship |
@@ -1117,16 +1467,21 @@ API Gateway → Lambda (Full Processing) → DynamoDB
 
 ### Programs Analyzed
 
-| Program | Location | Integration Types |
-|---------|----------|-------------------|
-| COPAUA0C | `app/app-authorization-ims-db2-mq/cbl/` | IMS + MQ + VSAM |
-| COPAUS2C | `app/app-authorization-ims-db2-mq/cbl/` | DB2 (fraud) |
-| CBPAUP0C | `app/app-authorization-ims-db2-mq/cbl/` | IMS (batch) |
-| COTRTLIC | `app/app-transaction-type-db2/cbl/` | DB2 (cursors) |
-| COTRTUPC | `app/app-transaction-type-db2/cbl/` | DB2 (CRUD) |
-| COBTUPDT | `app/app-transaction-type-db2/cbl/` | DB2 (batch) |
-| COACCT01 | `app/app-vsam-mq/cbl/` | MQ + VSAM |
-| CODATE01 | `app/app-vsam-mq/cbl/` | MQ |
+| Program | Location | Integration Types | DL/I API |
+|---------|----------|-------------------|----------|
+| COPAUA0C | `app/app-authorization-ims-db2-mq/cbl/` | IMS + MQ + VSAM | EXEC DLI |
+| COPAUS0C | `app/app-authorization-ims-db2-mq/cbl/` | IMS + VSAM (CICS) | EXEC DLI |
+| COPAUS1C | `app/app-authorization-ims-db2-mq/cbl/` | IMS + DB2 via LINK (CICS) | EXEC DLI |
+| COPAUS2C | `app/app-authorization-ims-db2-mq/cbl/` | DB2 (fraud) | N/A |
+| CBPAUP0C | `app/app-authorization-ims-db2-mq/cbl/` | IMS (batch purge) | EXEC DLI |
+| PAUDBUNL | `app/app-authorization-ims-db2-mq/cbl/` | IMS (batch unload to seq files) | CBLTDLI |
+| DBUNLDGS | `app/app-authorization-ims-db2-mq/cbl/` | IMS + GSAM (batch unload to GSAM) | CBLTDLI |
+| PAUDBLOD | `app/app-authorization-ims-db2-mq/cbl/` | IMS (batch load from seq files) | CBLTDLI |
+| COTRTLIC | `app/app-transaction-type-db2/cbl/` | DB2 (cursors) | N/A |
+| COTRTUPC | `app/app-transaction-type-db2/cbl/` | DB2 (CRUD) | N/A |
+| COBTUPDT | `app/app-transaction-type-db2/cbl/` | DB2 (batch) | N/A |
+| COACCT01 | `app/app-vsam-mq/cbl/` | MQ + VSAM | N/A |
+| CODATE01 | `app/app-vsam-mq/cbl/` | MQ | N/A |
 
 ### Copybooks Analyzed
 
@@ -1140,6 +1495,35 @@ API Gateway → Lambda (Full Processing) → DynamoDB
 | DCLTRTYP | `app/app-transaction-type-db2/dcl/` | DB2 transaction type |
 | DCLTRCAT | `app/app-transaction-type-db2/dcl/` | DB2 type category |
 | AUTHFRDS | `app/app-authorization-ims-db2-mq/dcl/` | DB2 fraud tracking |
+
+### IMS Definitions Analyzed
+
+| File | Location | Type | Purpose |
+|------|----------|------|---------|
+| DBPAUTP0.dbd | `app/app-authorization-ims-db2-mq/ims/` | DBD | Primary HIDAM database |
+| DBPAUTX0.dbd | `app/app-authorization-ims-db2-mq/ims/` | DBD | Secondary index |
+| PASFLDBD.DBD | `app/app-authorization-ims-db2-mq/ims/` | DBD | GSAM root segment file |
+| PADFLDBD.DBD | `app/app-authorization-ims-db2-mq/ims/` | DBD | GSAM child segment file |
+| PSBPAUTB.psb | `app/app-authorization-ims-db2-mq/ims/` | PSB | Online + batch (PROCOPT=AP) |
+| PSBPAUTL.psb | `app/app-authorization-ims-db2-mq/ims/` | PSB | Initial load (PROCOPT=L) |
+| PAUTBUNL.PSB | `app/app-authorization-ims-db2-mq/ims/` | PSB | Batch unload (PROCOPT=GOTP) |
+| DLIGSAMP.PSB | `app/app-authorization-ims-db2-mq/ims/` | PSB | GSAM unload (DB+2 GSAM PCBs) |
+
+### DDL and DCLGEN Files Analyzed
+
+**Note on DDL vs DCLGEN**: DDL files (in `ddl/` directories) contain SQL Data Definition Language statements (CREATE TABLE, CREATE INDEX, ALTER TABLE). DCLGEN files (in `dcl/` directories) are output from the DB2 DCLGEN utility -- they contain both an `EXEC SQL DECLARE TABLE` statement and a corresponding COBOL `01`-level host variable structure. Programs INCLUDE the DCLGEN copybook to get both the table declaration and host variables for embedded SQL.
+
+| File | Location | Type | Content |
+|------|----------|------|---------|
+| AUTHFRDS.ddl | `app/app-authorization-ims-db2-mq/ddl/` | DDL | CREATE TABLE CARDDEMO.AUTHFRDS with PRIMARY KEY(CARD_NUM, AUTH_TS) |
+| XAUTHFRD.ddl | `app/app-authorization-ims-db2-mq/ddl/` | DDL | Index definition for AUTHFRDS |
+| TRNTYPE.ddl | `app/app-transaction-type-db2/ddl/` | DDL | CREATE TABLE CARDDEMO.TRANSACTION_TYPE |
+| XTRNTYPE.ddl | `app/app-transaction-type-db2/ddl/` | DDL | Index for TRANSACTION_TYPE |
+| TRNTYCAT.ddl | `app/app-transaction-type-db2/ddl/` | DDL | CREATE TABLE CARDDEMO.TRANSACTION_TYPE_CATEGORY |
+| XTRNTYCAT.ddl | `app/app-transaction-type-db2/ddl/` | DDL | Index for TRANSACTION_TYPE_CATEGORY |
+| AUTHFRDS.dcl | `app/app-authorization-ims-db2-mq/dcl/` | DCLGEN | DECLARE TABLE + COBOL host vars for AUTHFRDS (26 columns) |
+| DCLTRTYP.dcl | `app/app-transaction-type-db2/dcl/` | DCLGEN | DECLARE TABLE + COBOL host vars for TRANSACTION_TYPE |
+| DCLTRCAT.dcl | `app/app-transaction-type-db2/dcl/` | DCLGEN | DECLARE TABLE + COBOL host vars for TRANSACTION_TYPE_CATEGORY |
 
 ---
 

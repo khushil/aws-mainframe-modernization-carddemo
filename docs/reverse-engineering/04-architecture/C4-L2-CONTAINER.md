@@ -12,8 +12,8 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 
 | Container | Technology | Program Count | Purpose |
 |-----------|------------|---------------|---------|
-| **CICS Online Region** | CICS TS / COBOL | 18 core programs | Interactive transaction processing |
-| **Batch Subsystem** | JES2 / JCL / COBOL | 10 programs | Scheduled batch processing |
+| **CICS Online Region** | CICS TS / COBOL | 19 core programs | Interactive transaction processing |
+| **Batch Subsystem** | JES2 / JCL / COBOL | 12 programs | Scheduled batch processing |
 | **BMS Presentation** | BMS Mapsets | 17 mapsets | 3270 terminal screen definitions |
 | **VSAM Data Store** | VSAM KSDS | 6+ files | Primary data persistence |
 
@@ -34,7 +34,7 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 **Technology**: IBM CICS Transaction Server, COBOL
 **Transaction IDs**: CC00, CA00, CM00, CB00, plus feature-specific
 
-**Programs (18 core + 9 extension)**:
+**Programs (19 core + 9 extension)**:
 
 | Program | Transaction | Function | BMS Mapset |
 |---------|-------------|----------|------------|
@@ -56,6 +56,7 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 | COUSR02C | CA00 | User update | COUSR02 |
 | COUSR03C | CA00 | User delete | COUSR03 |
 | COBSWAIT | -- | Wait utility | -- |
+| CSUTLDTC | -- | Date validation utility (CALL) | -- |
 
 **Extension Programs** (in `app-authorization-ims-db2-mq/`):
 
@@ -90,7 +91,7 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 **Technology**: JES2, JCL, COBOL batch programs
 **Execution**: Scheduled via JES2 or on-demand
 
-**Programs (10)**:
+**Programs (12)**:
 
 | Program | Function | Input Files | Output Files |
 |---------|----------|-------------|--------------|
@@ -104,6 +105,8 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 | CBTRN03C | Interest calculation | ACCTDAT, TRANSACT | ACCTDAT |
 | CBEXPORT | Data export (to ASCII) | VSAM files | ASCII files |
 | CBIMPORT | Data import (from ASCII) | ASCII files | VSAM files |
+| CBSTM03A | Statement generation (main) | TRANSACT, CUSTDAT, ACCTDAT, CCXREF | Statement files (text + HTML) |
+| CBSTM03B | Statement generation (file I/O subroutine) | VSAM files | Called by CBSTM03A |
 
 **Batch Job Workflows**:
 
@@ -287,7 +290,7 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 │                                                                             │
 │  ┌───────────────┐    ┌───────────────┐    ┌───────────────────────────┐  │
 │  │    3270       │    │     BMS       │    │        CICS Region        │  │
-│  │  Terminals    │◄──►│  Presentation │◄──►│    (18+ programs)         │  │
+│  │  Terminals    │◄──►│  Presentation │◄──►│    (19+ programs)         │  │
 │  │               │    │  (17 mapsets) │    │                           │  │
 │  └───────────────┘    └───────────────┘    └─────────────┬─────────────┘  │
 │                                                          │                  │
@@ -303,7 +306,7 @@ This document describes the Container (L2) view of the CardDemo mainframe applic
 │  ┌───────────────┐                         │                              │
 │  │    Batch      │─────────────────────────┘           ┌────────────┐    │
 │  │  Subsystem    │                                     │    MQ      │    │
-│  │ (10 programs) │◄───────────────────────────────────►│ [Optional] │    │
+│  │ (12 programs) │◄───────────────────────────────────►│ [Optional] │    │
 │  └───────────────┘                                     └────────────┘    │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────────┘

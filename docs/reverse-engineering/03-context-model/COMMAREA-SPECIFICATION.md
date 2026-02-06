@@ -5,7 +5,7 @@
 The COMMAREA (Communication Area) is the central state contract for the CardDemo CICS application. It provides the mechanism for passing context between programs in a pseudo-conversational environment. This document provides complete field-level documentation of the COMMAREA structure and its role in maintaining application state.
 
 **Source File**: `app/cpy/COCOM01Y.cpy`
-**Record Length**: ~155 bytes
+**Record Length**: 160 bytes
 **Copybook Version**: CardDemo_v1.0-15-g27d6c6f-68
 
 ---
@@ -58,8 +58,8 @@ The COMMAREA (Communication Area) is the central state contract for the CardDemo
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                   CDEMO-MORE-INFO (05)                          │   │
 │  │  ┌───────────────────┬───────────────────────────────────────┐  │   │
-│  │  │ CDEMO-LAST-MAP    │ PIC X(07) - Last displayed map name   │  │   │
-│  │  │ CDEMO-LAST-MAPSET │ PIC X(07) - Last displayed mapset     │  │   │
+│  │  │ CDEMO-LAST-MAP    │ PIC X(7) - Last displayed map name   │  │   │
+│  │  │ CDEMO-LAST-MAPSET │ PIC X(7) - Last displayed mapset     │  │   │
 │  │  └───────────────────┴───────────────────────────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                         │
@@ -276,7 +276,7 @@ This section contains screen/map tracking information.
 | Attribute | Value |
 |-----------|-------|
 | **Level** | 10 |
-| **PIC Clause** | PIC X(07) |
+| **PIC Clause** | PIC X(7) |
 | **Bytes** | 7 |
 | **Purpose** | Last displayed BMS map name |
 | **Valid Values** | BMS map name (e.g., COSGN0A, COMEN1A) |
@@ -287,7 +287,7 @@ This section contains screen/map tracking information.
 | Attribute | Value |
 |-----------|-------|
 | **Level** | 10 |
-| **PIC Clause** | PIC X(07) |
+| **PIC Clause** | PIC X(7) |
 | **Bytes** | 7 |
 | **Purpose** | Last displayed BMS mapset name |
 | **Valid Values** | BMS mapset name (e.g., COSGN00, COMEN01) |

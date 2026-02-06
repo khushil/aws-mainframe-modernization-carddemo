@@ -8,7 +8,7 @@
 | **Last Updated** | 2026-02-05 |
 | **Source Analysis** | RE-002 Data Model Extraction |
 | **Total Entities** | 10 |
-| **Total Fields** | 87 |
+| **Total Fields** | 80 leaf-level fields (87 including group-level items) |
 
 ---
 

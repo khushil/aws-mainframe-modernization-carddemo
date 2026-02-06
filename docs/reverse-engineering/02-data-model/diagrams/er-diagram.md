@@ -19,7 +19,7 @@ erDiagram
     ACCOUNT ||--o{ CARD : "owns"
     CARD ||--o{ TRANSACTION : "generates"
     ACCOUNT ||--o{ TRAN_CAT_BAL : "has balances"
-    DISCLOSURE_GROUP ||--o{ TRAN_CAT_BAL : "defines rates for"
+    DISCLOSURE_GROUP ||--o{ TRAN_CAT_BAL : "defines rates for" %% NOTE: Indirect/processing relationship via ACCOUNT.ACCT-GROUP-ID, not a direct FK
     TRAN_TYPE ||--o{ TRAN_CATEGORY : "contains"
     TRAN_CATEGORY ||--o{ TRANSACTION : "classifies"
     TRAN_CATEGORY ||--o{ TRAN_CAT_BAL : "tracks"

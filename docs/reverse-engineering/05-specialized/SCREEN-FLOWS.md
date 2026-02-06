@@ -15,7 +15,7 @@ This document provides a comprehensive analysis of the CardDemo mainframe applic
 | Form Screens (Data Entry) | 6 |
 | Detail/View Screens | 5 |
 | Menu Screens | 3 |
-| User Journeys Documented | 6 |
+| User Journeys Documented | 7 |
 
 ---
 
@@ -138,8 +138,8 @@ All screens share a consistent header layout:
 2. User Add (Security) → COUSR01C
 3. User Update (Security) → COUSR02C
 4. User Delete (Security) → COUSR03C
-5. Transaction Type List (DB2) → COTRTLIC
-6. Transaction Type Maintenance (DB2) → COTRTUPC
+5. Transaction Type List/Update (Db2) → COTRTLIC
+6. Transaction Type Maintenance (Db2) → COTRTUPC
 
 **Main Menu (COMEN01) Options:**
 1. Account View → COACTVWC
@@ -546,8 +546,10 @@ sequenceDiagram
 | COUSR00 | Continue | Back | - | - | Page Up | Page Down | - |
 | COUSR01 | Add | Back | Clear | - | - | - | Exit |
 | COUSR02 | Fetch | Save&Exit | Clear | Save | - | - | Cancel |
-| COUSR03 | Fetch | Back | Clear | Delete | - | - | - |
+| COUSR03 | Fetch | Back | Clear | Delete | - | - | Cancel |
 | CORPT00 | Continue | Back | - | - | - | - | - |
+
+> **Note:** COUSR01 BMS mapset defines PF12 as a field (`F12=Exit` in the screen footer at `COUSR01.bms:159`), but the COBOL program COUSR01C does not implement PF12 handling. Pressing PF12 falls through to the `WHEN OTHER` branch, which displays "Invalid key pressed." Modernization implementations should decide whether to honor the BMS-displayed PF12=Exit behavior or remove it from the UI.
 
 ---
 
@@ -722,16 +724,48 @@ sequenceDiagram
 **User Type:** Regular User
 **Priority:** Medium
 
-**Flow:** COMEN01 → COCRDLI → COCRDUP
+**Flow:** COMEN01 → COCRDLI → COCRDSLC (detail view) → optionally → COCRDUP (update)
 
 **Steps:**
 1. Select Option 3 "Credit Card List" from Main Menu
 2. (Optional) Enter Account Number or Card Number to filter
 3. View card list (7 cards per page)
-4. Select card for update (card is stored in context)
-5. Select Option 5 "Credit Card Update"
-6. Modify: Name on card, Active status, Expiry date
-7. Press PF5 to save or F12 to cancel
+4. Select a card from the list (selection stored in COMMAREA context)
+5. **Card Detail View (COCRDSLC):** List selection navigates to COCRDSLC which displays card detail fields (account ID, card number, cardholder name, expiry date, status) in read-only mode when arriving from the list. COCRDSLC can also be accessed directly via Main Menu Option 4 "Credit Card View", where the user enters account and card number manually. Press PF3 to return to the calling screen.
+6. **Card Update (COCRDUPC):** Select Option 5 "Credit Card Update" from Main Menu
+7. Modify: Name on card, Active status, Expiry date
+8. Press PF5 to save or F12 to cancel
+
+### 5.7 Journey 7: Transaction Reports
+
+**User Type:** Regular User
+**Priority:** Medium
+
+**Flow:** COMEN01 → Option 9 → CORPT00C (report parameters) → Submit → PF3 → COMEN01
+
+**Steps:**
+1. Select Option 9 "Transaction Reports" from Main Menu
+2. CORPT00C displays the report parameter screen
+3. Select report type by entering a value in one of:
+   - Monthly (current month date range auto-calculated)
+   - Yearly (current year date range auto-calculated)
+   - Custom (requires manual date range entry)
+4. For Custom reports:
+   a. Enter start date (MM, DD, YYYY fields)
+   b. Enter end date (MM, DD, YYYY fields)
+   c. Dates are validated for format and logical correctness via CSUTLDTC utility
+5. Press ENTER to submit
+6. Confirmation step: enter 'Y' in CONFIRM field to proceed, 'N' to cancel
+7. On confirmation, a batch JCL job (TRNRPT00) is submitted via extra-partition TDQ (JOBS queue)
+8. Success message displayed: "{Report type} report submitted for printing ..."
+9. Press PF3 to return to Main Menu (COMEN01C)
+
+**Error Scenarios:**
+- No report type selected: "Select a report type to print report..."
+- Empty date fields (Custom): "Start Date - Month can NOT be empty..." (and similar for each date component)
+- Invalid date values: "Start Date - Not a valid Month..." / "Not a valid date..."
+- Invalid confirmation: '"X" is not a valid value to confirm...'
+- TDQ write failure: "Unable to Write TDQ (JOBS)..."
 
 ---
 
@@ -1055,6 +1089,7 @@ src/
 | BMS Mapsets | `app/bms/` | Screen definitions |
 | COBOL Programs | `app/cbl/CO*.cbl` | Screen logic |
 | Copybooks | `app/cpy/` | Shared structures |
+| BMS Copybooks | `app/cpy-bms/` | 17 BMS-generated copybooks (.CPY) defining symbolic maps for each mapset |
 
 ---
 

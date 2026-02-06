@@ -10,9 +10,9 @@ This document describes the Component (L3) view of the CardDemo mainframe applic
 
 | Container | Component Groups | Total Programs |
 |-----------|------------------|----------------|
-| CICS Online Region | 10 groups | 18 core + 9 extension |
-| Batch Subsystem | 4 groups | 10 programs |
-| **Total** | **14 groups** | **37 programs** |
+| CICS Online Region | 11 groups (incl. Shared Utilities) | 19 core + 9 extension |
+| Batch Subsystem | 5 groups (incl. Statement Processing) | 12 programs |
+| **Total** | **16 groups** | **31 core + 13 extension = 44 programs** |
 
 ---
 
@@ -30,6 +30,7 @@ This document describes the Component (L3) view of the CardDemo mainframe applic
 | Bill Payment | COBIL00C | ACCTDAT, TRANSACT, CCXREF | Payment processing |
 | User Administration | COUSR00C-03C | USRSEC | Security user CRUD |
 | Reports | CORPT00C | TRANSACT | Report generation |
+| Shared Utilities | CSUTLDTC, COBSWAIT | -- | Date validation, batch wait |
 | Authorization [Ext] | COPAUA0C, COPAUS0-2C | IMS/DB2 | Real-time auth |
 | Transaction Type [Ext] | COTRTLIC, COTRTUPC | DB2 | Type maintenance |
 
@@ -285,7 +286,26 @@ COMPUTE ACCT-CURR-BAL = ACCT-CURR-BAL - TRAN-AMT
 
 ---
 
-### 9. Authorization Components [Optional Extension]
+### 9. Shared Utilities Component
+
+| Program | Function | Type | Called By |
+|---------|----------|------|-----------|
+| CSUTLDTC | Date validation utility (CEEDAYS API wrapper) | CICS utility (CALL) | COTRN02C, CORPT00C |
+| COBSWAIT | Batch wait utility (accepts centisecond delay via SYSIN) | Batch utility | JCL WAITSTEP |
+
+**CSUTLDTC** (`app/cbl/CSUTLDTC.cbl`):
+- Validates dates using the LE CEEDAYS API
+- Accepts date string, format string, returns validation result
+- Used by COTRN02C (transaction add) and CORPT00C (reports) for date input validation
+
+**COBSWAIT** (`app/cbl/COBSWAIT.cbl`):
+- Accepts a wait time parameter in centiseconds from SYSIN
+- Calls MVSWAIT to pause execution
+- Used in batch JCL workflows for timing control
+
+---
+
+### 10. Authorization Components [Optional Extension]
 
 **Directory**: `app/app-authorization-ims-db2-mq/cbl/`
 
@@ -298,7 +318,7 @@ COMPUTE ACCT-CURR-BAL = ACCT-CURR-BAL - TRAN-AMT
 
 ---
 
-### 10. Transaction Type Components [Optional Extension]
+### 11. Transaction Type Components [Optional Extension]
 
 **Directory**: `app/app-transaction-type-db2/cbl/`
 
@@ -320,6 +340,7 @@ COMPUTE ACCT-CURR-BAL = ACCT-CURR-BAL - TRAN-AMT
 | Transaction Processing | CBTRN01C-03C | TRANSACT, DALYTRAN | Daily processing |
 | Customer Maintenance | CBCUS01C | CUSTDAT | Customer file operations |
 | Data Exchange | CBEXPORT, CBIMPORT | All files | ASCII/EBCDIC conversion |
+| Statement Processing | CBSTM03A, CBSTM03B | TRANSACT, CCXREF, CUSTDAT, ACCTDAT | Statement generation (text + HTML) |
 
 ---
 
@@ -419,6 +440,39 @@ END-PERFORM
 | Function | Import ASCII data to VSAM |
 | Input | Sequential ASCII files |
 | Output | VSAM files (EBCDIC) |
+
+---
+
+### 5. Statement Processing Components
+
+#### Statement Generation - CBSTM03A
+
+**Source**: `app/cbl/CBSTM03A.CBL`
+
+| Aspect | Details |
+|--------|---------|
+| Function | Generate account statements from transaction data (plain text + HTML) |
+| Input Files | TRANSACT (via CBSTM03B), CCXREF (via CBSTM03B), CUSTDAT (via CBSTM03B), ACCTDAT (via CBSTM03B) |
+| Output Files | STMTFILE (text statements), HTMLFILE (HTML statements) |
+| Subroutine | Calls CBSTM03B for all file I/O operations |
+
+**Key Features**:
+- Mainframe control block addressing (PSA/TCB/TIOT)
+- Uses ALTER and GO TO statements
+- COMP and COMP-3 variables
+- 2-dimensional array for transaction grouping by card
+- Generates both plain text and HTML formatted statements
+
+#### Statement File I/O Subroutine - CBSTM03B
+
+**Source**: `app/cbl/CBSTM03B.CBL`
+
+| Aspect | Details |
+|--------|---------|
+| Function | File handling subroutine for statement generation |
+| Files Managed | TRNXFILE (indexed sequential), XREFFILE (indexed sequential), CUSTFILE (indexed random), ACCTFILE (indexed random) |
+| Interface | Called via CALL 'CBSTM03B' USING linkage area |
+| Operations | Open, Read (sequential + keyed), Close for all 4 files |
 
 ---
 
@@ -523,9 +577,11 @@ Daily Batch Cycle:
 | Bill Payment | `app/cbl/COBIL00C.cbl` |
 | User Administration | `app/cbl/COUSR00C.cbl` - `COUSR03C.cbl` |
 | Reports | `app/cbl/CORPT00C.cbl` |
+| Shared Utilities | `app/cbl/CSUTLDTC.cbl`, `app/cbl/COBSWAIT.cbl` |
 | Authorization [Ext] | `app/app-authorization-ims-db2-mq/cbl/COPAU*.cbl` |
 | Transaction Type [Ext] | `app/app-transaction-type-db2/cbl/COTR*.cbl` |
 | Batch Account | `app/cbl/CBACT01C.cbl` - `CBACT04C.cbl` |
 | Batch Transaction | `app/cbl/CBTRN01C.cbl` - `CBTRN03C.cbl` |
 | Batch Customer | `app/cbl/CBCUS01C.cbl` |
 | Data Exchange | `app/cbl/CBEXPORT.cbl`, `app/cbl/CBIMPORT.cbl` |
+| Statement Processing | `app/cbl/CBSTM03A.CBL`, `app/cbl/CBSTM03B.CBL` |

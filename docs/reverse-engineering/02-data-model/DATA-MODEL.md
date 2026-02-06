@@ -7,7 +7,7 @@
 | **Version** | 1.0 |
 | **Last Updated** | 2026-02-05 |
 | **Source Analysis** | RE-002 Data Model Extraction |
-| **Input Artifacts** | 10 copybooks, 10 JCL definitions, 5 batch programs |
+| **Input Artifacts** | 10 copybooks, 10 JCL definitions, 3 batch programs analyzed in detail |
 
 ---
 
@@ -561,6 +561,52 @@ STRING PARM-DATE,           -- 10 bytes (YYYY-MM-DD)
   DELIMITED BY SIZE
   INTO TRAN-ID              -- 16 bytes total
 ```
+
+---
+
+## 8. Data File Inventory
+
+The following data files are included in the repository for initial data load and testing.
+
+### 8.1 ASCII Data Files (`app/data/ASCII/`)
+
+These are human-readable text-format equivalents of the VSAM data, used for reference and EBCDIC conversion.
+
+| File | Corresponding Entity | Description |
+|------|---------------------|-------------|
+| acctdata.txt | ACCOUNT (ACCTDAT) | Account master records |
+| carddata.txt | CARD (CARDDAT) | Card master records |
+| cardxref.txt | CARD_XREF (CCXREF) | Card-to-account cross-references |
+| custdata.txt | CUSTOMER (CUSTDAT) | Customer master records |
+| dailytran.txt | DALYTRAN | Daily transaction input |
+| discgrp.txt | DISCLOSURE_GROUP (DISCGRP) | Interest rate disclosure groups |
+| tcatbal.txt | TRAN_CAT_BAL (TCATBALF) | Transaction category balances |
+| trancatg.txt | TRAN_CATEGORY (TRANCATG) | Transaction category definitions |
+| trantype.txt | TRAN_TYPE (TRANTYPE) | Transaction type definitions |
+
+**Total: 9 files**
+
+### 8.2 EBCDIC Data Files (`app/data/EBCDIC/`)
+
+These are mainframe-format flat files used by JCL REPRO jobs to load VSAM clusters.
+
+| File | Corresponding Entity | Description |
+|------|---------------------|-------------|
+| AWS.M2.CARDDEMO.ACCDATA.PS | ACCOUNT (ACCTDAT) | Account data (alternate name) |
+| AWS.M2.CARDDEMO.ACCTDATA.PS | ACCOUNT (ACCTDAT) | Account master data |
+| AWS.M2.CARDDEMO.CARDDATA.PS | CARD (CARDDAT) | Card master data |
+| AWS.M2.CARDDEMO.CARDXREF.PS | CARD_XREF (CCXREF) | Card cross-reference data |
+| AWS.M2.CARDDEMO.CUSTDATA.PS | CUSTOMER (CUSTDAT) | Customer master data |
+| AWS.M2.CARDDEMO.DALYTRAN.PS | DALYTRAN | Daily transaction input |
+| AWS.M2.CARDDEMO.DALYTRAN.PS.INIT | DALYTRAN | Empty daily transaction (reset) |
+| AWS.M2.CARDDEMO.DISCGRP.PS | DISCLOSURE_GROUP (DISCGRP) | Disclosure group data |
+| AWS.M2.CARDDEMO.EXPORT.DATA.PS | N/A | Exported data (batch output) |
+| AWS.M2.CARDDEMO.TCATBALF.PS | TRAN_CAT_BAL (TCATBALF) | Transaction category balances |
+| AWS.M2.CARDDEMO.TRANCATG.PS | TRAN_CATEGORY (TRANCATG) | Transaction category definitions |
+| AWS.M2.CARDDEMO.TRANTYPE.PS | TRAN_TYPE (TRANTYPE) | Transaction type definitions |
+| AWS.M2.CARDDEMO.USRSEC.PS | USER_SECURITY (USRSEC) | User security records |
+
+**Total: 13 files**
 
 ---
 

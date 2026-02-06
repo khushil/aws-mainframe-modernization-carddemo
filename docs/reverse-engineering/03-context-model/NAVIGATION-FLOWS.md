@@ -13,6 +13,20 @@ This document maps the complete navigation structure of the CardDemo CICS applic
 | CC00 | COSGN00C | Sign-on Screen | Initial application entry |
 | CA00 | COADM01C | Admin Menu | Post-login (Admin users) |
 | CM00 | COMEN01C | User Menu | Post-login (Regular users) |
+| CU00 | COUSR00C | User List (Browse) | Admin Menu Option 1 |
+| CU01 | COUSR01C | User Add | Admin Menu Option 2 |
+| CU02 | COUSR02C | User Update | Admin Menu Option 3 |
+| CU03 | COUSR03C | User Delete | Admin Menu Option 4 |
+| CAVW | COACTVWC | Account View | User Menu Option 1 |
+| CAUP | COACTUPC | Account Update | User Menu Option 2 |
+| CCLI | COCRDLIC | Credit Card List | User Menu Option 3 |
+| CCDL | COCRDSLC | Credit Card View | User Menu Option 4 |
+| CCUP | COCRDUPC | Credit Card Update | User Menu Option 5 |
+| CT00 | COTRN00C | Transaction List | User Menu Option 6 |
+| CT01 | COTRN01C | Transaction View | User Menu Option 7 |
+| CT02 | COTRN02C | Transaction Add | User Menu Option 8 |
+| CR00 | CORPT00C | Transaction Reports | User Menu Option 9 |
+| CB00 | COBIL00C | Bill Payment | User Menu Option 10 |
 
 ### Transaction Flow
 
@@ -97,7 +111,12 @@ graph TB
     COACTVWC -.->|"PF3"| CM00
     COACTUPC -.->|"PF3"| CM00
     COCRDLIC -.->|"PF3"| CM00
+    COCRDSLC -.->|"PF3"| CM00
+    COCRDUPC -.->|"PF3"| CM00
     COTRN00C -.->|"PF3"| CM00
+    COTRN01C -.->|"PF3"| CM00
+    COTRN02C -.->|"PF3"| CM00
+    CORPT00C -.->|"PF3"| CM00
     COBIL00C -.->|"PF3"| CM00
     CM00 -.->|"PF3"| CC00
 ```
@@ -383,11 +402,11 @@ sequenceDiagram
 | COUSR01 | COUSR1A | COUSR01C | User add |
 | COUSR02 | COUSR2A | COUSR02C | User update |
 | COUSR03 | COUSR3A | COUSR03C | User delete |
-| COACTVW | COACTVWA | COACTVWC | Account view |
-| COACTU1 | COACTU1A | COACTUPC | Account update |
-| COCRDL1 | COCRDL1A | COCRDLIC | Card list |
-| COCRDS1 | COCRDS1A | COCRDSLC | Card search/view |
-| COCRDUP | COCRDU1A | COCRDUPC | Card update |
+| COACTVW | CACTVWA | COACTVWC | Account view |
+| COACTUP | CACTUPA | COACTUPC | Account update |
+| COCRDLI | CCRDLIA | COCRDLIC | Card list |
+| COCRDSL | CCRDSLA | COCRDSLC | Card search/view |
+| COCRDUP | CCRDUPA | COCRDUPC | Card update |
 | COTRN00 | COTRN0A | COTRN00C | Transaction list |
 | COTRN01 | COTRN1A | COTRN01C | Transaction view |
 | COTRN02 | COTRN2A | COTRN02C | Transaction add |

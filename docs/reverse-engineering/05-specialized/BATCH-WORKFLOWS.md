@@ -29,14 +29,19 @@ This document provides a comprehensive analysis of the JCL batch workflows in th
 
 | Category | Count | Purpose |
 |----------|-------|---------|
-| VSAM File Definition | 10 | Create/populate VSAM clusters |
+| VSAM File Definition | 11 | Create/populate VSAM clusters |
 | GDG Base Definition | 4 | Define generation data groups |
 | Transaction Processing | 5 | Core business processing |
+| Statement Generation | 1 | Create account statements |
 | Reporting | 3 | Generate reports |
 | CICS File Management | 2 | Open/close files for batch |
 | Data Read/Extract | 4 | Extract data from VSAM |
 | Data Import/Export | 2 | Data migration utilities |
-| Other/Utility | 3 | CICS resources, timing, etc. |
+| FTP/File Transfer | 3 | FTP and internal reader jobs |
+| Text-to-PDF Conversion | 1 | Convert text statements to PDF |
+| Other/Utility | 2 | CICS resources, timing |
+
+> **Note on file extensions (MIN-003):** The `app/jcl/` directory contains files with both lowercase `.jcl` (33 files) and uppercase `.JCL` (5 files) extensions. Similarly, `app/cbl/` contains both `.cbl` and `.CBL` files. On case-sensitive file systems (Linux, z/OS USS), these are distinct entries. All uppercase `.JCL` files (CREASTMT, FTPJCL, INTRDRJ1, INTRDRJ2, TXT2PDF1) represent specialized workflows documented in section 2.9 below.
 
 ---
 
@@ -177,6 +182,8 @@ Defines 3 GDG bases and creates initial generations:
 |-----------|-------|
 | **GDG Base** | `AWS.M2.CARDDEMO.TRANREPT` |
 | **Limit** | 10 generations |
+
+> **GDG Limit Conflict (MIN-004):** DEFGDGB.jcl also defines the `AWS.M2.CARDDEMO.TRANREPT` GDG base with LIMIT(5), while REPTFILE.jcl defines it with LIMIT(10). These are conflicting definitions for the same GDG base. Whichever job runs last sets the effective limit. This should be reconciled during modernization.
 
 #### DALYREJS - Daily Rejects GDG
 
@@ -431,11 +438,155 @@ Simple read programs for card, customer, and cross-reference VSAM files respecti
 | Attribute | Value |
 |-----------|-------|
 | **Program** | COBSWAIT |
-| **PARM** | Centiseconds (00003600 = 36 seconds) |
+| **Input** | SYSIN DD (inline data: centiseconds value, e.g. `00003600` = 36 seconds) |
+
+> **Note:** The wait duration is delivered via `SYSIN DD *` inline data, not via EXEC PARM=. The JCL comment states "WAIT FOR CENTISECONDS IN THE PARM" but the actual mechanism is SYSIN.
 
 #### ESDSRRDS - Alternate VSAM Types
 
 Defines ESDS and RRDS versions of user security file for demonstration purposes.
+
+### 2.9 Additional JCL Jobs (6) - Uppercase .JCL Extension Files
+
+These six jobs use uppercase `.JCL` file extensions (plus one lowercase `.jcl`). They were previously undocumented and represent specialized workflows for statement generation, FTP file transfer, internal reader chaining, text-to-PDF conversion, and an alternate customer VSAM definition.
+
+#### CREASTMT.JCL - Statement Generation Workflow
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Create account statements for each card in the XREF file |
+| **Programs** | IDCAMS, SORT, IEFBR14, CBSTM03A |
+| **Criticality** | MEDIUM |
+
+**Step Details:**
+
+| Step | Program | Function |
+|------|---------|----------|
+| DELDEF01 | IDCAMS | Delete/define temporary VSAM `AWS.M2.CARDDEMO.TRXFL.VSAM.KSDS` (KEYS 32,0, RECORDSIZE 350) |
+| STEP010 | SORT | Sort TRANSACT VSAM by card number + tran ID, reformat key to first 16 bytes |
+| STEP020 | IDCAMS | REPRO sorted sequential file into temporary VSAM |
+| STEP030 | IEFBR14 | Delete prior statement output files (STATEMNT.HTML, STATEMNT.PS) |
+| STEP040 | CBSTM03A | Generate statements in text and HTML format |
+
+**Input Files (STEP040):**
+- `AWS.M2.CARDDEMO.TRXFL.VSAM.KSDS` - Sorted transaction VSAM (temporary)
+- `AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS` - Card cross-reference
+- `AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS` - Account master
+- `AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS` - Customer master
+
+**Output Files:**
+- `AWS.M2.CARDDEMO.STATEMNT.PS` - Plain text statements (LRECL=80)
+- `AWS.M2.CARDDEMO.STATEMNT.HTML` - HTML-formatted statements (LRECL=100)
+
+**Program Notes:**
+- **CBSTM03A.CBL** is the statement generation main program. It reads transaction data per card via XREF, looks up customer and account details, and writes formatted statements in both text and HTML formats. It demonstrates mainframe control block addressing (PSA/TCB/TIOT), ALTER/GO TO statements, COMP/COMP-3 variables, 2-dimensional arrays, and subroutine calls.
+- **CBSTM03B.CBL** is a called subroutine that handles all VSAM file I/O operations (open, read, read-by-key, close) for the four input files (TRNXFILE, XREFFILE, CUSTFILE, ACCTFILE). It is invoked via `CALL 'CBSTM03B' USING WS-M03B-AREA`.
+
+**Relationship to TXT2PDF1.JCL:** The `STATEMNT.PS` output from CREASTMT can be converted to PDF by running TXT2PDF1.JCL as a downstream job.
+
+#### FTPJCL.JCL - FTP File Transfer
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Transfer files to/from mainframe via FTP |
+| **Program** | FTP |
+| **Function** | Send mainframe dataset to remote FTP server as text file |
+
+**Step Details:**
+
+| Step | Program | Function |
+|------|---------|----------|
+| STEP1 | FTP | Connect to FTP server, PUT mainframe file |
+
+**FTP Operations:**
+- Connects to IP `172.31.21.124` with user `carddemousr`
+- Transfers `AWS.M2.CARDEMO.FTP.TEST` as ASCII text
+- Sends file to `/ftpfolder/welcome.txt` via PUT command
+- Comments note the PUT can be changed to GET for receiving files
+
+#### INTRDRJ1.JCL - Internal Reader Job Trigger
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Copy FTP-received file and trigger chained job via internal reader |
+| **Programs** | IDCAMS, IEBGENER |
+
+**Step Details:**
+
+| Step | Program | Function |
+|------|---------|----------|
+| IDCAMS | IDCAMS | REPRO `AWS.M2.CARDEMO.FTP.TEST` to `AWS.M2.CARDEMO.FTP.TEST.BKUP` |
+| STEP01 | IEBGENER | Submit INTRDRJ2 via internal reader (SYSOUT=(A,INTRDR)) |
+
+**Key Pattern:** This job demonstrates the JES internal reader pattern where IEBGENER copies a JCL member from a PDS (`AWS.M2.CARDDEMO.JCL(INTRDRJ2)`) to the internal reader, causing automatic submission of the chained job.
+
+#### INTRDRJ2.JCL - Internal Reader Chained Job
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Secondary copy triggered by INTRDRJ1 via internal reader |
+| **Program** | IDCAMS |
+
+**Step Details:**
+
+| Step | Program | Function |
+|------|---------|----------|
+| IDCAMS | IDCAMS | REPRO `AWS.M2.CARDEMO.FTP.TEST.BKUP` to `AWS.M2.CARDEMO.FTP.TEST.BKUP.INTRDR` |
+
+**Chain:** FTPJCL -> INTRDRJ1 -> INTRDRJ2 (triggered via internal reader)
+
+#### TXT2PDF1.JCL - Text to PDF Conversion
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Convert text statement file to PDF format |
+| **Program** | IKJEFT1B (TSO/E batch) |
+| **Function** | Invoke TXT2PDF REXX exec to convert plain text to PDF |
+
+**Step Details:**
+
+| Step | Program | Function |
+|------|---------|----------|
+| TXT2PDF | IKJEFT1B | Execute TXT2PDF REXX to convert text to PDF |
+
+**Key Attributes:**
+- **STEPLIB:** `AWS.M2.LBD.TXT2PDF.LOAD`
+- **SYSEXEC:** `AWS.M2.LBD.TXT2PDF.EXEC` (REXX library)
+- **Input:** `AWS.M2.CARDDEMO.STATEMNT.PS` (via INDD DD)
+- **Output:** `AWS.M2.CARDDEMO.STATEMNT.PS.PDF`
+- **COND:** `(0,NE)` - only runs if prior steps had RC=0
+
+**Relationship to CREASTMT.JCL:** This job converts the plain text statement output from CREASTMT.JCL STEP040 into PDF format.
+
+#### DEFCUST.jcl - Alternate Customer VSAM Definition
+
+| Attribute | Value |
+|-----------|-------|
+| **Purpose** | Define customer VSAM cluster using alternate DSN schema |
+| **Program** | IDCAMS |
+
+**Step Details:**
+
+| Step | Program | Function |
+|------|---------|----------|
+| STEP05 (first) | IDCAMS | DELETE `AWS.CCDA.CUSTDATA.CLUSTER` |
+| STEP05 (second) | IDCAMS | DEFINE CLUSTER `AWS.CUSTDATA.CLUSTER` |
+
+**Alternate DSN Schema (MAJ-004):**
+
+| Attribute | DEFCUST.jcl (Alternate) | CUSTFILE.jcl (Standard) |
+|-----------|------------------------|------------------------|
+| **Delete target** | `AWS.CCDA.CUSTDATA.CLUSTER` | `AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS` |
+| **Define name** | `AWS.CUSTDATA.CLUSTER` | `AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS` |
+| **Key spec** | KEYS(10 0) | KEYS(9 0) |
+| **Record size** | RECORDSIZE(500 500) | RECORDSIZE(500 500) |
+| **SHAREOPTIONS** | (1 4) | (2 3) |
+| **Data component** | `AWS.CUSTDATA.CLUSTER.DATA` | `AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS.DATA` |
+| **Index component** | `AWS.CUSTDATA.CLUSTER.INDEX` | `AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS.INDEX` |
+
+> **Key Discrepancy:** DEFCUST uses KEYS(10 0) while CUSTFILE uses KEYS(9 0). This suggests either a different customer ID format (10-byte vs 9-byte) or an alternate environment configuration. The DSN pattern `AWS.CCDA.*` and `AWS.CUSTDATA.*` differs from the standard `AWS.M2.CARDDEMO.*` pattern used throughout the rest of the application. This may represent a legacy or alternate deployment environment.
+
+> **Note:** DEFCUST.jcl has a duplicate step name (both steps are named STEP05). The first STEP05 performs the DELETE and the second STEP05 performs the DEFINE. While JCL allows this, it prevents RESTART= from targeting either step unambiguously.
 
 ---
 
@@ -469,10 +620,13 @@ graph LR
 ```mermaid
 graph LR
     A[CLOSEFIL] --> B[INTCALC]
-    B --> C[COMBTRAN]
-    C --> D[WAITSTEP]
-    D --> E[OPENFIL]
+    B --> C[TRANBKP]
+    C --> D[COMBTRAN]
+    D --> E[TRANIDX]
+    E --> F[OPENFIL]
 ```
+
+> **Correction (MAJ-002):** The original workflow omitted TRANBKP (between INTCALC and COMBTRAN) and TRANIDX (between COMBTRAN and OPENFIL). TRANBKP backs up the transaction VSAM and redefines the cluster; COMBTRAN reads `TRANSACT.BKUP(0)` which TRANBKP produces. TRANIDX rebuilds the AIX after COMBTRAN reloads the VSAM. Both are functionally required. The WAITSTEP node was removed as `scripts/run_interest_calc.sh` does not include it in this workflow. See section 3.3.2 for the actual script sequence.
 
 ### 3.2 Complete Job Dependency DAG
 
@@ -516,7 +670,13 @@ graph TD
     end
 ```
 
-### 3.3 Shell Script Workflow: run_full_batch.sh
+> **Note (MIN-002):** TRANCATG.jcl is a VSAM definition job listed in section 2.1 but is not shown in the "Data Refresh" subgraph above. Unlike TRANTYPE, DISCGRP, and TCATBALF which appear in `run_full_batch.sh`, TRANCATG is not referenced by any shell script and is presumed to be a one-time setup job or run independently. Its omission from the daily workflow DAG is intentional.
+
+### 3.3 Shell Script Workflows
+
+All three scripts use FTP via `tnftp` on port 2121 (tunneled to mainframe) to submit JCL jobs. They check for an active FTP tunnel before executing.
+
+#### 3.3.1 run_full_batch.sh - Complete Batch Cycle
 
 | Phase | Jobs | Wait Time |
 |-------|------|-----------|
@@ -527,6 +687,37 @@ graph TD
 | 5. Backup/Combine | TRANBKP, COMBTRAN | 5s |
 | 6. Index | TRANIDX | 5s |
 | 7. Open CICS | OPENFIL | - |
+
+#### 3.3.2 run_interest_calc.sh - Interest Calculation Only
+
+Executes the interest calculation cycle independently, without data refresh or transaction posting.
+
+| Step | Job | Wait Time | Purpose |
+|------|-----|-----------|---------|
+| 1 | CLOSEFIL | 5s | Close CICS files |
+| 2 | INTCALC | 5s | Run interest calculations |
+| 3 | TRANBKP | - | Backup transaction master |
+| 4 | COMBTRAN | 5s | Combine system transactions with daily |
+| 5 | TRANIDX | 5s | Rebuild alternate index |
+| 6 | OPENFIL | - | Reopen CICS files |
+
+**Sequence:** CLOSEFIL -> INTCALC -> TRANBKP -> COMBTRAN -> TRANIDX -> OPENFIL
+
+#### 3.3.3 run_posting.sh - Transaction Posting Only
+
+Executes transaction posting independently, without interest calculation or full data refresh.
+
+| Step | Job | Wait Time | Purpose |
+|------|-----|-----------|---------|
+| 1 | CLOSEFIL | 5s | Close CICS files |
+| 2 | ACCTFILE | - | Refresh account master |
+| 3 | TCATBALF | - | Refresh category balance |
+| 4 | TRANBKP | - | Backup/refresh transaction master |
+| 5 | POSTTRAN | 10s | Post daily transactions |
+| 6 | TRANIDX | 5s | Rebuild alternate index |
+| 7 | OPENFIL | - | Reopen CICS files |
+
+**Sequence:** CLOSEFIL -> ACCTFILE -> TCATBALF -> TRANBKP -> POSTTRAN -> TRANIDX -> OPENFIL
 
 ---
 
@@ -829,6 +1020,9 @@ CLOSEFIL → [Batch Jobs] → OPENFIL
 | CBACT03C | READXREF | Cross-reference read |
 | CBACT04C | INTCALC | Interest calculation |
 | CBCUS01C | READCUST | Customer data read |
+| CBSTM03A | CREASTMT | Statement generation main program (.CBL uppercase) |
+| CBSTM03B | (subroutine) | File I/O subroutine called by CBSTM03A (.CBL uppercase) |
+| CBTRN01C | (no JCL reference) | Batch transaction program - not referenced by any JCL job |
 | CBTRN02C | POSTTRAN | Transaction posting |
 | CBTRN03C | TRANREPT | Transaction reporting |
 | CBEXPORT | CBEXPORT | Multi-file export |
@@ -836,8 +1030,11 @@ CLOSEFIL → [Batch Jobs] → OPENFIL
 | COBSWAIT | WAITSTEP | Timing delay |
 | IDCAMS | 25+ jobs | VSAM utilities |
 | IEBGENER | Multiple | Data copy |
+| IEFBR14 | CREASTMT | Dummy program for file deletion |
+| IKJEFT1B | TXT2PDF1 | TSO/E batch for REXX execution |
+| FTP | FTPJCL | FTP file transfer utility |
 | DFHCSDUP | CBADMCDJ | CICS resource definition |
-| SORT | COMBTRAN, TRANREPT, PRTCATBL | Data sorting |
+| SORT | COMBTRAN, TRANREPT, PRTCATBL, CREASTMT | Data sorting |
 | SDSF | CLOSEFIL, OPENFIL | CICS file commands |
 
 ### Appendix B: Dataset Inventory
@@ -855,6 +1052,8 @@ CLOSEFIL → [Batch Jobs] → OPENFIL
 | `*.DISCGRP.VSAM.KSDS` | KSDS | 16,0 | 50 |
 | `*.USRSEC.VSAM.KSDS` | KSDS | 8,0 | 80 |
 | `*.EXPORT.DATA` | KSDS | 4,28 | 500 |
+| `*.TRXFL.VSAM.KSDS` | KSDS | 32,0 | 350 | (temp, CREASTMT) |
+| `AWS.CUSTDATA.CLUSTER` | KSDS | 10,0 | 500 | (alt schema, DEFCUST) |
 
 ### Appendix C: CICS File Mapping
 
@@ -893,7 +1092,7 @@ Meaning: Skip STEP10 if any prior step has RC > 4
 |-----------|-------|
 | Author | Claude (AI-assisted analysis) |
 | Prompt | RE-006 |
-| Source Files | 33 JCL, 10 COBOL, 2 scheduler configs, 3 shell scripts |
+| Source Files | 38 JCL (33 .jcl + 5 .JCL), 12 batch COBOL (10 .cbl + 2 .CBL), 2 scheduler configs, 3 shell scripts |
 | Output Location | `docs/reverse-engineering/05-specialized/BATCH-WORKFLOWS.md` |
 | Work Files | `.work/reverse-engineering/specialized/batch-workflows/` |
 

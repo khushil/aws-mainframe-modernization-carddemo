@@ -3,7 +3,8 @@
 **Document Version:** 1.0
 **Generated:** 2026-02-05
 **Prompt Suite:** RE-000 through RE-011
-**Total Documents:** 38 (this index + 35 analysis documents + confidence assessment + deep-dive)
+**Total Documents:** 39 (this index + 36 analysis documents + confidence assessment + deep-dive)
+**Canonical Counts:** See [CODEBASE-MANIFEST.md](appendices/CODEBASE-MANIFEST.md) for ground-truth asset counts
 
 ---
 
@@ -15,7 +16,7 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 
 | Finding | Detail |
 |---------|--------|
-| **Application Size** | 44 COBOL programs (30,175 LOC), 58 copybooks across all directories |
+| **Application Size** | 44 COBOL programs (30,175 LOC), 62 copybooks (41 .cpy + 21 BMS .CPY) across all directories |
 | **Core Programs** | 31 in `app/cbl/` (20,650 LOC); 13 in extension directories (9,525 LOC) |
 | **Bounded Contexts** | 7 identified (Authentication, User Admin, Account, Card, Transaction, Bill Payment, Batch) |
 | **Core Entities** | 6 (Customer, Account, Card, Transaction, CardCrossReference, User) |
@@ -86,7 +87,7 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 | # | Document | Path | Description |
 |---|----------|------|-------------|
 | 21 | **Screen Flows** | [05-specialized/SCREEN-FLOWS.md](05-specialized/SCREEN-FLOWS.md) | 17 BMS screens, fields, navigation, user journeys |
-| 22 | **Batch Workflows** | [05-specialized/BATCH-WORKFLOWS.md](05-specialized/BATCH-WORKFLOWS.md) | 33 JCL jobs, dependencies, recovery procedures |
+| 22 | **Batch Workflows** | [05-specialized/BATCH-WORKFLOWS.md](05-specialized/BATCH-WORKFLOWS.md) | 38 core JCL jobs (46 total), dependencies, recovery procedures |
 | 23 | **Security Model** | [05-specialized/SECURITY-MODEL.md](05-specialized/SECURITY-MODEL.md) | 10 security findings, PCI-DSS gap analysis |
 | 24 | **Integration Patterns** | [05-specialized/INTEGRATION-PATTERNS.md](05-specialized/INTEGRATION-PATTERNS.md) | DB2/IMS/MQ integration analysis |
 
@@ -112,17 +113,18 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 | # | Document | Path | Description |
 |---|----------|------|-------------|
 | 32 | **Program Inventory** | [appendices/PROGRAM-INVENTORY.md](appendices/PROGRAM-INVENTORY.md) | All 44 COBOL programs (core + extensions) with LOC, complexity |
-| 33 | **Copybook Inventory** | [appendices/COPYBOOK-INVENTORY.md](appendices/COPYBOOK-INVENTORY.md) | All 58 copybooks with purpose and dependencies |
+| 33 | **Copybook Inventory** | [appendices/COPYBOOK-INVENTORY.md](appendices/COPYBOOK-INVENTORY.md) | All 62 copybooks (41 .cpy + 21 BMS .CPY) with purpose and dependencies |
 | 34 | **File Inventory** | [appendices/FILE-INVENTORY.md](appendices/FILE-INVENTORY.md) | VSAM clusters, AIX, GDG specifications |
 | 35 | **Transaction Inventory** | [appendices/TRANSACTION-INVENTORY.md](appendices/TRANSACTION-INVENTORY.md) | CICS transactions, BMS mapsets, navigation |
+| 36 | **Codebase Manifest** | [appendices/CODEBASE-MANIFEST.md](appendices/CODEBASE-MANIFEST.md) | Canonical source-of-truth for all asset counts |
 
 ### Quality Assurance
 
 | # | Document | Path | Description |
 |---|----------|------|-------------|
-| 36 | **Confidence Assessment** | [CONFIDENCE-ASSESSMENT.md](CONFIDENCE-ASSESSMENT.md) | Honest assessment of gaps, blind spots, and remediation priorities |
-| 37 | **COACTUPC Deep-Dive** | [deep-dives/COACTUPC-ANALYSIS.md](deep-dives/COACTUPC-ANALYSIS.md) | Line-by-line analysis of the 4,236-line monolith |
-| 38 | **SME Validation Strategy** | [08-validation-strategy/SME-VALIDATION-STRATEGY.md](08-validation-strategy/SME-VALIDATION-STRATEGY.md) | Interview playbook, question bank, confidence framework for SME validation |
+| 37 | **Confidence Assessment** | [CONFIDENCE-ASSESSMENT.md](CONFIDENCE-ASSESSMENT.md) | Honest assessment of gaps, blind spots, and remediation priorities |
+| 38 | **COACTUPC Deep-Dive** | [deep-dives/COACTUPC-ANALYSIS.md](deep-dives/COACTUPC-ANALYSIS.md) | Line-by-line analysis of the 4,236-line monolith |
+| 39 | **SME Validation Strategy** | [08-validation-strategy/SME-VALIDATION-STRATEGY.md](08-validation-strategy/SME-VALIDATION-STRATEGY.md) | Interview playbook, question bank, confidence framework for SME validation |
 
 ---
 
@@ -137,12 +139,12 @@ This documentation suite provides a comprehensive reverse engineering analysis o
 | 05-specialized | 4 | 4 | Complete |
 | 06-quality | 3 | 3 | Complete |
 | 07-modernization | 4 | 4 | Complete |
-| appendices | 4 | 4 | Complete (inventory updated to v2.0) |
+| appendices | 5 | 5 | Complete (inventory updated to v2.0; manifest added) |
 | validation | 7 | 7 | Complete (VL-006 revised) |
 | deep-dives | 1 | 1 | New — COACTUPC analysis |
 | confidence assessment | 1 | 1 | New — quality assurance |
 | index | 1 | 1 | Complete (updated) |
-| **Total** | **45** | **45** | **Complete** |
+| **Total** | **46** | **46** | **Complete** |
 
 ---
 
@@ -234,10 +236,10 @@ Start with confidence assessment and validation:
 | Last Updated | 2026-02-06 (confidence assessment + remediation) |
 | Source Repository | aws-mainframe-modernization-carddemo |
 | COBOL Programs Analyzed | 44 (31 core + 13 extension) |
-| Copybooks Analyzed | 58 (46 core + 12 extension) |
-| BMS Screens Analyzed | 23 (19 core + 4 extension) |
+| Copybooks Analyzed | 62 (47 core + 15 extension) |
+| BMS Screens Analyzed | 21 (17 core + 4 extension) |
 | JCL Jobs Analyzed | 46 (38 core + 8 extension) |
-| Documents Generated | 45 (36 original + 7 validation + 2 new) |
+| Documents Generated | 46 (36 original + 7 validation + 3 new) |
 | Total Lines of Code | 30,175 |
 
 ---

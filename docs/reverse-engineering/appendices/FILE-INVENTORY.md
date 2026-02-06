@@ -1,10 +1,11 @@
 # CardDemo File Inventory
 
-**Document Version:** 1.0
-**Generated:** 2026-02-05
+**Document Version:** 1.1
+**Updated:** 2026-02-06
 **Total VSAM Clusters:** 10 (6 core + 4 reference)
 **Total Alternate Indexes:** 3
 **Total GDG Bases:** 11
+**See also:** [CODEBASE-MANIFEST.md](./CODEBASE-MANIFEST.md) for canonical asset counts
 
 ---
 
@@ -241,10 +242,47 @@
 
 ---
 
+## Data File Inventory
+
+### ASCII Reference Data (9 files in `app/data/ASCII/`)
+
+| # | File | Content | Used For |
+|---|------|---------|----------|
+| 1 | acctdata.txt | Account records | VSAM load (ACCTDAT) |
+| 2 | carddata.txt | Card records | VSAM load (CARDDAT) |
+| 3 | cardxref.txt | Card-account cross-references | VSAM load (CCXREF) |
+| 4 | custdata.txt | Customer records | VSAM load (CUSTDAT) |
+| 5 | dailytran.txt | Daily transactions | VSAM load (DALYTRAN) |
+| 6 | discgrp.txt | Disclosure group interest rates | VSAM load (DISCGRP) |
+| 7 | tcatbal.txt | Transaction category balances | VSAM load (TCATBALF) |
+| 8 | trancatg.txt | Transaction categories | VSAM load (TRANCATG) |
+| 9 | trantype.txt | Transaction types | VSAM load (TRANTYPE) |
+
+### EBCDIC Data Files (13 files in `app/data/EBCDIC/`)
+
+| # | File | Notes |
+|---|------|-------|
+| 1 | AWS.M2.CARDDEMO.ACCDATA.PS | Account data (alternate format) |
+| 2 | AWS.M2.CARDDEMO.ACCTDATA.PS | Account master data |
+| 3 | AWS.M2.CARDDEMO.CARDDATA.PS | Card master data |
+| 4 | AWS.M2.CARDDEMO.CARDXREF.PS | Card cross-reference data |
+| 5 | AWS.M2.CARDDEMO.CUSTDATA.PS | Customer master data |
+| 6 | AWS.M2.CARDDEMO.DALYTRAN.PS | Daily transactions |
+| 7 | AWS.M2.CARDDEMO.DALYTRAN.PS.INIT | Daily transaction initial/empty |
+| 8 | AWS.M2.CARDDEMO.DISCGRP.PS | Disclosure groups |
+| 9 | AWS.M2.CARDDEMO.EXPORT.DATA.PS | Multi-record export file |
+| 10 | AWS.M2.CARDDEMO.TCATBALF.PS | Transaction category balances |
+| 11 | AWS.M2.CARDDEMO.TRANCATG.PS | Transaction categories |
+| 12 | AWS.M2.CARDDEMO.TRANTYPE.PS | Transaction types |
+| 13 | AWS.M2.CARDDEMO.USRSEC.PS | User security records |
+
+---
+
 ## Cross-References
 
 | Document | Relevance |
 |----------|-----------|
+| [CODEBASE-MANIFEST.md](./CODEBASE-MANIFEST.md) | Canonical asset counts |
 | [DATA-MODEL.md](../02-data-model/DATA-MODEL.md) | Complete VSAM schema documentation |
 | [DATA-DICTIONARY.md](../02-data-model/DATA-DICTIONARY.md) | Field-level definitions |
 | [DATA-LINEAGE.md](../02-data-model/DATA-LINEAGE.md) | Data flow between files |

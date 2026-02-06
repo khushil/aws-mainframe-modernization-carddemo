@@ -14,9 +14,9 @@ This document presents the bounded context map extracted from the CardDemo mainf
 |---|--------------|----------|--------------|----------------|
 | 1 | Authentication | COSGN00C | USRSEC (R) | User login, session establishment |
 | 2 | User Administration | COUSR00C-03C | USRSEC (RW) | User CRUD operations |
-| 3 | Account Management | COACTVWC, COACTUPC | ACCTDAT, CUSTDAT, CARDDAT | Account viewing and updates |
+| 3 | Account Management | COACTVWC, COACTUPC | ACCTDAT, CUSTDAT, CCXREF | Account viewing and updates |
 | 4 | Card Management | COCRDLIC, COCRDSLC, COCRDUPC | CARDDAT, CCXREF | Card lifecycle management |
-| 5 | Transaction Processing | COTRN00C, COTRN01C, COTRN02C | TRANSACT, ACCTDAT | Transaction entry and inquiry |
+| 5 | Transaction Processing | COTRN00C, COTRN01C, COTRN02C, CORPT00C | TRANSACT, ACCTDAT | Transaction entry, inquiry, and reports |
 | 6 | Bill Payment | COBIL00C | ACCTDAT, TRANSACT | Payment processing |
 | 7 | Batch Processing | CBTRN01C-03C, CBACT01C-04C, CBCUS01C | All files | Nightly batch operations |
 
@@ -105,8 +105,7 @@ END-IF
 | File | Access | Purpose |
 |------|--------|---------|
 | ACCTDAT | READ/UPDATE | Account master data |
-| CUSTDAT | READ | Customer demographics |
-| CARDDAT | READ | Associated card info |
+| CUSTDAT | READ/REWRITE | Customer demographics |
 | CCXREF (AIX) | READ | Card-to-account lookup |
 
 **Relationship**:
@@ -133,7 +132,7 @@ END-IF
 **Data Access**:
 | File | Access | Purpose |
 |------|--------|---------|
-| CARDDAT | READ/WRITE | Card master data |
+| CARDDAT | READ/REWRITE | Card master data |
 | CCXREF | READ | Cross-reference lookup |
 | ACCTDAT | READ | Parent account validation |
 
@@ -144,10 +143,10 @@ END-IF
 ### 5. Transaction Processing Context
 
 **Transaction ID**: CM00 (via menu)
-**Programs**: COTRN00C, COTRN01C, COTRN02C
-**Source**: `app/cbl/COTRN00C.cbl`, `app/cbl/COTRN01C.cbl`, `app/cbl/COTRN02C.cbl`
+**Programs**: COTRN00C, COTRN01C, COTRN02C, CORPT00C
+**Source**: `app/cbl/COTRN00C.cbl`, `app/cbl/COTRN01C.cbl`, `app/cbl/COTRN02C.cbl`, `app/cbl/CORPT00C.cbl`
 
-**Responsibility**: Transaction inquiry, viewing details, and adding new transactions to the system.
+**Responsibility**: Transaction inquiry, viewing details, adding new transactions, and transaction reporting.
 
 **Program Functions**:
 | Program | Function | Menu Option |
@@ -155,6 +154,7 @@ END-IF
 | COTRN00C | Transaction List | Option 6 |
 | COTRN01C | Transaction View | Option 7 |
 | COTRN02C | Transaction Add | Option 8 |
+| CORPT00C | Transaction Reports | Option 9 |
 
 **Data Access**:
 | File | Access | Purpose |
@@ -197,8 +197,8 @@ END-IF
 
 ### 7. Batch Processing Context
 
-**Programs**: CBTRN01C, CBTRN02C, CBTRN03C, CBACT01C, CBACT02C, CBACT03C, CBACT04C, CBCUS01C, CBEXPORT, CBIMPORT
-**Source**: `app/cbl/CB*.cbl`
+**Programs**: CBTRN01C, CBTRN02C, CBTRN03C, CBACT01C, CBACT02C, CBACT03C, CBACT04C, CBCUS01C, CBSTM03A, CBSTM03B, CBEXPORT, CBIMPORT
+**Source**: `app/cbl/CB*.cbl`, `app/cbl/CB*.CBL`
 
 **Responsibility**: Nightly batch operations including transaction posting, interest calculation, data maintenance, and import/export.
 
@@ -213,6 +213,8 @@ END-IF
 | CBTRN01C | Transaction read | Nightly |
 | CBTRN02C | Interest calculation | Nightly |
 | CBTRN03C | Transaction posting | Nightly |
+| CBSTM03A | Statement generation (part A) | Nightly |
+| CBSTM03B | Statement generation (part B) | Nightly |
 | CBEXPORT | Data export (EBCDIC) | On-demand |
 | CBIMPORT | Data import (ASCII) | On-demand |
 
@@ -231,7 +233,7 @@ graph TB
         USRADM[User Administration<br/>COUSR00C-03C]
         ACCTMGMT[Account Management<br/>COACTVWC/COACTUPC]
         CARDMGMT[Card Management<br/>COCRDLIC/COCRDSLC/COCRDUPC]
-        TRNPROC[Transaction Processing<br/>COTRN00C-02C]
+        TRNPROC[Transaction Processing<br/>COTRN00C-02C/CORPT00C]
         BILLPAY[Bill Payment<br/>COBIL00C]
     end
 
@@ -296,10 +298,10 @@ Batch Processing operates on a **Separate Ways** pattern:
 
 | Data Store | Owner Context | Reader Contexts | Writer Contexts |
 |------------|---------------|-----------------|-----------------|
-| USRSEC | Authentication | User Admin | User Admin |
+| USRSEC | User Administration | Authentication, User Admin | User Admin |
 | ACCTDAT | Account Management | Card Mgmt, Transaction, Bill Payment | Account Mgmt, Bill Payment, Batch |
-| CARDDAT | Card Management | Account Mgmt | Card Mgmt, Batch |
-| CUSTDAT | Account Management | Account Mgmt | Batch |
+| CARDDAT | Card Management | Transaction, Bill Payment | Card Mgmt, Batch |
+| CUSTDAT | Account Management | Account Mgmt | Account Mgmt, Batch |
 | TRANSACT | Transaction Processing | Bill Payment, Transaction | Transaction, Bill Payment, Batch |
 | CCXREF | Card Management | Account Mgmt, Transaction, Bill Payment | Card Mgmt, Batch |
 
@@ -357,8 +359,8 @@ For modernization, implement ACLs at these boundaries:
 | User Administration | `app/cbl/COUSR00C.cbl`, `COUSR01C.cbl`, `COUSR02C.cbl`, `COUSR03C.cbl` |
 | Account Management | `app/cbl/COACTVWC.cbl`, `COACTUPC.cbl` |
 | Card Management | `app/cbl/COCRDLIC.cbl`, `COCRDSLC.cbl`, `COCRDUPC.cbl` |
-| Transaction Processing | `app/cbl/COTRN00C.cbl`, `COTRN01C.cbl`, `COTRN02C.cbl` |
+| Transaction Processing | `app/cbl/COTRN00C.cbl`, `COTRN01C.cbl`, `COTRN02C.cbl`, `CORPT00C.cbl` |
 | Bill Payment | `app/cbl/COBIL00C.cbl` |
-| Batch Processing | `app/cbl/CBTRN01C.cbl`, `CBTRN02C.cbl`, `CBTRN03C.cbl`, `CBACT01C.cbl`, `CBACT02C.cbl`, `CBACT03C.cbl`, `CBACT04C.cbl`, `CBCUS01C.cbl`, `CBEXPORT.cbl`, `CBIMPORT.cbl` |
+| Batch Processing | `app/cbl/CBTRN01C.cbl`, `CBTRN02C.cbl`, `CBTRN03C.cbl`, `CBACT01C.cbl`, `CBACT02C.cbl`, `CBACT03C.cbl`, `CBACT04C.cbl`, `CBCUS01C.cbl`, `CBSTM03A.CBL`, `CBSTM03B.CBL`, `CBEXPORT.cbl`, `CBIMPORT.cbl` |
 | Menu Configuration | `app/cpy/COADM02Y.cpy`, `COMEN02Y.cpy` |
 | COMMAREA | `app/cpy/COCOM01Y.cpy` |

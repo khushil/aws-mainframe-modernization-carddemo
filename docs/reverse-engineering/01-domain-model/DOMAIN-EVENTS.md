@@ -1,5 +1,29 @@
 # CardDemo Domain Events Catalog
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Event Summary](#event-summary)
+- [Online Domain Events](#online-domain-events)
+  - [Authentication Events](#authentication-events)
+  - [Account Events](#account-events)
+  - [Card Events](#card-events)
+  - [Transaction Events (Online)](#transaction-events-online)
+  - [User Management Events](#user-management-events)
+- [Batch Domain Events](#batch-domain-events)
+  - [Transaction Posting Events](#transaction-posting-events)
+- [State Transition Events](#state-transition-events)
+  - [Card Status Transitions](#card-status-transitions)
+  - [Account Status Transitions](#account-status-transitions)
+- [Event Flow Diagrams](#event-flow-diagrams)
+  - [Bill Payment Event Flow](#bill-payment-event-flow)
+  - [Batch Posting Event Flow](#batch-posting-event-flow)
+- [Event Aggregation by Aggregate](#event-aggregation-by-aggregate)
+- [Event Source References](#event-source-references)
+- [Event-Driven Architecture Considerations](#event-driven-architecture-considerations)
+
+---
+
 ## Overview
 
 This document catalogs the domain events identified in the CardDemo application. Domain events represent significant state changes or actions that occur within the system. Events are categorized by their origin (online vs. batch) and the aggregate they affect.
@@ -438,6 +462,20 @@ sequenceDiagram
 ### Batch Process Events
 - BatchProcessingCompleted
 - TransactionCategoryBalanceUpdated
+
+### Additional Batch Programs (Not Yet Event-Mapped)
+
+The following batch programs also produce domain-relevant state changes but are not yet fully mapped to domain events:
+
+| Program | Domain Actions |
+|---------|---------------|
+| CBACT02C.cbl | Account data refresh (triggers AccountUpdated events) |
+| CBACT03C.cbl | Account record updates (triggers AccountUpdated events) |
+| CBACT04C.cbl | Account maintenance (triggers AccountUpdated events) |
+| CBEXPORT.cbl | Data export to sequential files (read-only, no state changes) |
+| CBIMPORT.cbl | Data import from sequential files (triggers bulk entity creation events) |
+| CBSTM03A.CBL | Statement generation part A (read-only reporting) |
+| CBSTM03B.CBL | Statement generation part B (read-only reporting) |
 
 ---
 

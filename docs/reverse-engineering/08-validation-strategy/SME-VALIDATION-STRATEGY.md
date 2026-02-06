@@ -65,7 +65,7 @@ This documentation serves four purposes. Each imposes different confidence requi
 | VL-006 | Batch Workflows | **76.6** | FAIL | **2** | 6/38 JCL missing, wrong counts (MNTTRDB2 reclassified as valid) |
 | VL-007 | Security Model | 90.0 | PASS | 0 | COMMAREA size corrected from ~130 to 160 bytes |
 | VL-008 | Integration Patterns | **82.4** | COND. PASS | 0 | 5/13 extension programs missing; IMS DBD/PSB not analyzed |
-| VL-000 | Cross-Doc Consistency | **71.0** | FAIL | — | Program counts vary 29–44 across docs; COMMAREA size inconsistent |
+| VL-000 | Cross-Doc Consistency | **71.0** | FAIL | — | Program counts and COMMAREA size inconsistencies (remediated in RM-000) |
 
 > **Updated 2026-02-06:** VL-006 score revised from 73.8 to 76.6 after MNTTRDB2 was reclassified from "phantom hallucination" to "valid — found in `app/app-transaction-type-db2/jcl/MNTTRDB2.jcl`." COMMAREA size in SECURITY-MODEL.md corrected to 160 bytes. VL-008 and VL-000 added. See [CONFIDENCE-ASSESSMENT.md](../CONFIDENCE-ASSESSMENT.md) for full details.
 
@@ -322,7 +322,7 @@ Domain Model   ████████████████████░�
 **CardDemo example:**
 - ACCTDAT appears in the Data Model (VSAM layout), Context Model (data ownership matrix), and Batch Workflows (job dependencies). Are the descriptions consistent?
 - The COMMAREA is described in the Context Model (COMMAREA-SPECIFICATION.md), Security Model (Section 4.1), and Architecture (C4-L4). Do all three match?
-- Note: VL-007 found the Security Model claims COMMAREA is "~130 bytes" while VL-003 says "~155 bytes," and the actual value is 160 bytes. This is a concrete cross-reference validation target.
+- Note: VL-007 found the Security Model originally claimed COMMAREA is "~130 bytes" while VL-003 said "~155 bytes." Both have been corrected to the actual value of 160 bytes. This was a concrete cross-reference validation target that has been remediated.
 
 ### 3.6 Code Walkthrough with Commentary
 

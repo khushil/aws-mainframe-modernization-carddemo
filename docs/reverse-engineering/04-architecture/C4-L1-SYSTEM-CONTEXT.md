@@ -186,7 +186,7 @@ User → COSGN00C (CC00) → USRSEC File Lookup
                              │
                     ┌────────▼────────┐
                     │  CICS Programs  │
-                    │  (18+ online)   │
+                    │  (19 online)    │
                     └────────┬────────┘
                              │
               ┌──────────────┼──────────────┐
@@ -207,7 +207,7 @@ User → COSGN00C (CC00) → USRSEC File Lookup
               │
      ┌────────▼────────┐
      │  Batch Programs │
-     │  (10 programs)  │
+     │  (12 programs)  │
      └────────┬────────┘
               │
       ┌───────┴───────┐
@@ -266,7 +266,7 @@ User → COSGN00C (CC00) → USRSEC File Lookup
 | Presentation | BMS | 17 mapsets, 3270 datastream |
 | Transaction Processing | CICS TS | Pseudo-conversational |
 | Batch Processing | JES2/JCL | Sequential batch jobs |
-| Business Logic | COBOL | 28+ programs |
+| Business Logic | COBOL | 31 core programs |
 | Data Storage | VSAM KSDS | 6+ data files |
 | Extensions | DB2, IMS, MQ | Optional integrations |
 

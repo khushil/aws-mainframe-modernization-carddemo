@@ -202,21 +202,30 @@ Different error messages enable **user enumeration attacks** - attackers can det
 
 ### 3.3 Privilege Reset Pattern
 
-**Severity: High** — Five online programs silently execute `SET CDEMO-USRTYP-USER TO TRUE`, which resets the COMMAREA user type from Admin ('A') to User ('U'):
+**Severity: High** — Five online programs silently execute `SET CDEMO-USRTYP-USER TO TRUE`, which resets the COMMAREA user type from Admin ('A') to User ('U'). This pattern appears in 9 locations across 5 programs:
 
-| Program | Function | Effect |
-|---------|----------|--------|
-| COACTVWC | Account View | Admin demoted to User on entry |
-| COACTUPC | Account Update | Admin demoted to User on entry |
-| COCRDLIC | Card List | Admin demoted to User on entry |
-| COCRDSLC | Card Detail View | Admin demoted to User on entry |
-| COCRDUPC | Card Update | Admin demoted to User on entry |
+| Program | Function | Line(s) | Instances | Context |
+|---------|----------|---------|:---------:|---------|
+| COACTVWC | Account View | 344 | 1 | XCTL to next program |
+| COACTUPC | Account Update | 947 | 1 | XCTL to next program |
+| COCRDLIC | Card List | 320, 388, 466, 522, 550 | 5 | Init, PF3 return, re-init, view select, update select |
+| COCRDSLC | Card Detail View | 326 | 1 | XCTL to next program |
+| COCRDUPC | Card Update | 464 | 1 | XCTL to next program |
+
+**Code Pattern:**
+```cobol
+*> Example from COACTVWC.cbl:344
+SET  CDEMO-USRTYP-USER  TO TRUE
+SET  CDEMO-PGM-ENTER    TO TRUE
+```
+
+This modifies the COMMAREA `CDEMO-USER-TYPE` field (defined in `COCOM01Y.cpy:26-28`), changing the 88-level condition from `CDEMO-USRTYP-ADMIN` ('A') to `CDEMO-USRTYP-USER` ('U'). The reset occurs before every XCTL transfer within these programs, effectively forcing user-level context regardless of the caller's actual role.
 
 **Impact:** An admin navigating through any of these programs loses admin rights in the COMMAREA. On returning to the menu via PF3, they would see the User Menu instead of the Admin Menu. This is either:
 - **A bug:** The programs incorrectly reset the privilege flag, or
 - **An undocumented security feature:** Intended to enforce least-privilege during data operations
 
-Either interpretation creates **unpredictable session behavior** that must be resolved during modernization.
+Either interpretation creates **unpredictable session behavior** that must be resolved during modernization. This pattern is also related to SEC-008 (Unsigned COMMAREA), as both issues concern session state integrity in the COMMAREA.
 
 ### 3.4 Menu Authorization Check
 
@@ -251,7 +260,9 @@ END-IF
 | 8 | Transaction Add | COTRN02C | U |
 | 9 | Transaction Reports | CORPT00C | U |
 | 10 | Bill Payment | COBIL00C | U |
-| 11 | Pending Authorization View | COPAUS0C | U |
+| 11 | Pending Authorization View | COPAUS0C [1] | U |
+
+> **[1]** COPAUS0C is defined in the menu configuration (`COMEN02Y.cpy:86-90`) but is **not present** in the core `app/cbl/` codebase. The program file exists only in the extension directory `app/app-authorization-ims-db2-mq/cbl/COPAUS0C.cbl`, which requires the IMS+DB2+MQ optional integration. `COMEN01C.cbl` includes special handling for this case (line 147: `WHEN CDEMO-MENU-OPT-PGMNAME(WS-OPTION) = 'COPAUS0C'` with a CICS INQUIRE check).
 
 **Admin Menu (COADM02Y.cpy):**
 
@@ -297,7 +308,16 @@ END-IF
       10 CDEMO-LAST-MAPSET             PIC X(7).
 ```
 
-**Total Size:** 160 bytes (4+8+4+8+8+1+1+9+25+25+25+11+1+16+7+7)
+**Total Size:** 160 bytes
+
+| Group | Fields | Bytes |
+|-------|--------|-------|
+| CDEMO-GENERAL-INFO | FROM-TRANID(4) + FROM-PROGRAM(8) + TO-TRANID(4) + TO-PROGRAM(8) + USER-ID(8) + USER-TYPE(1) + PGM-CONTEXT(1) | 34 |
+| CDEMO-CUSTOMER-INFO | CUST-ID(9) + CUST-FNAME(25) + CUST-MNAME(25) + CUST-LNAME(25) | 84 |
+| CDEMO-ACCOUNT-INFO | ACCT-ID(11) + ACCT-STATUS(1) | 12 |
+| CDEMO-CARD-INFO | CARD-NUM(16) | 16 |
+| CDEMO-MORE-INFO | LAST-MAP(7) + LAST-MAPSET(7) | 14 |
+| **Total** | | **160** |
 
 ### 4.2 Session Lifecycle
 
@@ -949,6 +969,7 @@ carddemo/bills:pay          - Make bill payments
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-02-05 | Claude Code | Initial security model analysis |
+| 1.1 | 2026-02-06 | Claude Code | RM-007 remediation: COMMAREA size breakdown (M-001), COBSWAIT in access matrix (M-002), SET CDEMO-USRTYP-USER pattern with line refs (M-003), COPAUS0C extension footnote (m-001) |
 
 ---
 
