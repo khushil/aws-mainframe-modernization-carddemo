@@ -1,8 +1,26 @@
-mock-data-generator/node_modules/*
-sample/*
-.vscode/*
-mock-data-generator/markers/*
-batch-app/markers/*
-/.idea/
+# Node.js dependencies
+node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific files
 .DS_Store
 **/.DS_Store
+Thumbs.db
+
+# Build and compilation artifacts
+*.lst
+*.lis
+*.txt.symbols
+test.txt
+
+# Markers directories (build process)
+**/markers/
+
+# Legacy patterns (kept for compatibility)
+sample/*
