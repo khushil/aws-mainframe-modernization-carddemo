@@ -1,0 +1,370 @@
+openapi: 3.0.3
+info:
+  title: CardDemo Authentication API
+  description: |
+    API for authentication operations extracted from CardDemo COBOL programs.
+
+    **Source Programs:**
+    - COSGN00C.cbl - User Sign-on
+
+    **Data Sources:**
+    - USRSEC (User Security File - VSAM KSDS)
+
+    **Security Model:**
+    The COBOL application uses a simple user type system:
+    - Type 'A' = Admin (full access)
+    - Type 'U' = User (limited access)
+
+    This is mapped to OAuth 2.0 scopes in the JWT token.
+  version: 1.0.0
+  contact:
+    name: CardDemo API Support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.carddemo.example.com/v1
+    description: Production server
+  - url: https://api-staging.carddemo.example.com/v1
+    description: Staging server
+
+tags:
+  - name: Authentication
+    description: User authentication and token management
+
+paths:
+  /auth/token:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user and obtain JWT token
+      description: |
+        Authenticates user credentials and returns a JWT access token.
+
+        **COBOL Source:** COSGN00C.cbl (lines 108-257)
+
+        **Files Accessed:**
+        - USRSEC (read by SEC-USR-ID)
+
+        **Authentication Flow:**
+        1. Lookup user by ID in USRSEC file
+        2. Compare provided password with SEC-USR-PWD
+        3. On success, return JWT with scopes based on SEC-USR-TYPE
+
+        **Scope Assignment:**
+        - SEC-USR-TYPE = 'A' → Admin scopes
+        - SEC-USR-TYPE = 'U' → User scopes
+      operationId: authenticate
+      security: []  # No auth required for this endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+            example:
+              userId: "ADMIN001"
+              password: "PASSWORD"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                adminUser:
+                  summary: Admin user response
+                  value:
+                    accessToken: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+                    scope: "carddemo:admin accounts:read accounts:write cards:read cards:write transactions:read transactions:write users:read users:write"
+                    user:
+                      userId: "ADMIN001"
+                      firstName: "SYSTEM"
+                      lastName: "ADMINISTRATOR"
+                      userType: "admin"
+                regularUser:
+                  summary: Regular user response
+                  value:
+                    accessToken: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    tokenType: "Bearer"
+                    expiresIn: 3600
+                    scope: "carddemo:user accounts:read cards:read transactions:read transactions:write"
+                    user:
+                      userId: "USER0001"
+                      firstName: "JOHN"
+                      lastName: "DOE"
+                      userType: "user"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingUserId:
+                  summary: Missing user ID
+                  value:
+                    error:
+                      code: "MISSING_USER_ID"
+                      message: "Please enter User ID ..."
+                missingPassword:
+                  summary: Missing password
+                  value:
+                    error:
+                      code: "MISSING_PASSWORD"
+                      message: "Please enter Password ..."
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                userNotFound:
+                  summary: User not found
+                  value:
+                    error:
+                      code: "USER_NOT_FOUND"
+                      message: "User not found. Try again ..."
+                invalidPassword:
+                  summary: Invalid password
+                  value:
+                    error:
+                      code: "INVALID_CREDENTIALS"
+                      message: "Wrong Password. Try again ..."
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INTERNAL_ERROR"
+                  message: "Unable to verify the User ..."
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: |
+        Refreshes an expired access token.
+
+        **Note:** This endpoint is an extension not present in the original
+        COBOL application but recommended for API implementations.
+      operationId: refreshToken
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            example:
+              refreshToken: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/revoke:
+    post:
+      tags:
+        - Authentication
+      summary: Revoke access token
+      description: |
+        Revokes the current access token (logout).
+
+        **Note:** This endpoint is an extension not present in the original
+        COBOL application (which uses PF3 to exit).
+      operationId: revokeToken
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Token revoked successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token containing user identity and scopes.
+
+        **Token Claims:**
+        - `sub`: User ID (from SEC-USR-ID)
+        - `name`: Full name (SEC-USR-FNAME + SEC-USR-LNAME)
+        - `type`: User type ('admin' or 'user')
+        - `scope`: Space-delimited OAuth scopes
+
+  schemas:
+    AuthRequest:
+      type: object
+      required:
+        - userId
+        - password
+      properties:
+        userId:
+          type: string
+          maxLength: 8
+          description: |
+            User ID (max 8 characters).
+
+            Maps to COBOL: WS-USER-ID, SEC-USR-ID
+          example: "ADMIN001"
+        password:
+          type: string
+          maxLength: 8
+          format: password
+          description: |
+            Password (max 8 characters).
+
+            Maps to COBOL: WS-USER-PWD, SEC-USR-PWD
+
+            **Note:** Password is converted to uppercase before comparison.
+          example: "PASSWORD"
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+        - scope
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+        tokenType:
+          type: string
+          enum:
+            - Bearer
+          description: Token type (always "Bearer")
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 3600
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+        scope:
+          type: string
+          description: |
+            Space-delimited list of granted scopes.
+
+            **Admin scopes (SEC-USR-TYPE = 'A'):**
+            - carddemo:admin
+            - accounts:read, accounts:write
+            - cards:read, cards:write
+            - transactions:read, transactions:write
+            - users:read, users:write
+
+            **User scopes (SEC-USR-TYPE = 'U'):**
+            - carddemo:user
+            - accounts:read
+            - cards:read
+            - transactions:read, transactions:write
+          example: "carddemo:admin accounts:read accounts:write"
+        user:
+          $ref: '#/components/schemas/UserInfo'
+
+    UserInfo:
+      type: object
+      properties:
+        userId:
+          type: string
+          maxLength: 8
+          description: User ID
+          example: "ADMIN001"
+        firstName:
+          type: string
+          maxLength: 20
+          description: First name (from SEC-USR-FNAME)
+          example: "SYSTEM"
+        lastName:
+          type: string
+          maxLength: 20
+          description: Last name (from SEC-USR-LNAME)
+          example: "ADMINISTRATOR"
+        userType:
+          type: string
+          enum:
+            - admin
+            - user
+          description: |
+            User type mapped from SEC-USR-TYPE:
+            - 'A' → 'admin'
+            - 'U' → 'user'
+          example: "admin"
+
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token from previous authentication
+          example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: |
+                Error code mapped from COBOL conditions:
+                - DFHRESP(NOTFND) [code 13] → USER_NOT_FOUND
+                - Password mismatch → INVALID_CREDENTIALS
+                - Empty user ID → MISSING_USER_ID
+                - Empty password → MISSING_PASSWORD
+              example: "INVALID_CREDENTIALS"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Wrong Password. Try again ..."
+            details:
+              type: object
+              additionalProperties: true
+
+  responses:
+    Unauthorized:
+      description: Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"

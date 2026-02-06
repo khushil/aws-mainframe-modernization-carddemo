@@ -1,0 +1,47 @@
+validation_id: VL-001
+title: Domain Model Validation
+status: completed
+started: "2026-02-06"
+completed: "2026-02-06"
+targets:
+  - docs/reverse-engineering/01-domain-model/DOMAIN-MODEL.md
+  - docs/reverse-engineering/01-domain-model/UBIQUITOUS-LANGUAGE.md
+  - docs/reverse-engineering/01-domain-model/BUSINESS-RULES.md
+  - docs/reverse-engineering/01-domain-model/DOMAIN-EVENTS.md
+verdict: PASS
+score: 88
+steps:
+  step_1_directories:
+    status: completed
+  step_2_source_references:
+    status: completed
+    references_checked: 95
+    pass: 93
+    minor_offset: 2
+    fail: 0
+  step_3_code_excerpts:
+    status: completed
+    excerpts_verified: 40+
+    verbatim_match_rate: 100%
+  step_4_completeness:
+    status: completed
+    copybooks_covered: 16/29
+    programs_covered: 22/29
+    entities_documented: 10
+    glossary_terms: 312
+  step_5_quantitative:
+    status: completed
+    line_count_systematic_offset: "+1 across all 14 entries"
+  step_6_doc_quality:
+    status: completed
+    mermaid_diagrams: 12
+    mermaid_syntax_errors: 0
+    toc_missing_in_long_docs: 2
+  step_7_hallucination:
+    status: completed
+    hallucinations_found: 0
+  step_8_findings_yaml:
+    status: completed
+  step_9_report:
+    status: completed
+output: docs/reverse-engineering/validation/VL-001-domain-model-report.md

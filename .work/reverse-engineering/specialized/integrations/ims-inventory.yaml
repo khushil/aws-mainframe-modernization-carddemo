@@ -1,0 +1,267 @@
+# CardDemo IMS DB Integration Inventory
+# Generated: 2026-02-05
+
+database:
+  name: DBPAUTP0
+  access_method: HIDAM
+  description: Hierarchical Indexed Direct Access Method for pending authorizations
+  psb: PSBPAUTB
+
+segments:
+  root:
+    name: PAUTSUM0
+    description: Pending Authorization Summary (Root Segment)
+    copybook: app/app-authorization-ims-db2-mq/cpy/CIPAUSMY.cpy
+    key:
+      field: ACCNTID
+      type: Account ID
+    fields:
+      - name: PA-ACCT-ID
+        type: PIC S9(11) COMP-3
+        description: Account identifier (key field)
+      - name: PA-CUST-ID
+        type: PIC 9(09)
+        description: Customer identifier
+      - name: PA-AUTH-STATUS
+        type: PIC X(01)
+        description: Authorization status
+      - name: PA-ACCOUNT-STATUS
+        type: PIC X(02) OCCURS 5 TIMES
+        description: Account status array
+      - name: PA-CREDIT-LIMIT
+        type: PIC S9(09)V99 COMP-3
+        description: Credit limit
+      - name: PA-CASH-LIMIT
+        type: PIC S9(09)V99 COMP-3
+        description: Cash advance limit
+      - name: PA-CREDIT-BALANCE
+        type: PIC S9(09)V99 COMP-3
+        description: Current credit balance
+      - name: PA-CASH-BALANCE
+        type: PIC S9(09)V99 COMP-3
+        description: Current cash balance
+      - name: PA-APPROVED-AUTH-CNT
+        type: PIC S9(04) COMP
+        description: Count of approved authorizations
+      - name: PA-DECLINED-AUTH-CNT
+        type: PIC S9(04) COMP
+        description: Count of declined authorizations
+      - name: PA-APPROVED-AUTH-AMT
+        type: PIC S9(09)V99 COMP-3
+        description: Total approved amount
+      - name: PA-DECLINED-AUTH-AMT
+        type: PIC S9(09)V99 COMP-3
+        description: Total declined amount
+    estimated_size_bytes: 100
+
+  child:
+    name: PAUTDTL1
+    description: Pending Authorization Details (Child Segment)
+    copybook: app/app-authorization-ims-db2-mq/cpy/CIPAUDTY.cpy
+    parent: PAUTSUM0
+    key:
+      fields:
+        - PA-AUTH-DATE-9C
+        - PA-AUTH-TIME-9C
+      type: Composite (Date + Time)
+      note: Values stored as 99999-date and 999999999-time for descending order
+    fields:
+      - name: PA-AUTHORIZATION-KEY
+        description: Composite key structure
+        subfields:
+          - name: PA-AUTH-DATE-9C
+            type: PIC S9(05) COMP-3
+            description: Authorization date key
+          - name: PA-AUTH-TIME-9C
+            type: PIC S9(09) COMP-3
+            description: Authorization time key
+      - name: PA-AUTH-ORIG-DATE
+        type: PIC X(06)
+        description: Original authorization date (YYMMDD)
+      - name: PA-AUTH-ORIG-TIME
+        type: PIC X(06)
+        description: Original authorization time (HHMMSS)
+      - name: PA-CARD-NUM
+        type: PIC X(16)
+        description: Card number
+      - name: PA-AUTH-TYPE
+        type: PIC X(04)
+        description: Authorization type
+      - name: PA-CARD-EXPIRY-DATE
+        type: PIC X(04)
+        description: Card expiry date (MMYY)
+      - name: PA-MESSAGE-TYPE
+        type: PIC X(06)
+        description: Message type code
+      - name: PA-MESSAGE-SOURCE
+        type: PIC X(06)
+        description: Message source identifier
+      - name: PA-AUTH-ID-CODE
+        type: PIC X(06)
+        description: Authorization ID code
+      - name: PA-AUTH-RESP-CODE
+        type: PIC X(02)
+        description: Authorization response code
+        values:
+          "00": Approved
+          "05": Declined
+      - name: PA-AUTH-RESP-REASON
+        type: PIC X(04)
+        description: Response reason code
+      - name: PA-PROCESSING-CODE
+        type: PIC 9(06)
+        description: Processing code
+      - name: PA-TRANSACTION-AMT
+        type: PIC S9(10)V99 COMP-3
+        description: Transaction amount
+      - name: PA-APPROVED-AMT
+        type: PIC S9(10)V99 COMP-3
+        description: Approved amount
+      - name: PA-MERCHANT-CATAGORY-CODE
+        type: PIC X(04)
+        description: Merchant category code (MCC)
+      - name: PA-ACQR-COUNTRY-CODE
+        type: PIC X(03)
+        description: Acquirer country code
+      - name: PA-POS-ENTRY-MODE
+        type: PIC 9(02)
+        description: POS entry mode
+      - name: PA-MERCHANT-ID
+        type: PIC X(15)
+        description: Merchant identifier
+      - name: PA-MERCHANT-NAME
+        type: PIC X(22)
+        description: Merchant name
+      - name: PA-MERCHANT-CITY
+        type: PIC X(13)
+        description: Merchant city
+      - name: PA-MERCHANT-STATE
+        type: PIC X(02)
+        description: Merchant state
+      - name: PA-MERCHANT-ZIP
+        type: PIC X(09)
+        description: Merchant ZIP code
+      - name: PA-TRANSACTION-ID
+        type: PIC X(15)
+        description: Transaction identifier
+      - name: PA-MATCH-STATUS
+        type: PIC X(01)
+        description: Match status
+        values:
+          P: Pending
+          D: Auth Declined
+          E: Pending Expired
+          M: Matched with Transaction
+      - name: PA-AUTH-FRAUD
+        type: PIC X(01)
+        description: Fraud flag
+        values:
+          F: Fraud Confirmed
+          R: Fraud Removed
+      - name: PA-FRAUD-RPT-DATE
+        type: PIC X(08)
+        description: Fraud report date
+
+dli_functions:
+  from_copybook: app/app-authorization-ims-db2-mq/cpy/IMSFUNCS.cpy
+  codes:
+    - code: GU
+      name: Get Unique
+      description: Position to specific segment by key
+      example_program: COPAUA0C
+      example_line: 620-624
+    - code: GHU
+      name: Get Hold Unique
+      description: Same as GU with update intent (lock)
+      usage: Update scenarios
+    - code: GN
+      name: Get Next
+      description: Sequential forward navigation
+      example_program: CBPAUP0C
+      example_line: 223-226
+    - code: GHN
+      name: Get Hold Next
+      description: GN with update intent
+      usage: Sequential update processing
+    - code: GNP
+      name: Get Next in Parent
+      description: Iterate child segments under current parent
+      example_program: CBPAUP0C
+      example_line: 255-258
+    - code: GHNP
+      name: Get Hold Next in Parent
+      description: GNP with update intent
+      usage: Child segment updates
+    - code: REPL
+      name: Replace
+      description: Update current segment
+      example_program: COPAUA0C
+      example_line: 825-828
+    - code: ISRT
+      name: Insert
+      description: Add new segment
+      examples:
+        - program: COPAUA0C
+          line: 830-833
+          note: Insert root segment
+        - program: COPAUA0C
+          line: 913-919
+          note: Insert child with parent path
+    - code: DLET
+      name: Delete
+      description: Remove current segment
+      examples:
+        - program: CBPAUP0C
+          line: 310-313
+          note: Delete child segment
+        - program: CBPAUP0C
+          line: 335-338
+          note: Delete root segment
+
+status_codes:
+  - code: "  "
+    meaning: Success
+    action: Continue
+  - code: FW
+    meaning: Success (alternate)
+    action: Continue
+  - code: GE
+    meaning: Segment not found
+    action: Set not-found flag
+  - code: GB
+    meaning: End of database
+    action: Exit loop
+  - code: II
+    meaning: Duplicate segment
+    action: Handle duplicate
+  - code: GP
+    meaning: Wrong parentage
+    action: Error handling
+  - code: BA
+    meaning: Database unavailable
+    action: Retry or abort
+  - code: TC
+    meaning: PSB scheduled more than once
+    action: TERM and re-SCHD
+  - code: TE
+    meaning: Could not schedule PSB
+    action: Abort
+
+programs_using:
+  - name: COPAUA0C
+    type: CICS Online
+    operations: [GU, REPL, ISRT]
+    description: Real-time authorization processing
+  - name: CBPAUP0C
+    type: Batch
+    operations: [GN, GNP, DLET, CHKP]
+    description: Purge expired authorizations
+
+psb_scheduling:
+  program: COPAUA0C
+  pattern: |
+    EXEC DLI SCHD PSB((PSB-NAME)) NODHABEND END-EXEC
+    IF PSB-SCHEDULED-MORE-THAN-ONCE
+       EXEC DLI TERM END-EXEC
+       EXEC DLI SCHD PSB((PSB-NAME)) NODHABEND END-EXEC
+    END-IF

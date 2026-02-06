@@ -1,0 +1,76 @@
+validation_id: VL-002
+target: RE-002 Data Model Extraction
+status: COMPLETED
+date: 2026-02-06
+
+phases:
+  phase_1_claims_inventory:
+    status: completed
+    output: claims-inventory.yaml
+    summary: Cataloged all verifiable claims from 4 documentation files
+
+  phase_2_source_references:
+    status: completed
+    output: source-reference-results.yaml
+    summary: >
+      Verified 33 source references (12 copybooks, 10 JCL, 11 COBOL line ranges).
+      All references correct. Zero hallucinations found.
+
+  phase_3_factual_accuracy:
+    status: completed
+    output: factual-accuracy-results.yaml
+    summary: >
+      Verified 80 PIC clauses, 10 record lengths, 13 VSAM key definitions,
+      18 SQL type mappings. All correct. COMP-3 claim verified. Typos preserved.
+
+  phase_4_completeness:
+    status: completed
+    output: completeness-results.yaml
+    summary: >
+      All 10 entities, 80 fields, 10 FILLER fields, 3 AIX definitions,
+      3 batch program lineages covered. Minor gap: data file inventory not enumerated.
+
+  phase_5_quality:
+    status: completed
+    output: quality-results.yaml
+    summary: >
+      8 Mermaid diagrams syntactically valid. Consistent formatting across all 4 docs.
+      Full cross-document consistency. Minor ER modeling interpretation issue.
+
+  phase_6_final_report:
+    status: completed
+    output: ../../docs/reverse-engineering/validation/VL-002-data-model-report.md
+    summary: >
+      Final score 97.8/100. Verdict PASS.
+      0 critical, 0 major, 4 minor findings. Zero hallucinations.
+
+scores:
+  source_reference_accuracy:
+    weight: 35
+    raw_score: 100.0
+    weighted_score: 35.0
+  factual_accuracy:
+    weight: 25
+    raw_score: 100.0
+    weighted_score: 25.0
+  completeness:
+    weight: 20
+    raw_score: 95.0
+    weighted_score: 19.0
+  quantitative_accuracy:
+    weight: 10
+    raw_score: 90.0
+    weighted_score: 9.0
+  documentation_quality:
+    weight: 10
+    raw_score: 98.0
+    weighted_score: 9.8
+  total: 97.8
+
+verdict: PASS
+findings:
+  critical: 0
+  major: 0
+  minor: 4
+  info: 2
+hallucinations: 0

@@ -1,0 +1,220 @@
+# RE-005: Screen Inventory
+# CardDemo Mainframe Application - All 17 BMS Mapsets
+
+screens:
+  # Authentication
+  - bms_file: COSGN00.bms
+    mapset: COSGN00
+    map_name: COSGN0A
+    program: COSGN00C
+    category: Authentication
+    title: Sign-On Screen
+    description: Application login/authentication screen
+    field_count: ~35
+    input_fields: [USERID, PASSWD]
+    pf_keys: [ENTER=Sign-on, F3=Exit]
+
+  # Admin Navigation
+  - bms_file: COADM01.bms
+    mapset: COADM01
+    map_name: COADM1A
+    program: COADM01C
+    category: Navigation-Admin
+    title: Admin Menu
+    description: Administrative menu for user management
+    field_count: ~32
+    input_fields: [OPTION]
+    pf_keys: [ENTER=Continue, F3=Exit]
+    menu_options: 6
+
+  # User Navigation
+  - bms_file: COMEN01.bms
+    mapset: COMEN01
+    map_name: COMEN1A
+    program: COMEN01C
+    category: Navigation-User
+    title: Main Menu
+    description: Main user menu with 11 options
+    field_count: ~32
+    input_fields: [OPTION]
+    pf_keys: [ENTER=Continue, F3=Exit]
+    menu_options: 11
+
+  # Account Module
+  - bms_file: COACTVW.bms
+    mapset: COACTVW
+    map_name: CACTVWA
+    program: COACTVWC
+    category: Account
+    title: View Account
+    description: Account details view with customer info
+    field_count: ~95
+    input_fields: [ACCTSID]
+    pf_keys: [F3=Exit]
+
+  - bms_file: COACTUP.bms
+    mapset: COACTUP
+    map_name: CACTUPA
+    program: COACTUPC
+    category: Account
+    title: Update Account
+    description: Account update form with editable fields
+    field_count: ~145
+    input_fields: [ACCTSID, ACSTTUS, OPNYEAR, OPNMON, OPNDAY, ACRDLIM, etc.]
+    pf_keys: [ENTER=Process, F3=Exit, F5=Save, F12=Cancel]
+
+  # Card Module
+  - bms_file: COCRDLI.bms
+    mapset: COCRDLI
+    map_name: CCRDLIA
+    program: COCRDLIC
+    category: Card
+    title: List Credit Cards
+    description: Paginated list of credit cards
+    field_count: ~72
+    input_fields: [ACCTSID, CARDSID, CRDSEL1-7]
+    list_rows: 7
+    pf_keys: [F3=Exit, F7=Backward, F8=Forward]
+
+  - bms_file: COCRDSL.bms
+    mapset: COCRDSL
+    map_name: CCRDSLA
+    program: COCRDSLC
+    category: Card
+    title: View Credit Card Detail
+    description: Credit card detail view
+    field_count: ~39
+    input_fields: [ACCTSID, CARDSID]
+    pf_keys: [ENTER=Search, F3=Exit]
+
+  - bms_file: COCRDUP.bms
+    mapset: COCRDUP
+    map_name: CCRDUPA
+    program: COCRDUPC
+    category: Card
+    title: Update Credit Card
+    description: Credit card update form
+    field_count: ~28
+    input_fields: [CARDSID, CRDNAME, CRDSTCD, EXPMON, EXPYEAR]
+    pf_keys: [ENTER=Process, F3=Exit, F5=Save, F12=Cancel]
+
+  # Transaction Module
+  - bms_file: COTRN00.bms
+    mapset: COTRN00
+    map_name: COTRN0A
+    program: COTRN00C
+    category: Transaction
+    title: List Transactions
+    description: Paginated transaction list with selection
+    field_count: ~151
+    input_fields: [TRNIDIN, SEL0001-10]
+    list_rows: 10
+    pf_keys: [ENTER=Continue, F3=Back, F7=Backward, F8=Forward]
+
+  - bms_file: COTRN01.bms
+    mapset: COTRN01
+    map_name: COTRN1A
+    program: COTRN01C
+    category: Transaction
+    title: View Transaction
+    description: Transaction detail view
+    field_count: ~84
+    input_fields: [TRNIDIN]
+    pf_keys: [ENTER=Fetch, F3=Back, F4=Clear, F5=Browse]
+
+  - bms_file: COTRN02.bms
+    mapset: COTRN02
+    map_name: COTRN2A
+    program: COTRN02C
+    category: Transaction
+    title: Add Transaction
+    description: New transaction entry form
+    field_count: ~88
+    input_fields: [ACTIDIN, CARDNIN, TTYPCD, TCATCD, TRNSRC, TDESC, TRNAMT, etc.]
+    pf_keys: [ENTER=Continue, F3=Back, F4=Clear, F5=Copy Last]
+
+  # Payment Module
+  - bms_file: COBIL00.bms
+    mapset: COBIL00
+    map_name: COBIL0A
+    program: COBIL00C
+    category: Payment
+    title: Bill Payment
+    description: Bill payment confirmation screen
+    field_count: ~26
+    input_fields: [ACTIDIN, CONFIRM]
+    pf_keys: [ENTER=Continue, F3=Back, F4=Clear]
+
+  # User Admin Module (Admin Only)
+  - bms_file: COUSR00.bms
+    mapset: COUSR00
+    map_name: COUSR0A
+    program: COUSR00C
+    category: User-Admin
+    title: List Users
+    description: Paginated user list with selection
+    field_count: ~174
+    input_fields: [USRIDIN, SEL0001-10]
+    list_rows: 10
+    pf_keys: [ENTER=Continue, F3=Back, F7=Backward, F8=Forward]
+
+  - bms_file: COUSR01.bms
+    mapset: COUSR01
+    map_name: COUSR1A
+    program: COUSR01C
+    category: User-Admin
+    title: Add User
+    description: New user creation form
+    field_count: ~26
+    input_fields: [FNAME, LNAME, USERID, PASSWD, USRTYPE]
+    pf_keys: [ENTER=Add User, F3=Back, F4=Clear, F12=Exit]
+
+  - bms_file: COUSR02.bms
+    mapset: COUSR02
+    map_name: COUSR2A
+    program: COUSR02C
+    category: User-Admin
+    title: Update User
+    description: User update form
+    field_count: ~28
+    input_fields: [USRIDIN, FNAME, LNAME, PASSWD, USRTYPE]
+    pf_keys: [ENTER=Fetch, F3=Save&Exit, F4=Clear, F5=Save, F12=Cancel]
+
+  - bms_file: COUSR03.bms
+    mapset: COUSR03
+    map_name: COUSR3A
+    program: COUSR03C
+    category: User-Admin
+    title: Delete User
+    description: User deletion confirmation
+    field_count: ~23
+    input_fields: [USRIDIN]
+    pf_keys: [ENTER=Fetch, F3=Back, F4=Clear, F5=Delete]
+
+  # Reports Module
+  - bms_file: CORPT00.bms
+    mapset: CORPT00
+    map_name: CORPT0A
+    program: CORPT00C
+    category: Reports
+    title: Transaction Reports
+    description: Report generation with date range selection
+    field_count: ~56
+    input_fields: [MONTHLY, YEARLY, CUSTOM, SDTMM, SDTDD, SDTYYYY, etc.]
+    pf_keys: [ENTER=Continue, F3=Back]
+
+summary:
+  total_screens: 17
+  categories:
+    Authentication: 1
+    Navigation-Admin: 1
+    Navigation-User: 1
+    Account: 2
+    Card: 3
+    Transaction: 3
+    Payment: 1
+    User-Admin: 4
+    Reports: 1
+  list_screens: [COUSR00, COTRN00, COCRDLI]
+  form_screens: [COUSR01, COUSR02, COUSR03, COTRN02, COACTUP, COCRDUP]
+  detail_screens: [COACTVW, COCRDSL, COTRN01, COBIL00, CORPT00]

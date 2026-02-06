@@ -1,0 +1,93 @@
+document_inventory:
+  generated: "2026-02-05"
+  total_documents: 36
+  sections:
+    - name: 01-domain-model
+      path: docs/reverse-engineering/01-domain-model/
+      documents:
+        - DOMAIN-MODEL.md
+        - UBIQUITOUS-LANGUAGE.md
+        - BUSINESS-RULES.md
+        - DOMAIN-EVENTS.md
+      count: 4
+      status: complete
+
+    - name: 02-data-model
+      path: docs/reverse-engineering/02-data-model/
+      documents:
+        - DATA-MODEL.md
+        - DATA-DICTIONARY.md
+        - DATA-LINEAGE.md
+        - diagrams/er-diagram.md
+      count: 4
+      status: complete
+
+    - name: 03-context-model
+      path: docs/reverse-engineering/03-context-model/
+      documents:
+        - CONTEXT-MAP.md
+        - COMMAREA-SPECIFICATION.md
+        - NAVIGATION-FLOWS.md
+      count: 3
+      status: complete
+
+    - name: 04-architecture
+      path: docs/reverse-engineering/04-architecture/
+      documents:
+        - C4-L1-SYSTEM-CONTEXT.md
+        - C4-L2-CONTAINER.md
+        - C4-L3-COMPONENT.md
+        - C4-L4-CODE-PATTERNS.md
+        - diagrams/system-context.md
+        - diagrams/container.md
+        - diagrams/component-cics.md
+        - diagrams/component-batch.md
+        - diagrams/data-flow.md
+      count: 9
+      status: complete
+
+    - name: 05-specialized
+      path: docs/reverse-engineering/05-specialized/
+      documents:
+        - SCREEN-FLOWS.md
+        - BATCH-WORKFLOWS.md
+        - SECURITY-MODEL.md
+        - INTEGRATION-PATTERNS.md
+      count: 4
+      status: complete
+
+    - name: 06-quality
+      path: docs/reverse-engineering/06-quality/
+      documents:
+        - TEST-COVERAGE.md
+        - TEST-SCENARIOS.md
+        - EDGE-CASES.md
+      count: 3
+      status: complete
+
+    - name: 07-modernization
+      path: docs/reverse-engineering/07-modernization/
+      documents:
+        - API-CANDIDATES.md
+        - API-CONTRACTS.md
+        - MODERNIZATION-READINESS.md
+        - MIGRATION-ROADMAP.md
+      count: 4
+      status: complete
+
+    - name: appendices
+      path: docs/reverse-engineering/appendices/
+      documents:
+        - PROGRAM-INVENTORY.md
+        - COPYBOOK-INVENTORY.md
+        - FILE-INVENTORY.md
+        - TRANSACTION-INVENTORY.md
+      count: 4
+      status: complete
+
+    - name: index
+      path: docs/reverse-engineering/
+      documents:
+        - index.md
+      count: 1
+      status: complete

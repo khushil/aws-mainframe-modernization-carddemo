@@ -1,0 +1,452 @@
+---
+# Documentation Quality Assessment Results
+# Validation Layer: VL-002
+# Scope: RE-002 Data Model Documentation (4 files)
+# Date: 2026-02-06
+
+metadata:
+  validation_id: "VL-002-QUALITY"
+  validation_type: "documentation_quality"
+  prompt_under_test: "RE-002"
+  documents_reviewed:
+    - "docs/reverse-engineering/02-data-model/DATA-MODEL.md"
+    - "docs/reverse-engineering/02-data-model/DATA-DICTIONARY.md"
+    - "docs/reverse-engineering/02-data-model/DATA-LINEAGE.md"
+    - "docs/reverse-engineering/02-data-model/er-diagram.md"
+  total_documents: 4
+
+# ---------------------------------------------------------------------------
+# 1. Mermaid Syntax Validation
+# ---------------------------------------------------------------------------
+mermaid_syntax_validation:
+  score: 98
+  max_score: 100
+  total_diagrams: 8
+
+  diagrams:
+    - file: "DATA-LINEAGE.md"
+      diagram_count: 3
+      details:
+        - id: "CBTRN02C-flowchart"
+          line_range: "76-120"
+          type: "flowchart TD"
+          features:
+            - "subgraphs"
+            - "decision nodes"
+            - "labeled edges"
+          node_ids_unique: true
+          syntax_errors: 0
+          verdict: "VALID"
+
+        - id: "CBACT04C-flowchart"
+          line_range: "242-287"
+          type: "flowchart TD"
+          features:
+            - "subgraphs"
+            - "decision nodes"
+          connections_valid: true
+          syntax_errors: 0
+          verdict: "VALID"
+
+        - id: "CBTRN03C-flowchart"
+          line_range: "389-442"
+          type: "flowchart TD"
+          features:
+            - "multiple subgraphs"
+            - "complex flow"
+          node_ids_unique: true
+          syntax_errors: 0
+          verdict: "VALID"
+
+    - file: "er-diagram.md"
+      diagram_count: 5
+      details:
+        - id: "complete-er-diagram"
+          line_range: "16-127"
+          type: "erDiagram"
+          entity_count: 10
+          features:
+            - "PK/FK annotations"
+            - "relationship notation using ||--o{"
+            - "attribute definitions"
+          entity_names_consistent: true
+          syntax_errors: 0
+          verdict: "VALID"
+
+        - id: "simplified-er-diagram"
+          line_range: "134-173"
+          type: "erDiagram"
+          entity_count: 5
+          syntax_errors: 0
+          verdict: "VALID"
+
+        - id: "reference-data-relationships"
+          line_range: "180-217"
+          type: "erDiagram"
+          entity_count: 5
+          syntax_errors: 0
+          verdict: "VALID"
+
+        - id: "physical-file-relationships"
+          line_range: "224-257"
+          type: "flowchart LR"
+          features:
+            - "subgraphs"
+            - "cylinder nodes using [()]"
+          syntax_errors: 0
+          verdict: "VALID"
+
+        - id: "alternate-index-relationships"
+          line_range: "264-282"
+          type: "flowchart TD"
+          subgraph_count: 3
+          features:
+            - "AIX relationship mapping"
+          syntax_errors: 0
+          verdict: "VALID"
+
+  issues:
+    - severity: "MINOR"
+      file: "er-diagram.md"
+      diagram: "complete-er-diagram"
+      description: >
+        The relationship DISCLOSURE_GROUP ||--o{ TRAN_CAT_BAL : "defines rates for"
+        is a logical/processing relationship, not a direct FK. DISCLOSURE_GROUP rates
+        are looked up by CBACT04C to compute interest on TRAN_CAT_BAL records, but
+        TRAN_CAT_BAL does not contain a FK to DISCLOSURE_GROUP. The link is indirect
+        through ACCT-GROUP-ID in ACCOUNT. This is a modeling choice, not strictly
+        wrong, but could be misleading.
+
+    - severity: "MINOR"
+      file: "er-diagram.md"
+      diagram: "complete-er-diagram"
+      description: >
+        The relationship TRAN_CATEGORY ||--o{ DISCLOSURE_GROUP : "has rates in"
+        has a reversed direction. DISCLOSURE_GROUP has a FK-like composite key
+        matching TRAN_CATEGORY's key, so this direction is acceptable but
+        could be interpreted differently.
+
+  summary: >
+    All 8 Mermaid diagrams across 2 files have valid syntax. No parse errors
+    detected. Two minor modeling interpretation issues in the complete ER
+    diagram where logical/processing relationships are represented as direct
+    relationships. These are design choices rather than errors.
+
+# ---------------------------------------------------------------------------
+# 2. ER Entity-to-Copybook Mapping Verification
+# ---------------------------------------------------------------------------
+er_to_copybook_mapping:
+  score: 100
+  max_score: 100
+
+  mappings:
+    - entity: "CUSTOMER"
+      copybook: "CVCUS01Y.cpy"
+      fields_match: true
+      notes: "All fields present with correct PIC annotations"
+
+    - entity: "ACCOUNT"
+      copybook: "CVACT01Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "CARD"
+      copybook: "CVACT02Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "CARD_XREF"
+      copybook: "CVACT03Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "TRANSACTION"
+      copybook: "CVTRA05Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "TRAN_CAT_BAL"
+      copybook: "CVTRA01Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "DISCLOSURE_GROUP"
+      copybook: "CVTRA02Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "TRAN_TYPE"
+      copybook: "CVTRA03Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "TRAN_CATEGORY"
+      copybook: "CVTRA04Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+    - entity: "USER_SECURITY"
+      copybook: "CSUSR01Y.cpy"
+      fields_match: true
+      notes: "All fields present"
+
+  filler_fields:
+    handling: "Correctly omitted from ER diagram"
+    rationale: "Standard practice - FILLER fields are padding, not logical data"
+
+  summary: >
+    All 10 ER entities map correctly to their corresponding copybooks.
+    Every field in each copybook is represented in the ER diagram with
+    accurate PIC clause annotations. FILLER fields are appropriately omitted.
+
+# ---------------------------------------------------------------------------
+# 3. Markdown Formatting Consistency
+# ---------------------------------------------------------------------------
+markdown_formatting:
+  score: 100
+  max_score: 100
+
+  per_document:
+    - file: "DATA-MODEL.md"
+      heading_hierarchy: "H1 > H2 > H3 > H4"
+      heading_hierarchy_valid: true
+      table_format_consistent: true
+      code_blocks_fenced: true
+      code_language_hints: true
+      physical_layout_tables_consistent: true
+      property_tables_consistent: true
+      score: 100
+
+    - file: "DATA-DICTIONARY.md"
+      heading_hierarchy: "H1 > H2 > H3 > H4"
+      heading_hierarchy_valid: true
+      table_format_consistent: true
+      field_table_columns:
+        - "#"
+        - "Field Name"
+        - "COBOL PIC"
+        - "Offset"
+        - "Length"
+        - "SQL Type"
+        - "Description"
+      value_domain_tables_consistent: true
+      sql_ddl_blocks_formatted: true
+      complete_sql_schema_present: true
+      score: 100
+
+    - file: "DATA-LINEAGE.md"
+      heading_hierarchy: "H1 > H2 > H3 > H4"
+      heading_hierarchy_valid: true
+      table_format_consistent: true
+      io_summary_boxes_consistent: true
+      io_summary_format: "ASCII art"
+      code_blocks_fenced: true
+      code_language_hint: "cobol"
+      score: 100
+
+    - file: "er-diagram.md"
+      heading_hierarchy: "H1 > H2 > H3"
+      heading_hierarchy_valid: true
+      mermaid_blocks_fenced: true
+      diagram_sections_titled: true
+      score: 100
+
+  summary: >
+    All 4 documents follow consistent Markdown formatting conventions.
+    Heading hierarchies are well-structured, tables use uniform column
+    layouts, code blocks are properly fenced with language hints, and
+    each document follows its own internal pattern consistently.
+
+# ---------------------------------------------------------------------------
+# 4. Internal Consistency Across Documents
+# ---------------------------------------------------------------------------
+internal_consistency:
+  score: 100
+  max_score: 100
+
+  cross_document_checks:
+    - check: "Field Consistency"
+      description: "DATA-MODEL physical layouts match DATA-DICTIONARY field tables"
+      status: "VERIFIED"
+
+    - check: "PIC Clause Consistency"
+      description: "DATA-DICTIONARY PIC clauses match er-diagram annotations"
+      status: "VERIFIED"
+
+    - check: "Field Reference Consistency"
+      description: "DATA-LINEAGE field references match DATA-DICTIONARY"
+      status: "VERIFIED"
+
+    - check: "Record Length Consistency"
+      description: "DATA-MODEL record sizes match DATA-DICTIONARY"
+      status: "VERIFIED"
+
+    - check: "File Size Consistency"
+      description: "er-diagram file sizes match DATA-MODEL (physical file relationships flowchart)"
+      status: "VERIFIED"
+
+    - check: "Cardinality Consistency"
+      description: "DATA-MODEL section 2.2 cardinalities match er-diagram Cardinality Summary Table"
+      status: "VERIFIED"
+
+    - check: "I/O Relationship Consistency"
+      description: "er-diagram relationships match DATA-LINEAGE I/O summaries"
+      status: "VERIFIED"
+
+    - check: "Entity Naming Consistency"
+      description: "Consistent entity naming across all 4 documents"
+      status: "VERIFIED"
+
+    - check: "VSAM File Naming Consistency"
+      description: "VSAM file names consistent across all 4 documents"
+      status: "VERIFIED"
+
+  issues: []
+
+  summary: >
+    All 9 cross-document consistency checks passed. The 4 RE-002 documents
+    are fully aligned in their representations of entities, fields, record
+    lengths, cardinalities, relationships, and naming conventions.
+
+# ---------------------------------------------------------------------------
+# 5. Quantitative Accuracy
+# ---------------------------------------------------------------------------
+quantitative_accuracy:
+  score: 95
+  max_score: 100
+
+  header_claims:
+    - document: "DATA-DICTIONARY.md"
+      claim: "10 entities"
+      actual_count: 10
+      entities:
+        - "ACCOUNT"
+        - "CARD"
+        - "CUSTOMER"
+        - "CARD_XREF"
+        - "TRANSACTION"
+        - "USER_SECURITY"
+        - "TRAN_CAT_BAL"
+        - "DISCLOSURE_GROUP"
+        - "TRAN_TYPE"
+        - "TRAN_CATEGORY"
+      verdict: "CORRECT"
+
+    - document: "DATA-DICTIONARY.md"
+      claim: "87 fields"
+      actual_leaf_field_count: 80
+      explanation: >
+        Manual count of leaf-level fields yields 80. If counting group-level
+        fields (TRAN-CAT-KEY in CVTRA01Y, DIS-GROUP-KEY in CVTRA02Y,
+        TRAN-CAT-KEY in CVTRA04Y, ACCOUNT-RECORD, CARD-RECORD,
+        CARD-XREF-RECORD, TRAN-RECORD) the total of 87 is plausible but
+        non-standard. Group-level COBOL fields are typically not counted
+        as independent data fields.
+      verdict: "MINOR_DISCREPANCY"
+
+    - document: "DATA-MODEL.md"
+      claim: "10 copybooks"
+      actual_entity_copybooks: 10
+      total_copybooks_referenced: 12
+      explanation: >
+        10 data entity copybooks (CVACT01Y-03Y, CVCUS01Y, CSUSR01Y,
+        CVTRA01Y-05Y) are correctly identified. CVTRA06Y and CVTRA07Y
+        are also referenced in the documentation but are not primary
+        entity copybooks. The claim of 10 is accurate for entity
+        copybooks.
+      verdict: "ACCEPTABLE"
+
+    - document: "DATA-MODEL.md"
+      claim: "10 JCL definitions"
+      actual_jcl_files:
+        - "ACCTFILE"
+        - "CARDFILE"
+        - "CUSTFILE"
+        - "XREFFILE"
+        - "TRANFILE"
+        - "DUSRSECJ"
+        - "TCATBALF"
+        - "DISCGRP"
+        - "TRANTYPE"
+        - "TRANCATG"
+      actual_count: 10
+      verdict: "CORRECT"
+
+    - document: "DATA-MODEL.md"
+      claim: "5 batch programs"
+      primary_programs_analyzed:
+        - "CBTRN02C"
+        - "CBTRN03C"
+        - "CBACT04C"
+      primary_count: 3
+      explanation: >
+        3 batch programs are analyzed in detail. The claim of 5 may
+        include CBACT01C and CBCUS01C or other programs mentioned
+        peripherally. This is a slight overcount relative to the
+        programs given detailed coverage.
+      verdict: "MINOR_DISCREPANCY"
+
+  summary: >
+    Entity count (10) and JCL definition count (10) are accurate. The
+    field count of 87 includes group-level COBOL fields which inflates
+    the number beyond the 80 leaf-level fields. The batch program count
+    of 5 slightly overstates the 3 programs analyzed in detail. These
+    are minor discrepancies that do not impact the overall utility of
+    the documentation.
+
+# ---------------------------------------------------------------------------
+# Overall Quality Assessment
+# ---------------------------------------------------------------------------
+overall:
+  scores:
+    - category: "Mermaid Syntax"
+      score: 98
+      max_score: 100
+      notes: "Valid syntax throughout; minor modeling interpretation issues"
+
+    - category: "ER-to-Copybook Mapping"
+      score: 100
+      max_score: 100
+      notes: "Perfect match across all 10 entities"
+
+    - category: "Markdown Formatting"
+      score: 100
+      max_score: 100
+      notes: "Consistent formatting across all 4 documents"
+
+    - category: "Internal Consistency"
+      score: 100
+      max_score: 100
+      notes: "All documents fully aligned"
+
+    - category: "Quantitative Accuracy"
+      score: 95
+      max_score: 100
+      notes: "87 fields claim and 5 batch programs claim slightly off"
+
+  overall_quality_score: 97
+  overall_max_score: 100
+
+  verdict: "PASS"
+
+  recommendations:
+    - priority: "LOW"
+      description: >
+        Consider adding a note to the complete ER diagram clarifying that
+        the DISCLOSURE_GROUP to TRAN_CAT_BAL relationship is a logical
+        processing dependency (via CBACT04C interest calculation) rather
+        than a direct foreign key relationship.
+
+    - priority: "LOW"
+      description: >
+        Reconcile the field count header claim of 87 with the actual
+        leaf-level field count of 80. Either adjust the count to 80 or
+        add a note explaining that group-level COBOL fields are included
+        in the total.
+
+    - priority: "LOW"
+      description: >
+        Reconcile the batch program count of 5 with the 3 programs
+        analyzed in detail (CBTRN02C, CBTRN03C, CBACT04C). Either
+        expand coverage to include CBACT01C and CBCUS01C or adjust
+        the header claim.

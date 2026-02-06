@@ -1,0 +1,328 @@
+openapi: 3.0.3
+info:
+  title: CardDemo Account API
+  description: |
+    API for account operations extracted from CardDemo COBOL programs.
+
+    **Source Programs:**
+    - COACTVWC.cbl - Account View
+
+    **Data Sources:**
+    - ACCTDAT (Account Master)
+    - CUSTDAT (Customer Master)
+    - CXACAIX (Card-Account Cross Reference)
+  version: 1.0.0
+  contact:
+    name: CardDemo API Support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.carddemo.example.com/v1
+    description: Production server
+  - url: https://api-staging.carddemo.example.com/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Accounts
+    description: Account management operations
+
+paths:
+  /accounts/{accountId}:
+    get:
+      tags:
+        - Accounts
+      summary: Get account details
+      description: |
+        Retrieves account information along with associated customer details.
+
+        **COBOL Source:** COACTVWC.cbl (lines 687-721)
+
+        **Files Accessed:**
+        - CXACAIX (Card-Account cross-reference)
+        - ACCTDAT (Account master)
+        - CUSTDAT (Customer master)
+      operationId: getAccount
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 11-digit account identifier
+          schema:
+            type: string
+            pattern: '^\d{11}$'
+            example: "00000000001"
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+              example:
+                accountId: "00000000001"
+                status: "ACTIVE"
+                currentBalance: 1500.00
+                creditLimit: 5000.00
+                cashCreditLimit: 1000.00
+                openDate: "2020-01-15"
+                expirationDate: "2025-01-15"
+                reissueDate: "2023-01-15"
+                currentCycleCredit: 500.00
+                currentCycleDebit: 200.00
+                groupId: "GROUP001"
+                customer:
+                  customerId: "000000001"
+                  firstName: "JOHN"
+                  middleName: "Q"
+                  lastName: "PUBLIC"
+                  ssn: "XXX-XX-1234"
+                  dateOfBirth: "1980-05-15"
+                  ficoScore: 750
+                  address:
+                    line1: "123 MAIN STREET"
+                    line2: "APT 4B"
+                    city: "SPRINGFIELD"
+                    state: "IL"
+                    zipCode: "62701"
+                    country: "USA"
+                  primaryPhone: "555-123-4567"
+                  secondaryPhone: "555-987-6543"
+        '400':
+          description: Invalid account ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_ACCT_ID"
+                  message: "Account ID must be an 11-digit number"
+                  details:
+                    field: "accountId"
+                    constraint: "pattern: ^\\d{11}$"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "ACCT_NOT_FOUND"
+                  message: "Account not found in account master file"
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/token endpoint
+
+  schemas:
+    AccountResponse:
+      type: object
+      required:
+        - accountId
+        - status
+        - currentBalance
+        - creditLimit
+      properties:
+        accountId:
+          type: string
+          pattern: '^\d{11}$'
+          description: 11-digit account identifier
+          example: "00000000001"
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+          description: Account status (mapped from ACCT-ACTIVE-STATUS Y/N)
+        currentBalance:
+          type: number
+          format: decimal
+          description: Current account balance
+          example: 1500.00
+        creditLimit:
+          type: number
+          format: decimal
+          description: Credit limit
+          example: 5000.00
+        cashCreditLimit:
+          type: number
+          format: decimal
+          description: Cash advance credit limit
+          example: 1000.00
+        openDate:
+          type: string
+          format: date
+          description: Account open date
+          example: "2020-01-15"
+        expirationDate:
+          type: string
+          format: date
+          description: Account expiration date
+          example: "2025-01-15"
+        reissueDate:
+          type: string
+          format: date
+          description: Last card reissue date
+          example: "2023-01-15"
+        currentCycleCredit:
+          type: number
+          format: decimal
+          description: Credits in current billing cycle
+          example: 500.00
+        currentCycleDebit:
+          type: number
+          format: decimal
+          description: Debits in current billing cycle
+          example: 200.00
+        groupId:
+          type: string
+          maxLength: 10
+          description: Account group identifier
+          example: "GROUP001"
+        customer:
+          $ref: '#/components/schemas/Customer'
+
+    Customer:
+      type: object
+      required:
+        - customerId
+        - firstName
+        - lastName
+      properties:
+        customerId:
+          type: string
+          pattern: '^\d{9}$'
+          description: 9-digit customer identifier
+          example: "000000001"
+        firstName:
+          type: string
+          maxLength: 25
+          description: Customer first name
+          example: "JOHN"
+        middleName:
+          type: string
+          maxLength: 25
+          description: Customer middle name
+          example: "Q"
+        lastName:
+          type: string
+          maxLength: 25
+          description: Customer last name
+          example: "PUBLIC"
+        ssn:
+          type: string
+          pattern: '^XXX-XX-\d{4}$'
+          description: Masked SSN (last 4 digits only)
+          example: "XXX-XX-1234"
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth
+          example: "1980-05-15"
+        ficoScore:
+          type: integer
+          minimum: 300
+          maximum: 850
+          description: FICO credit score
+          example: 750
+        address:
+          $ref: '#/components/schemas/Address'
+        primaryPhone:
+          type: string
+          maxLength: 15
+          description: Primary phone number
+          example: "555-123-4567"
+        secondaryPhone:
+          type: string
+          maxLength: 15
+          description: Secondary phone number
+          example: "555-987-6543"
+
+    Address:
+      type: object
+      properties:
+        line1:
+          type: string
+          maxLength: 50
+          example: "123 MAIN STREET"
+        line2:
+          type: string
+          maxLength: 50
+          example: "APT 4B"
+        city:
+          type: string
+          maxLength: 50
+          example: "SPRINGFIELD"
+        state:
+          type: string
+          maxLength: 2
+          example: "IL"
+        zipCode:
+          type: string
+          maxLength: 10
+          example: "62701"
+        country:
+          type: string
+          maxLength: 3
+          example: "USA"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: "ACCT_NOT_FOUND"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Account not found"
+            details:
+              type: object
+              additionalProperties: true
+              description: Additional error details
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

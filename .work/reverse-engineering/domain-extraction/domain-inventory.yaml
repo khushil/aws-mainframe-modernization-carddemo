@@ -1,0 +1,219 @@
+# RE-001 Domain Inventory
+# Generated: 2026-02-05
+
+aggregate_roots:
+  - name: Account
+    source: CVACT01Y.cpy
+    identity: ACCT-ID (11 digits)
+    children:
+      - Card (1:N via CARD-ACCT-ID)
+      - TransactionCategoryBalance (1:N per type/category)
+    embedded_values:
+      - currentCycleCredit
+      - currentCycleDebit
+
+  - name: Customer
+    source: CVCUS01Y.cpy
+    identity: CUST-ID (9 digits)
+    embedded_values:
+      - Name (first, middle, last)
+      - Address (line1-3, state, country, zip)
+      - Contact (phone1, phone2)
+      - Identity (ssn, govtId, dob)
+      - FinancialProfile (ficoScore, eftAccountId)
+
+  - name: Transaction
+    source: CVTRA05Y.cpy
+    identity: TRAN-ID (16 chars)
+    embedded_values:
+      - Merchant (id, name, city, zip)
+      - Timestamps (origin, process)
+
+  - name: User
+    source: CSUSR01Y.cpy
+    identity: SEC-USR-ID (8 chars)
+    embedded_values:
+      - Credentials (password)
+
+entities:
+  - name: Card
+    source: CVACT02Y.cpy
+    identity: CARD-NUM (16 chars)
+    parent: Account
+    classification: Child Entity
+
+  - name: CardCrossReference
+    source: CVACT03Y.cpy
+    identity: XREF-CARD-NUM (16 chars)
+    classification: Junction Entity
+    relationships:
+      - Card (1:1)
+      - Customer (N:1)
+      - Account (N:1)
+
+  - name: TransactionCategoryBalance
+    source: CVTRA01Y.cpy
+    identity: ACCT-ID + TYPE-CD + CAT-CD (composite)
+    parent: Account
+    classification: Child Entity
+
+  - name: DailyTransaction
+    source: CVTRA06Y.cpy
+    identity: DALYTRAN-ID (16 chars)
+    classification: Transient Entity
+    purpose: Staging before batch posting
+
+reference_data:
+  - name: TransactionType
+    source: CVTRA03Y.cpy
+    identity: TRAN-TYPE (2 chars)
+    known_values:
+      - DB: Debit
+      - CR: Credit
+      - FE: Fee
+      - IN: Interest
+
+  - name: TransactionCategory
+    source: CVTRA04Y.cpy
+    identity: TYPE-CD + CAT-CD (composite)
+    purpose: Sub-classification within type
+
+  - name: DisclosureGroup
+    source: CVTRA02Y.cpy
+    identity: GROUP-ID + TYPE-CD + CAT-CD (composite)
+    purpose: Interest rate configuration
+
+  - name: ValidPhoneAreaCode
+    source: CSLKPCDY.cpy
+    purpose: NANPA area code validation
+    count: 500+
+
+  - name: ValidUSStateCode
+    source: CSLKPCDY.cpy
+    purpose: US state code validation
+    count: 55
+
+  - name: ValidStateZipCombo
+    source: CSLKPCDY.cpy
+    purpose: State-ZIP validation
+    count: 200+
+
+value_objects:
+  - name: Money
+    representation: PIC S9(10)V99
+    precision: 2 decimal places
+    range: -9,999,999,999.99 to +9,999,999,999.99
+    used_for: balances, limits, amounts
+
+  - name: Date
+    representation: PIC X(10)
+    format: YYYY-MM-DD
+    used_for: openDate, expirationDate, dob
+
+  - name: Timestamp
+    representation: PIC X(26)
+    format: YYYY-MM-DD-HH.MM.SS.FFFFFF
+    used_for: transaction timestamps
+
+  - name: Name
+    components:
+      - firstName: PIC X(25)
+      - middleName: PIC X(25)
+      - lastName: PIC X(25)
+
+  - name: Address
+    components:
+      - line1: PIC X(50)
+      - line2: PIC X(50)
+      - line3: PIC X(50)
+      - stateCode: PIC X(2)
+      - countryCode: PIC X(3)
+      - zipCode: PIC X(10)
+
+  - name: Contact
+    components:
+      - phone1: PIC X(15)
+      - phone2: PIC X(15)
+
+  - name: Merchant
+    components:
+      - merchantId: PIC 9(9)
+      - merchantName: PIC X(50)
+      - merchantCity: PIC X(50)
+      - merchantZip: PIC X(10)
+
+session_context:
+  - name: COMMAREA
+    source: COCOM01Y.cpy
+    components:
+      - fromTranid: Navigation source
+      - fromProgram: Calling program
+      - toTranid: Navigation target
+      - toProgram: Target program
+      - userId: Authenticated user
+      - userType: Role (A/U)
+      - programContext: Enter(0)/Reenter(1)
+      - customerInfo: Selected customer
+      - accountInfo: Selected account
+      - cardInfo: Selected card
+      - lastMap: Previous screen
+      - lastMapset: Previous mapset
+
+domain_relationships:
+  - from: Customer
+    to: Account
+    cardinality: "1:N"
+    via: XREF lookup
+
+  - from: Account
+    to: Card
+    cardinality: "1:N"
+    via: CARD-ACCT-ID
+
+  - from: Card
+    to: Transaction
+    cardinality: "1:N"
+    via: TRAN-CARD-NUM
+
+  - from: Account
+    to: DisclosureGroup
+    cardinality: "N:1"
+    via: ACCT-GROUP-ID
+
+  - from: CardCrossReference
+    to: Card
+    cardinality: "1:1"
+    via: XREF-CARD-NUM = CARD-NUM
+
+  - from: CardCrossReference
+    to: Customer
+    cardinality: "N:1"
+    via: XREF-CUST-ID
+
+  - from: CardCrossReference
+    to: Account
+    cardinality: "N:1"
+    via: XREF-ACCT-ID
+
+88_level_states:
+  user_types:
+    - CDEMO-USRTYP-ADMIN: VALUE 'A'
+    - CDEMO-USRTYP-USER: VALUE 'U'
+
+  program_context:
+    - CDEMO-PGM-ENTER: VALUE 0
+    - CDEMO-PGM-REENTER: VALUE 1
+
+  card_status:
+    - Active: VALUE 'Y'
+    - Inactive: VALUE 'N'
+
+  validation_flags:
+    - ISVALID: VALUE LOW-VALUES
+    - NOT-OK: VALUE '0'
+    - BLANK: VALUE 'B'
+
+  function_keys:
+    - CCARD-AID-ENTER: VALUE 'ENTER'
+    - CCARD-AID-CLEAR: VALUE 'CLEAR'
+    - CCARD-AID-PFK01 through PFK12

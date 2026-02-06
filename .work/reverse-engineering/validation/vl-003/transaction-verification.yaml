@@ -1,0 +1,145 @@
+phase: 3
+title: Transaction ID Verification
+status: complete
+doc_file: docs/reverse-engineering/03-context-model/NAVIGATION-FLOWS.md
+
+verified_transids:
+  - transid: CC00
+    program: COSGN00C
+    source: "COSGN00C.cbl:37 — VALUE 'CC00'"
+    in_doc_table: true
+    doc_correct: true
+
+  - transid: CA00
+    program: COADM01C
+    source: "COADM01C.cbl:37 — VALUE 'CA00'"
+    in_doc_table: true
+    doc_correct: true
+
+  - transid: CM00
+    program: COMEN01C
+    source: "COMEN01C.cbl:37 — VALUE 'CM00'"
+    in_doc_table: true
+    doc_correct: true
+
+  - transid: CU00
+    program: COUSR00C
+    source: "COUSR00C.cbl:37 — VALUE 'CU00'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CU01
+    program: COUSR01C
+    source: "COUSR01C.cbl:37 — VALUE 'CU01'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CU02
+    program: COUSR02C
+    source: "COUSR02C.cbl:37 — VALUE 'CU02'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CU03
+    program: COUSR03C
+    source: "COUSR03C.cbl:37 — VALUE 'CU03'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CAVW
+    program: COACTVWC
+    source: "COACTVWC.cbl:145-146 — LIT-THISTRANID VALUE 'CAVW'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CAUP
+    program: COACTUPC
+    source: "COACTUPC.cbl:535-536 — LIT-THISTRANID VALUE 'CAUP'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CCLI
+    program: COCRDLIC
+    source: "COCRDLIC.cbl:181-182 — LIT-THISTRANID VALUE 'CCLI'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CCDL
+    program: COCRDSLC
+    source: "COCRDSLC.cbl:165-166 — LIT-THISTRANID VALUE 'CCDL'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CCUP
+    program: COCRDUPC
+    source: "COCRDUPC.cbl:221-222 — LIT-THISTRANID VALUE 'CCUP'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CT00
+    program: COTRN00C
+    source: "COTRN00C.cbl:37 — VALUE 'CT00'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CT01
+    program: COTRN01C
+    source: "COTRN01C.cbl:37 — VALUE 'CT01'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CT02
+    program: COTRN02C
+    source: "COTRN02C.cbl:37 — VALUE 'CT02'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CR00
+    program: CORPT00C
+    source: "CORPT00C.cbl:38 — VALUE 'CR00'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+  - transid: CB00
+    program: COBIL00C
+    source: "COBIL00C.cbl:38 — VALUE 'CB00'"
+    in_doc_table: false
+    in_nav_graph: false
+    note: "Missing from doc entirely"
+
+programs_without_transid:
+  - program: COBSWAIT.cbl
+    has_transid: false
+    note: "Utility program — no WS-TRANID, no EXEC CICS RETURN TRANSID. Correctly absent from docs."
+  - program: CSUTLDTC.cbl
+    has_transid: false
+    note: "Date utility — no WS-TRANID, no CICS transaction. Correctly absent from docs."
+
+summary:
+  total_transids_in_source: 17
+  documented_in_table: 3
+  documented_correctly: 3
+  missing_from_table: 14
+  accuracy_of_documented: "100% (3/3 correct)"
+  completeness_of_table: "17.6% (3/17)"
+  severity: MAJOR
+  note: >
+    The Transaction ID Mapping table (NAVIGATION-FLOWS.md lines 11-15) documents only
+    3 of 17 transaction IDs: CC00, CA00, CM00. The remaining 14 TransIDs
+    (CU00-CU03, CAVW, CAUP, CCLI, CCDL, CCUP, CT00-CT02, CR00, CB00) are
+    entirely absent from both the explicit table and the navigation graph node labels.
+    The navigation graph labels programs by program name but does NOT include their
+    TransIDs. This is a significant completeness gap for a Context Model document.

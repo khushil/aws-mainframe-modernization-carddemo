@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: CardDemo Payment API
+  description: |
+    API for payment operations extracted from CardDemo COBOL programs.
+
+    **Source Programs:**
+    - COBIL00C.cbl - Bill Payment Processing
+
+    **Data Sources:**
+    - ACCTDAT (Account Master - read/update)
+    - CXACAIX (Card-Account Cross Reference)
+    - TRANSACT (Transaction File - write)
+
+    **Transaction Semantics:**
+    This API performs a multi-step transaction:
+    1. Reads account with UPDATE lock
+    2. Validates balance > 0
+    3. Retrieves card number from CXACAIX
+    4. Generates new transaction ID
+    5. Creates payment transaction record
+    6. Updates account balance to $0.00
+  version: 1.0.0
+  contact:
+    name: CardDemo API Support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.carddemo.example.com/v1
+    description: Production server
+  - url: https://api-staging.carddemo.example.com/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Payments
+    description: Bill payment operations
+
+paths:
+  /accounts/{accountId}/payments:
+    post:
+      tags:
+        - Payments
+      summary: Create bill payment
+      description: |
+        Pays the full current balance on an account.
+
+        **COBOL Source:** COBIL00C.cbl (lines 154-244)
+
+        **Business Logic:**
+        - Payment amount equals current balance
+        - After payment, balance is set to $0.00
+        - Creates a transaction record with type '02' (BILL PAYMENT)
+        - Transaction ID is auto-generated (max existing + 1)
+
+        **Files Accessed:**
+        - ACCTDAT (read with UPDATE lock, then REWRITE)
+        - CXACAIX (read to get card number)
+        - TRANSACT (write new payment record)
+
+        **Required Scope:** `transactions:write`
+      operationId: createPayment
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 11-digit account identifier
+          schema:
+            type: string
+            pattern: '^\d{11}$'
+            example: "00000000001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            example:
+              confirm: true
+      responses:
+        '201':
+          description: Payment successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+              example:
+                transactionId: "0000000000000123"
+                paymentAmount: 1500.00
+                newBalance: 0.00
+                processedTimestamp: "2024-01-15T14:30:05Z"
+                message: "Payment successful"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidAccountId:
+                  summary: Invalid account ID format
+                  value:
+                    error:
+                      code: "INVALID_ACCT_ID"
+                      message: "Account ID must be an 11-digit number"
+                invalidConfirmation:
+                  summary: Invalid confirmation value
+                  value:
+                    error:
+                      code: "INVALID_CONFIRM"
+                      message: "Invalid value. Valid values are (Y/N)"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "FORBIDDEN"
+                  message: "Required scope: transactions:write"
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "ACCT_NOT_FOUND"
+                  message: "Account ID NOT found"
+        '409':
+          description: Duplicate transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "DUPLICATE_TRAN"
+                  message: "Transaction ID already exists"
+        '422':
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "NO_BALANCE_DUE"
+                  message: "You have nothing to pay"
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from /auth/token endpoint.
+
+        Required scope: `transactions:write`
+
+  schemas:
+    PaymentRequest:
+      type: object
+      required:
+        - confirm
+      properties:
+        confirm:
+          type: boolean
+          description: |
+            Confirmation flag to proceed with payment.
+
+            Maps to COBOL CONFIRMI field:
+            - true = 'Y' (proceed with payment)
+            - false = 'N' (cancel payment)
+          example: true
+        idempotencyKey:
+          type: string
+          maxLength: 36
+          description: |
+            Optional idempotency key to prevent duplicate payments.
+            Recommended format: UUID v4.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    PaymentResponse:
+      type: object
+      required:
+        - transactionId
+        - paymentAmount
+        - newBalance
+        - processedTimestamp
+      properties:
+        transactionId:
+          type: string
+          pattern: '^\d{16}$'
+          description: |
+            16-digit transaction ID assigned to this payment.
+
+            Generated by: MAX(TRAN-ID) + 1
+          example: "0000000000000123"
+        paymentAmount:
+          type: number
+          format: decimal
+          description: |
+            Amount paid (equals original ACCT-CURR-BAL).
+
+            Source: TRAN-AMT from created transaction record.
+          example: 1500.00
+        newBalance:
+          type: number
+          format: decimal
+          description: |
+            New account balance after payment (always $0.00 for full payment).
+
+            Source: ACCT-CURR-BAL after REWRITE.
+          example: 0.00
+        processedTimestamp:
+          type: string
+          format: date-time
+          description: |
+            Timestamp when payment was processed.
+
+            Source: TRAN-PROC-TS from created transaction record.
+          example: "2024-01-15T14:30:05Z"
+        message:
+          type: string
+          description: Success message
+          example: "Payment successful"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: |
+                Error code mapped from COBOL conditions:
+                - DFHRESP(NOTFND) → ACCT_NOT_FOUND
+                - DFHRESP(DUPREC) → DUPLICATE_TRAN
+                - Balance <= 0 → NO_BALANCE_DUE
+              example: "NO_BALANCE_DUE"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "You have nothing to pay"
+            details:
+              type: object
+              additionalProperties: true
+              description: Additional error context
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

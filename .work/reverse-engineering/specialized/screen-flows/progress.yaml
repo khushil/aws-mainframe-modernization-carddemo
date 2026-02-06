@@ -1,0 +1,64 @@
+# RE-005: Screen Flow Analysis Progress Tracking
+# CardDemo Mainframe Application
+
+project: CardDemo
+analysis_type: RE-005 Screen Flow Analysis
+status: completed
+started: 2026-02-05
+completed: 2026-02-05
+
+phases:
+  phase_1_infrastructure:
+    name: Progress Tracking Infrastructure
+    status: completed
+    artifacts:
+      - progress.yaml
+      - screen-inventory.yaml
+      - field-analysis/
+
+  phase_2_bms_inventory:
+    name: BMS Inventory & Screen Mapping
+    status: completed
+    bms_files_analyzed: 17
+
+  phase_3_field_analysis:
+    name: Field Specifications Extraction
+    status: completed
+    screens_analyzed: 17
+
+  phase_4_pf_keys:
+    name: PF Key Reference Table
+    status: completed
+
+  phase_5_navigation:
+    name: Navigation Flow Mapping
+    status: completed
+    leveraged: docs/reverse-engineering/03-context-model/NAVIGATION-FLOWS.md
+
+  phase_6_user_journeys:
+    name: User Journey Documentation
+    status: completed
+    journeys_documented: 6
+
+  phase_7_error_catalog:
+    name: Error Message Catalog
+    status: completed
+
+  phase_8_ascii_layouts:
+    name: ASCII Screen Layouts
+    status: completed
+
+  phase_9_role_access:
+    name: Role-Based Access Documentation
+    status: completed
+
+  phase_10_final_doc:
+    name: Final Documentation Generation
+    status: completed
+    output_file: docs/reverse-engineering/05-specialized/SCREEN-FLOWS.md
+
+verification:
+  bms_coverage: 17/17
+  cobol_programs_analyzed: 17
+  user_journeys: 6
+  error_messages: extracted

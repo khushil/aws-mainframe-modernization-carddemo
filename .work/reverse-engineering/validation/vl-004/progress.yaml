@@ -1,0 +1,39 @@
+validation_id: VL-004
+title: C4 Architecture Validation
+target: RE-004 C4 Architecture Documentation
+started: "2026-02-06"
+completed: "2026-02-06"
+status: complete
+verdict: FAIL
+score: 90.0
+findings:
+  critical: 0
+  major: 3
+  minor: 2
+  hallucinations: 0
+phases:
+  phase_1_inventory:
+    status: complete
+    description: Pre-validation inventory of source assets and C4 documents
+    result: "4 C4 docs + 5 diagram files; 31 programs, 30 copybooks, 17 BMS, 38 JCL verified"
+  phase_2_source_citations:
+    status: complete
+    description: Source citation verification (all L4 code excerpts)
+    result: "19/19 citations verified exact match at cited line numbers"
+  phase_3_completeness:
+    status: complete
+    description: Program completeness across L2 and L3 levels
+    result: "3 programs missing (CSUTLDTC, CBSTM03A, CBSTM03B), 1 partial (COBSWAIT)"
+  phase_4_quantitative:
+    status: complete
+    description: Quantitative accuracy of counts and tallies
+    result: "CICS count 18 vs actual 19; Batch count 10 vs actual 12; total wrong"
+  phase_5_hallucinations:
+    status: complete
+    description: Hallucination detection across all C4 documents
+    result: "0 hallucinations found; CVCAR00Y, COUSR00Y, S9(7)V99 not referenced"
+  phase_6_report:
+    status: complete
+    description: Score calculation and final report generation
+    artifact: ../../../docs/reverse-engineering/validation/VL-004-c4-architecture-report.md
+report_path: docs/reverse-engineering/validation/VL-004-c4-architecture-report.md

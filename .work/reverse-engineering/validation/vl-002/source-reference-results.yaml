@@ -1,0 +1,584 @@
+###############################################################################
+# VL-002: Source Reference Verification Results
+# RE-002 Data Model Documentation vs. Actual Source Code
+#
+# Validates that every file path, line number, and code snippet cited in the
+# RE-002 data-model documentation exists in the codebase and matches the
+# claimed content.
+#
+# Date: 2026-02-06
+###############################################################################
+
+metadata:
+  validation_id: VL-002
+  target_document: RE-002 (Data Model Extraction)
+  validation_type: source-reference-verification
+  date: "2026-02-06"
+  total_references_checked: 33
+  references_verified_correct: 33
+  references_incorrect: 0
+  hallucinated_references: 0
+  score_percent: 100
+
+# ---------------------------------------------------------------------------
+# Section 1: Copybook File References (12 files)
+# ---------------------------------------------------------------------------
+copybook_references:
+
+  - id: CPY-01
+    file: app/cpy/CVACT01Y.cpy
+    exists: true
+    doc_claim: "Data-structure for account entity (RECLN 300)"
+    source_line: 2
+    source_content: "*    Data-structure for  account entity (RECLN 300)"
+    result: MATCH
+    details:
+      - claim: "CVACT01Y.cpy:2 for record length RECLN 300"
+        source_line: 2
+        source_content: "*    Data-structure for  account entity (RECLN 300)"
+        result: MATCH
+      - claim: "CVACT01Y.cpy:5 for ACCT-ID PIC 9(11)"
+        source_line: 5
+        source_content: "05  ACCT-ID  PIC 9(11)."
+        result: MATCH
+
+  - id: CPY-02
+    file: app/cpy/CVACT02Y.cpy
+    exists: true
+    doc_claim: "Data-structure for card entity (RECLN 150)"
+    source_line: 2
+    source_content: "*    Data-structure for card entity (RECLN 150)"
+    result: MATCH
+    details:
+      - claim: "CVACT02Y.cpy:2 for record length RECLN 150"
+        source_line: 2
+        source_content: "*    Data-structure for card entity (RECLN 150)"
+        result: MATCH
+      - claim: "CVACT02Y.cpy:5 for CARD-NUM PIC X(16)"
+        source_line: 5
+        source_content: "05  CARD-NUM  PIC X(16)."
+        result: MATCH
+
+  - id: CPY-03
+    file: app/cpy/CVACT03Y.cpy
+    exists: true
+    doc_claim: "Data-structure for card xref (RECLN 50)"
+    source_line: 2
+    source_content: "*    Data-structure for card xref (RECLN 50)"
+    result: MATCH
+    details:
+      - claim: "CVACT03Y.cpy:2 for record length RECLN 50"
+        source_line: 2
+        source_content: "*    Data-structure for card xref (RECLN 50)"
+        result: MATCH
+      - claim: "CVACT03Y.cpy:5 for XREF-CARD-NUM PIC X(16)"
+        source_line: 5
+        source_content: "05  XREF-CARD-NUM  PIC X(16)."
+        result: MATCH
+
+  - id: CPY-04
+    file: app/cpy/CVCUS01Y.cpy
+    exists: true
+    doc_claim: "Data-structure for Customer entity (RECLN 500)"
+    source_line: 2
+    source_content: "*    Data-structure for Customer entity (RECLN 500)"
+    result: MATCH
+    details:
+      - claim: "CVCUS01Y.cpy:2 for record length RECLN 500"
+        source_line: 2
+        source_content: "*    Data-structure for Customer entity (RECLN 500)"
+        result: MATCH
+      - claim: "CVCUS01Y.cpy:5 for CUST-ID PIC 9(09)"
+        source_line: 5
+        source_content: "05  CUST-ID  PIC 9(09)."
+        result: MATCH
+
+  - id: CPY-05
+    file: app/cpy/CSUSR01Y.cpy
+    exists: true
+    doc_claim: "User security record, RECLN 80"
+    source_line: 17
+    source_content: "01 SEC-USER-DATA."
+    result: MATCH
+    details:
+      - claim: "CSUSR01Y.cpy:17-23 for full record layout"
+        source_lines: "17-23"
+        source_content: "01 SEC-USER-DATA. through end of record fields"
+        result: MATCH
+      - claim: "CSUSR01Y.cpy:18 for SEC-USR-ID PIC X(08)"
+        source_line: 18
+        source_content: "05 SEC-USR-ID  PIC X(08)."
+        result: MATCH
+    notes: >
+      Record starts at line 17 due to copyright header preceding the
+      data definition. The :17 reference correctly accounts for this offset.
+
+  - id: CPY-06
+    file: app/cpy/CVTRA01Y.cpy
+    exists: true
+    doc_claim: "RECLN 50, TRAN-CAT-BAL-RECORD"
+    result: MATCH
+
+  - id: CPY-07
+    file: app/cpy/CVTRA02Y.cpy
+    exists: true
+    doc_claim: "RECLN 50, DIS-GROUP-RECORD"
+    result: MATCH
+
+  - id: CPY-08
+    file: app/cpy/CVTRA03Y.cpy
+    exists: true
+    doc_claim: "RECLN 60, TRAN-TYPE-RECORD"
+    result: MATCH
+
+  - id: CPY-09
+    file: app/cpy/CVTRA04Y.cpy
+    exists: true
+    doc_claim: "RECLN 60, TRAN-CAT-RECORD"
+    result: MATCH
+
+  - id: CPY-10
+    file: app/cpy/CVTRA05Y.cpy
+    exists: true
+    doc_claim: "RECLN 350, TRAN-RECORD"
+    result: MATCH
+
+  - id: CPY-11
+    file: app/cpy/CVTRA06Y.cpy
+    exists: true
+    doc_claim: "RECLN 350, DALYTRAN-RECORD"
+    result: MATCH
+
+  - id: CPY-12
+    file: app/cpy/CVTRA07Y.cpy
+    exists: true
+    doc_claim: "Report layout structures"
+    result: MATCH
+
+# ---------------------------------------------------------------------------
+# Section 2: JCL File References (10 files)
+# ---------------------------------------------------------------------------
+jcl_references:
+
+  - id: JCL-01
+    file: app/jcl/ACCTFILE.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 44 for KSDS type (INDEXED)"
+        source_line: 44
+        source_content: "INDEXED -"
+        result: MATCH
+      - claim: "Line 36 for dataset name"
+        source_line: 36
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(11 0)"
+        source_line: 40
+        source_content: "KEYS(11 0)"
+        result: MATCH
+      - claim: "RECORDSIZE(300 300)"
+        source_line: 41
+        source_content: "RECORDSIZE(300 300)"
+        result: MATCH
+
+  - id: JCL-02
+    file: app/jcl/CARDFILE.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 50 for DEFINE CLUSTER"
+        source_line: 50
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS)"
+        result: MATCH
+      - claim: "CARDFILE.jcl:50-92 for KSDS with AIX"
+        source_lines: "50-92"
+        source_content: "DEFINE CLUSTER through AIX definition"
+        result: MATCH
+      - claim: "Line 85 for AIX KEYS(11 16)"
+        source_line: 85
+        source_content: "KEYS(11 16)"
+        result: MATCH
+      - claim: "Line 86 for NONUNIQUEKEY"
+        source_line: 86
+        source_content: "NONUNIQUEKEY"
+        result: MATCH
+
+  - id: JCL-03
+    file: app/jcl/CUSTFILE.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 46 for KSDS DEFINE CLUSTER"
+        source_line: 46
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(9 0)"
+        source_line: 50
+        source_content: "KEYS(9 0)"
+        result: MATCH
+      - claim: "RECORDSIZE(500 500)"
+        source_line: 51
+        source_content: "RECORDSIZE(500 500)"
+        result: MATCH
+
+  - id: JCL-04
+    file: app/jcl/XREFFILE.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 39 for DEFINE CLUSTER"
+        source_line: 39
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS)"
+        result: MATCH
+      - claim: "XREFFILE.jcl:39-102 for KSDS with AIX"
+        source_lines: "39-102"
+        source_content: "DEFINE CLUSTER through AIX definitions"
+        result: MATCH
+      - claim: "Line 74 for AIX KEYS(11,25)"
+        source_line: 74
+        source_content: "KEYS(11,25)"
+        result: MATCH
+      - claim: "Line 75 for NONUNIQUEKEY"
+        source_line: 75
+        source_content: "NONUNIQUEKEY"
+        result: MATCH
+
+  - id: JCL-05
+    file: app/jcl/TRANFILE.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 49 for DEFINE CLUSTER"
+        source_line: 49
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS)"
+        result: MATCH
+      - claim: "TRANFILE.jcl:49-111 for KSDS with AIX"
+        source_lines: "49-111"
+        source_content: "DEFINE CLUSTER through AIX definitions"
+        result: MATCH
+      - claim: "Line 84 for AIX KEYS(26 304)"
+        source_line: 84
+        source_content: "KEYS(26 304)"
+        result: MATCH
+      - claim: "Line 85 for NONUNIQUEKEY"
+        source_line: 85
+        source_content: "NONUNIQUEKEY"
+        result: MATCH
+
+  - id: JCL-06
+    file: app/jcl/DUSRSECJ.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "USRSEC VSAM KSDS definition"
+        source_line: 64
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(8,0)"
+        source_line: 65
+        source_content: "KEYS(8,0)"
+        result: MATCH
+      - claim: "RECORDSIZE(80,80)"
+        source_line: 66
+        source_content: "RECORDSIZE(80,80)"
+        result: MATCH
+
+  - id: JCL-07
+    file: app/jcl/TCATBALF.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 36 for KSDS DEFINE CLUSTER"
+        source_line: 36
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(17 0)"
+        source_line: 40
+        source_content: "KEYS(17 0)"
+        result: MATCH
+      - claim: "RECORDSIZE(50 50)"
+        source_line: 41
+        source_content: "RECORDSIZE(50 50)"
+        result: MATCH
+
+  - id: JCL-08
+    file: app/jcl/DISCGRP.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 36 for KSDS DEFINE CLUSTER"
+        source_line: 36
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(16 0)"
+        source_line: 40
+        source_content: "KEYS(16 0)"
+        result: MATCH
+      - claim: "RECORDSIZE(50 50)"
+        source_line: 41
+        source_content: "RECORDSIZE(50 50)"
+        result: MATCH
+
+  - id: JCL-09
+    file: app/jcl/TRANTYPE.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 36 for KSDS DEFINE CLUSTER"
+        source_line: 36
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(2 0)"
+        source_line: 40
+        source_content: "KEYS(2 0)"
+        result: MATCH
+      - claim: "RECORDSIZE(60 60)"
+        source_line: 41
+        source_content: "RECORDSIZE(60 60)"
+        result: MATCH
+
+  - id: JCL-10
+    file: app/jcl/TRANCATG.jcl
+    exists: true
+    result: MATCH
+    details:
+      - claim: "Line 36 for KSDS DEFINE CLUSTER"
+        source_line: 36
+        source_content: "DEFINE CLUSTER (NAME(AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS)"
+        result: MATCH
+      - claim: "KEYS(6 0)"
+        source_line: 40
+        source_content: "KEYS(6 0)"
+        result: MATCH
+      - claim: "RECORDSIZE(60 60)"
+        source_line: 41
+        source_content: "RECORDSIZE(60 60)"
+        result: MATCH
+
+# ---------------------------------------------------------------------------
+# Section 3: COBOL Program Line References (11 ranges)
+# ---------------------------------------------------------------------------
+cobol_references:
+
+  - id: CBL-01
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "380-392"
+    doc_claim: "Card lookup paragraph 1500-A-LOOKUP-XREF"
+    result: MATCH
+    details:
+      - claim: "1500-A-LOOKUP-XREF paragraph"
+        source_line: 380
+        source_content: "1500-A-LOOKUP-XREF."
+        result: MATCH
+      - claim: "Reads XREF-FILE, MOVE 100 TO WS-VALIDATION-FAIL-REASON on INVALID KEY"
+        source_lines: "380-392"
+        result: MATCH
+
+  - id: CBL-02
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "393-399"
+    doc_claim: "Account lookup paragraph 1500-B-LOOKUP-ACCT"
+    result: MATCH
+    details:
+      - claim: "1500-B-LOOKUP-ACCT paragraph start"
+        source_line: 393
+        source_content: "1500-B-LOOKUP-ACCT."
+        result: MATCH
+      - claim: "MOVE 101 TO WS-VALIDATION-FAIL-REASON with ACCOUNT RECORD NOT FOUND"
+        source_lines: "397-399"
+        result: MATCH
+
+  - id: CBL-03
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "403-413"
+    doc_claim: "Credit limit check logic"
+    result: MATCH
+    details:
+      - claim: "COMPUTE WS-TEMP-BAL = ACCT-CURR-CYC-CREDIT - ACCT-CURR-CYC-DEBIT + DALYTRAN-AMT"
+        source_lines: "403-406"
+        result: MATCH
+      - claim: "IF ACCT-CREDIT-LIMIT >= WS-TEMP-BAL ... MOVE 102 ... OVERLIMIT TRANSACTION"
+        source_lines: "407-413"
+        result: MATCH
+
+  - id: CBL-04
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "414-420"
+    doc_claim: "Account expiration check"
+    result: MATCH
+    details:
+      - claim: "IF ACCT-EXPIRAION-DATE >= DALYTRAN-ORIG-TS (1:10)"
+        source_line: 414
+        source_content: "IF ACCT-EXPIRAION-DATE >= DALYTRAN-ORIG-TS (1:10)"
+        result: MATCH
+      - claim: "MOVE 103, TRANSACTION RECEIVED AFTER ACCT EXPIRATION"
+        source_lines: "417-419"
+        result: MATCH
+
+  - id: CBL-05
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "467-542"
+    doc_claim: "TCATBAL update paragraph 2700-UPDATE-TCATBAL"
+    result: MATCH
+    details:
+      - claim: "2700-UPDATE-TCATBAL paragraph"
+        source_line: 467
+        source_content: "2700-UPDATE-TCATBAL."
+        result: MATCH
+      - claim: "MOVE fields to TRANCAT key, ADD DALYTRAN-AMT TO TRAN-CAT-BAL"
+        source_lines: "505-508"
+        result: MATCH
+      - claim: "2700-B-UPDATE-TCATBAL-REC with ADD DALYTRAN-AMT TO TRAN-CAT-BAL"
+        source_lines: "526-527"
+        result: MATCH
+
+  - id: CBL-06
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "545-560"
+    doc_claim: "Account update paragraph 2800-UPDATE-ACCOUNT-REC"
+    result: MATCH
+    details:
+      - claim: "2800-UPDATE-ACCOUNT-REC paragraph"
+        source_line: 545
+        source_content: "2800-UPDATE-ACCOUNT-REC."
+        result: MATCH
+      - claim: "ADD DALYTRAN-AMT TO ACCT-CURR-BAL"
+        source_line: 547
+        source_content: "ADD DALYTRAN-AMT TO ACCT-CURR-BAL"
+        result: MATCH
+      - claim: "IF DALYTRAN-AMT >= 0 ADD to CREDIT ELSE ADD to DEBIT"
+        source_lines: "548-552"
+        result: MATCH
+
+  - id: CBL-07
+    file: app/cbl/CBTRN02C.cbl
+    line_range: "692-704"
+    doc_claim: "Timestamp generation paragraph Z-GET-DB2-FORMAT-TIMESTAMP"
+    result: MATCH
+    details:
+      - claim: "Z-GET-DB2-FORMAT-TIMESTAMP paragraph"
+        source_line: 692
+        source_content: "Z-GET-DB2-FORMAT-TIMESTAMP."
+        result: MATCH
+      - claim: "MOVE FUNCTION CURRENT-DATE TO COBOL-TS then MOVEs for DB2 format"
+        source_lines: "693-704"
+        result: MATCH
+
+  - id: CBL-08
+    file: app/cbl/CBACT04C.cbl
+    line_range: "350-370"
+    doc_claim: "Account update after interest paragraph 1050-UPDATE-ACCOUNT"
+    result: MATCH
+    details:
+      - claim: "1050-UPDATE-ACCOUNT paragraph"
+        source_line: 350
+        source_content: "1050-UPDATE-ACCOUNT."
+        result: MATCH
+      - claim: "ADD WS-TOTAL-INT TO ACCT-CURR-BAL"
+        source_line: 352
+        source_content: "ADD WS-TOTAL-INT TO ACCT-CURR-BAL"
+        result: MATCH
+      - claim: "MOVE 0 TO ACCT-CURR-CYC-CREDIT and MOVE 0 TO ACCT-CURR-CYC-DEBIT"
+        source_lines: "353-354"
+        source_content: "MOVE 0 TO ACCT-CURR-CYC-CREDIT / MOVE 0 TO ACCT-CURR-CYC-DEBIT"
+        result: MATCH
+
+  - id: CBL-09
+    file: app/cbl/CBACT04C.cbl
+    line_range: "436-460"
+    doc_claim: "Interest rate fallback logic"
+    result: MATCH
+    details:
+      - claim: "IF DISCGRP-STATUS = '23'"
+        source_line: 436
+        source_content: "IF DISCGRP-STATUS = '23'"
+        result: MATCH
+      - claim: "MOVE 'DEFAULT' TO FD-DIS-ACCT-GROUP-ID"
+        source_line: 437
+        source_content: "MOVE 'DEFAULT' TO FD-DIS-ACCT-GROUP-ID"
+        result: MATCH
+      - claim: "PERFORM 1200-A-GET-DEFAULT-INT-RATE"
+        source_line: 438
+        source_content: "PERFORM 1200-A-GET-DEFAULT-INT-RATE"
+        result: MATCH
+
+  - id: CBL-10
+    file: app/cbl/CBACT04C.cbl
+    line_range: "462-470"
+    doc_claim: "Interest formula paragraph 1300-COMPUTE-INTEREST"
+    result: MATCH
+    details:
+      - claim: "1300-COMPUTE-INTEREST paragraph"
+        source_line: 462
+        source_content: "1300-COMPUTE-INTEREST."
+        result: MATCH
+      - claim: "COMPUTE WS-MONTHLY-INT = ( TRAN-CAT-BAL * DIS-INT-RATE) / 1200"
+        source_lines: "464-465"
+        source_content: "COMPUTE WS-MONTHLY-INT = ( TRAN-CAT-BAL * DIS-INT-RATE) / 1200"
+        result: MATCH
+
+  - id: CBL-11
+    file: app/cbl/CBACT04C.cbl
+    line_range: "473-515"
+    doc_claim: "Interest transaction generation paragraph 1300-B-WRITE-TX"
+    result: MATCH
+    details:
+      - claim: "1300-B-WRITE-TX paragraph"
+        source_line: 473
+        source_content: "1300-B-WRITE-TX."
+        result: MATCH
+      - claim: "STRING PARM-DATE WS-TRANID-SUFFIX INTO TRAN-ID"
+        source_lines: "476-480"
+        result: MATCH
+      - claim: "All field assignments for interest transaction record"
+        source_lines: "482-498"
+        result: MATCH
+
+# ---------------------------------------------------------------------------
+# Section 4: Hallucination Check
+# ---------------------------------------------------------------------------
+hallucination_check:
+  description: >
+    Verified that no file references in the RE-002 documentation point to
+    files that do not exist in the repository. Also checked for common
+    hallucination patterns such as fabricated copybook names.
+  files_checked_for_false_positives:
+    - name: CVCAR00Y.cpy
+      referenced_in_docs: false
+      exists_in_repo: false
+      status: NO_HALLUCINATION
+    - name: COUSR00Y.cpy
+      referenced_in_docs: false
+      exists_in_repo: false
+      status: NO_HALLUCINATION
+  hallucinated_references_found: 0
+
+# ---------------------------------------------------------------------------
+# Section 5: Summary
+# ---------------------------------------------------------------------------
+summary:
+  categories:
+    - category: Copybook file references
+      total_checked: 12
+      verified_correct: 12
+      incorrect: 0
+    - category: JCL file references
+      total_checked: 10
+      verified_correct: 10
+      incorrect: 0
+    - category: COBOL program line ranges
+      total_checked: 11
+      verified_correct: 11
+      incorrect: 0
+  overall:
+    total_references_checked: 33
+    references_verified_correct: 33
+    references_incorrect: 0
+    hallucinated_references: 0
+    accuracy_percent: 100
+  conclusion: >
+    All 33 source references in the RE-002 data model documentation have been
+    verified against the actual source code. Every file path exists, every
+    line number matches the claimed content, and no hallucinated references
+    were detected. The documentation achieves 100% source-reference accuracy.

@@ -1,0 +1,589 @@
+# CardDemo Top API Candidates - Interface Analysis
+# RE-011: API Candidate Identification
+# Generated: 2026-02-05
+
+type_mapping:
+  cobol_to_json:
+    - cobol: "PIC 9(11)"
+      json_type: string
+      format: "^\\d{11}$"
+      example: "00000000001"
+      description: "11-digit account ID"
+    - cobol: "PIC 9(16)"
+      json_type: string
+      format: "^\\d{16}$"
+      example: "4111111111111111"
+      description: "16-digit card number"
+    - cobol: "PIC X(n)"
+      json_type: string
+      format: "maxLength: n"
+      example: "JOHN DOE"
+      description: "Character field trimmed"
+    - cobol: "PIC S9(10)V99"
+      json_type: number
+      format: decimal
+      example: 1234.56
+      description: "Signed decimal amount"
+    - cobol: "PIC X(10) date"
+      json_type: string
+      format: date
+      example: "2024-12-31"
+      description: "ISO 8601 date"
+    - cobol: "PIC X(26) timestamp"
+      json_type: string
+      format: date-time
+      example: "2024-12-31T23:59:59Z"
+      description: "ISO 8601 timestamp"
+    - cobol: "88-level Y/N"
+      json_type: string
+      format: enum
+      example: "ACTIVE"
+      description: "Status enumeration"
+
+candidates:
+  # Candidate 1: COACTVWC - Account View
+  - program: COACTVWC
+    function: "Account View"
+    weighted_score: 4.55
+    api:
+      method: GET
+      endpoint: "/accounts/{accountId}"
+
+    cobol_interface:
+      input:
+        - name: CDEMO-ACCT-ID
+          copybook: COCOM01Y
+          pic: "PIC 9(11)"
+          description: "11-digit account ID"
+          validation:
+            - "Must be numeric"
+            - "Must be non-zero"
+            - "Must exist in CXACAIX"
+
+      output:
+        account_record:
+          copybook: CVACT01Y
+          record_length: 300
+          fields:
+            - name: ACCT-ID
+              pic: "PIC 9(11)"
+              json_path: "accountId"
+            - name: ACCT-ACTIVE-STATUS
+              pic: "PIC X(01)"
+              json_path: "status"
+              mapping:
+                "Y": "ACTIVE"
+                "N": "INACTIVE"
+            - name: ACCT-CURR-BAL
+              pic: "PIC S9(10)V99"
+              json_path: "currentBalance"
+            - name: ACCT-CREDIT-LIMIT
+              pic: "PIC S9(10)V99"
+              json_path: "creditLimit"
+            - name: ACCT-CASH-CREDIT-LIMIT
+              pic: "PIC S9(10)V99"
+              json_path: "cashCreditLimit"
+            - name: ACCT-OPEN-DATE
+              pic: "PIC X(10)"
+              json_path: "openDate"
+            - name: ACCT-EXPIRAION-DATE
+              pic: "PIC X(10)"
+              json_path: "expirationDate"
+            - name: ACCT-REISSUE-DATE
+              pic: "PIC X(10)"
+              json_path: "reissueDate"
+            - name: ACCT-CURR-CYC-CREDIT
+              pic: "PIC S9(10)V99"
+              json_path: "currentCycleCredit"
+            - name: ACCT-CURR-CYC-DEBIT
+              pic: "PIC S9(10)V99"
+              json_path: "currentCycleDebit"
+            - name: ACCT-GROUP-ID
+              pic: "PIC X(10)"
+              json_path: "groupId"
+
+        customer_record:
+          copybook: CVCUS01Y
+          record_length: 500
+          fields:
+            - name: CUST-ID
+              pic: "PIC 9(09)"
+              json_path: "customer.customerId"
+            - name: CUST-FIRST-NAME
+              pic: "PIC X(25)"
+              json_path: "customer.firstName"
+            - name: CUST-MIDDLE-NAME
+              pic: "PIC X(25)"
+              json_path: "customer.middleName"
+            - name: CUST-LAST-NAME
+              pic: "PIC X(25)"
+              json_path: "customer.lastName"
+            - name: CUST-SSN
+              pic: "PIC 9(09)"
+              json_path: "customer.ssn"
+              notes: "Masked in API response: XXX-XX-1234"
+            - name: CUST-DOB-YYYY-MM-DD
+              pic: "PIC X(10)"
+              json_path: "customer.dateOfBirth"
+            - name: CUST-FICO-CREDIT-SCORE
+              pic: "PIC 9(03)"
+              json_path: "customer.ficoScore"
+            - name: CUST-ADDR-LINE-1
+              pic: "PIC X(50)"
+              json_path: "customer.address.line1"
+            - name: CUST-ADDR-LINE-2
+              pic: "PIC X(50)"
+              json_path: "customer.address.line2"
+            - name: CUST-ADDR-LINE-3
+              pic: "PIC X(50)"
+              json_path: "customer.address.city"
+            - name: CUST-ADDR-STATE-CD
+              pic: "PIC X(02)"
+              json_path: "customer.address.state"
+            - name: CUST-ADDR-ZIP
+              pic: "PIC X(10)"
+              json_path: "customer.address.zipCode"
+            - name: CUST-ADDR-COUNTRY-CD
+              pic: "PIC X(03)"
+              json_path: "customer.address.country"
+            - name: CUST-PHONE-NUM-1
+              pic: "PIC X(15)"
+              json_path: "customer.primaryPhone"
+            - name: CUST-PHONE-NUM-2
+              pic: "PIC X(15)"
+              json_path: "customer.secondaryPhone"
+
+    files_accessed:
+      - name: CXACAIX
+        type: VSAM_KSDS
+        operation: READ
+        key: XREF-ACCT-ID
+        purpose: "Cross-reference to get customer ID"
+      - name: ACCTDAT
+        type: VSAM_KSDS
+        operation: READ
+        key: ACCT-ID
+        purpose: "Account master record"
+      - name: CUSTDAT
+        type: VSAM_KSDS
+        operation: READ
+        key: CUST-ID
+        purpose: "Customer details"
+
+    error_conditions:
+      - condition: "DFHRESP(NOTFND) on CXACAIX"
+        http_status: 404
+        error_code: "ACCT_NOT_FOUND"
+        message: "Account not found in cross-reference file"
+      - condition: "DFHRESP(NOTFND) on ACCTDAT"
+        http_status: 404
+        error_code: "ACCT_NOT_FOUND"
+        message: "Account not found in account master file"
+      - condition: "DFHRESP(NOTFND) on CUSTDAT"
+        http_status: 404
+        error_code: "CUST_NOT_FOUND"
+        message: "Customer not found in customer master file"
+      - condition: "Non-numeric account ID"
+        http_status: 400
+        error_code: "INVALID_ACCT_ID"
+        message: "Account ID must be an 11-digit number"
+
+  # Candidate 2: COCRDSLC - Card Details
+  - program: COCRDSLC
+    function: "Card Details"
+    weighted_score: 4.75
+    api:
+      method: GET
+      endpoint: "/cards/{cardNumber}"
+
+    cobol_interface:
+      input:
+        - name: CDEMO-CARD-NUM
+          copybook: COCOM01Y
+          pic: "PIC 9(16)"
+          description: "16-digit card number"
+          validation:
+            - "Must be numeric"
+            - "Must be non-zero"
+
+      output:
+        card_record:
+          copybook: CVACT02Y
+          record_length: 150
+          fields:
+            - name: CARD-NUM
+              pic: "PIC X(16)"
+              json_path: "cardNumber"
+            - name: CARD-ACCT-ID
+              pic: "PIC 9(11)"
+              json_path: "accountId"
+            - name: CARD-CVV-CD
+              pic: "PIC 9(03)"
+              json_path: "cvv"
+              notes: "Never exposed in API - omit from response"
+            - name: CARD-EMBOSSED-NAME
+              pic: "PIC X(50)"
+              json_path: "embossedName"
+            - name: CARD-EXPIRAION-DATE
+              pic: "PIC X(10)"
+              json_path: "expirationDate"
+            - name: CARD-ACTIVE-STATUS
+              pic: "PIC X(01)"
+              json_path: "status"
+              mapping:
+                "Y": "ACTIVE"
+                "N": "INACTIVE"
+
+    files_accessed:
+      - name: CARDDAT
+        type: VSAM_KSDS
+        operation: READ
+        key: CARD-NUM
+        purpose: "Card master record"
+
+    error_conditions:
+      - condition: "DFHRESP(NOTFND)"
+        http_status: 404
+        error_code: "CARD_NOT_FOUND"
+        message: "Card not found"
+      - condition: "Non-numeric card number"
+        http_status: 400
+        error_code: "INVALID_CARD_NUM"
+        message: "Card number must be a 16-digit number"
+
+  # Candidate 3: COTRN01C - Transaction View
+  - program: COTRN01C
+    function: "Transaction View"
+    weighted_score: 4.50
+    api:
+      method: GET
+      endpoint: "/transactions/{transactionId}"
+
+    cobol_interface:
+      input:
+        - name: TRAN-ID
+          copybook: CVTRA05Y
+          pic: "PIC X(16)"
+          description: "16-character transaction ID"
+
+      output:
+        transaction_record:
+          copybook: CVTRA05Y
+          record_length: 350
+          fields:
+            - name: TRAN-ID
+              pic: "PIC X(16)"
+              json_path: "transactionId"
+            - name: TRAN-TYPE-CD
+              pic: "PIC X(02)"
+              json_path: "typeCode"
+            - name: TRAN-CAT-CD
+              pic: "PIC 9(04)"
+              json_path: "categoryCode"
+            - name: TRAN-SOURCE
+              pic: "PIC X(10)"
+              json_path: "source"
+            - name: TRAN-DESC
+              pic: "PIC X(100)"
+              json_path: "description"
+            - name: TRAN-AMT
+              pic: "PIC S9(09)V99"
+              json_path: "amount"
+            - name: TRAN-MERCHANT-ID
+              pic: "PIC 9(09)"
+              json_path: "merchant.id"
+            - name: TRAN-MERCHANT-NAME
+              pic: "PIC X(50)"
+              json_path: "merchant.name"
+            - name: TRAN-MERCHANT-CITY
+              pic: "PIC X(50)"
+              json_path: "merchant.city"
+            - name: TRAN-MERCHANT-ZIP
+              pic: "PIC X(10)"
+              json_path: "merchant.zipCode"
+            - name: TRAN-CARD-NUM
+              pic: "PIC X(16)"
+              json_path: "cardNumber"
+              notes: "Masked in API: XXXX-XXXX-XXXX-1234"
+            - name: TRAN-ORIG-TS
+              pic: "PIC X(26)"
+              json_path: "originTimestamp"
+            - name: TRAN-PROC-TS
+              pic: "PIC X(26)"
+              json_path: "processedTimestamp"
+
+    files_accessed:
+      - name: TRANSACT
+        type: VSAM_KSDS
+        operation: READ
+        key: TRAN-ID
+        purpose: "Transaction record"
+
+    error_conditions:
+      - condition: "DFHRESP(NOTFND)"
+        http_status: 404
+        error_code: "TRAN_NOT_FOUND"
+        message: "Transaction ID NOT found"
+      - condition: "Empty transaction ID"
+        http_status: 400
+        error_code: "INVALID_TRAN_ID"
+        message: "Transaction ID cannot be empty"
+
+  # Candidate 4: COSGN00C - Authentication
+  - program: COSGN00C
+    function: "User Authentication"
+    weighted_score: 4.45
+    api:
+      method: POST
+      endpoint: "/auth/token"
+
+    cobol_interface:
+      input:
+        - name: WS-USER-ID
+          pic: "PIC X(08)"
+          description: "User ID"
+          validation:
+            - "Required"
+            - "Max 8 characters"
+        - name: WS-USER-PWD
+          pic: "PIC X(08)"
+          description: "Password"
+          validation:
+            - "Required"
+            - "Max 8 characters"
+
+      output:
+        security_record:
+          copybook: CSUSR01Y
+          record_length: 80
+          fields:
+            - name: SEC-USR-ID
+              pic: "PIC X(08)"
+              json_path: "userId"
+            - name: SEC-USR-FNAME
+              pic: "PIC X(20)"
+              json_path: "firstName"
+            - name: SEC-USR-LNAME
+              pic: "PIC X(20)"
+              json_path: "lastName"
+            - name: SEC-USR-TYPE
+              pic: "PIC X(01)"
+              json_path: "userType"
+              mapping:
+                "A": "admin"
+                "U": "user"
+
+        api_response:
+          description: "JWT token response"
+          fields:
+            - json_path: "accessToken"
+              description: "JWT access token"
+            - json_path: "tokenType"
+              value: "Bearer"
+            - json_path: "expiresIn"
+              description: "Token expiration in seconds"
+            - json_path: "scope"
+              description: "OAuth scopes based on SEC-USR-TYPE"
+
+    files_accessed:
+      - name: USRSEC
+        type: VSAM_KSDS
+        operation: READ
+        key: SEC-USR-ID
+        purpose: "User security credentials"
+
+    error_conditions:
+      - condition: "DFHRESP(NOTFND)"
+        http_status: 401
+        error_code: "USER_NOT_FOUND"
+        message: "User not found"
+      - condition: "Password mismatch"
+        http_status: 401
+        error_code: "INVALID_CREDENTIALS"
+        message: "Invalid credentials"
+      - condition: "Empty user ID"
+        http_status: 400
+        error_code: "MISSING_USER_ID"
+        message: "User ID is required"
+      - condition: "Empty password"
+        http_status: 400
+        error_code: "MISSING_PASSWORD"
+        message: "Password is required"
+
+    oauth_scopes:
+      admin:
+        condition: "SEC-USR-TYPE = 'A'"
+        scopes:
+          - "carddemo:admin"
+          - "accounts:read"
+          - "accounts:write"
+          - "cards:read"
+          - "cards:write"
+          - "transactions:read"
+          - "transactions:write"
+          - "users:read"
+          - "users:write"
+      user:
+        condition: "SEC-USR-TYPE = 'U'"
+        scopes:
+          - "carddemo:user"
+          - "accounts:read"
+          - "cards:read"
+          - "transactions:read"
+          - "transactions:write"
+
+  # Candidate 5: COBIL00C - Bill Payment
+  - program: COBIL00C
+    function: "Bill Payment"
+    weighted_score: 3.75
+    api:
+      method: POST
+      endpoint: "/accounts/{accountId}/payments"
+
+    cobol_interface:
+      input:
+        - name: ACCT-ID
+          copybook: CVACT01Y
+          pic: "PIC 9(11)"
+          description: "Account ID"
+          validation:
+            - "Must be numeric"
+            - "Must exist in ACCTDAT"
+            - "Account balance must be > 0"
+        - name: CONFIRMI
+          pic: "PIC X(01)"
+          description: "Confirmation flag"
+          validation:
+            - "Y = confirm payment"
+            - "N = cancel"
+
+      output:
+        payment_response:
+          fields:
+            - json_path: "transactionId"
+              source: "TRAN-ID (generated)"
+              description: "16-digit transaction ID"
+            - json_path: "paymentAmount"
+              source: "ACCT-CURR-BAL (original)"
+              description: "Amount paid"
+            - json_path: "newBalance"
+              source: "ACCT-CURR-BAL (updated)"
+              description: "New account balance (0.00)"
+            - json_path: "processedTimestamp"
+              source: "TRAN-PROC-TS"
+              description: "Payment timestamp"
+
+    files_accessed:
+      - name: ACCTDAT
+        type: VSAM_KSDS
+        operation: READ_UPDATE
+        key: ACCT-ID
+        purpose: "Read balance, update after payment"
+      - name: CXACAIX
+        type: VSAM_KSDS
+        operation: READ
+        key: XREF-ACCT-ID
+        purpose: "Get card number for transaction"
+      - name: TRANSACT
+        type: VSAM_KSDS
+        operation: WRITE
+        key: TRAN-ID
+        purpose: "Create payment transaction record"
+
+    transaction_logic:
+      steps:
+        - "1. Read account record with UPDATE lock"
+        - "2. Validate balance > 0"
+        - "3. Read CXACAIX to get card number"
+        - "4. Generate new TRAN-ID (max + 1)"
+        - "5. Create transaction record"
+        - "6. Update account balance to 0"
+        - "7. Return success with transaction ID"
+
+    error_conditions:
+      - condition: "DFHRESP(NOTFND) on ACCTDAT"
+        http_status: 404
+        error_code: "ACCT_NOT_FOUND"
+        message: "Account ID NOT found"
+      - condition: "ACCT-CURR-BAL <= 0"
+        http_status: 422
+        error_code: "NO_BALANCE_DUE"
+        message: "You have nothing to pay"
+      - condition: "DFHRESP(DUPREC) on TRANSACT"
+        http_status: 409
+        error_code: "DUPLICATE_TRAN"
+        message: "Transaction ID already exists"
+      - condition: "Invalid confirmation"
+        http_status: 400
+        error_code: "INVALID_CONFIRM"
+        message: "Invalid value. Valid values are (Y/N)"
+
+  # Candidate 6: COTRN00C - Transaction List
+  - program: COTRN00C
+    function: "Transaction List"
+    weighted_score: 3.75
+    api:
+      method: GET
+      endpoint: "/transactions"
+
+    cobol_interface:
+      input:
+        - name: TRNIDINI
+          pic: "PIC X(16)"
+          description: "Starting transaction ID (optional)"
+          validation:
+            - "If provided, must be numeric"
+        - name: PAGE-NUM
+          pic: "PIC 9(08)"
+          description: "Page number"
+
+      output:
+        transaction_list:
+          description: "Array of up to 10 transactions per page"
+          pagination:
+            - name: CDEMO-CT00-TRNID-FIRST
+              json_path: "pagination.firstId"
+            - name: CDEMO-CT00-TRNID-LAST
+              json_path: "pagination.lastId"
+            - name: CDEMO-CT00-PAGE-NUM
+              json_path: "pagination.currentPage"
+            - name: NEXT-PAGE-YES
+              json_path: "pagination.hasNextPage"
+          items:
+            copybook: CVTRA05Y
+            fields:
+              - name: TRAN-ID
+                json_path: "items[].transactionId"
+              - name: TRAN-DESC
+                json_path: "items[].description"
+              - name: TRAN-AMT
+                json_path: "items[].amount"
+              - name: TRAN-ORIG-TS
+                json_path: "items[].date"
+
+    files_accessed:
+      - name: TRANSACT
+        type: VSAM_KSDS
+        operation: BROWSE
+        key: TRAN-ID
+        purpose: "Sequential read of transactions"
+
+    pagination:
+      page_size: 10
+      cursor_based: true
+      cursor_field: TRAN-ID
+      forward_operation: READNEXT
+      backward_operation: READPREV
+
+    error_conditions:
+      - condition: "DFHRESP(NOTFND)"
+        http_status: 404
+        error_code: "NO_TRANSACTIONS"
+        message: "No transactions found"
+      - condition: "Non-numeric transaction ID"
+        http_status: 400
+        error_code: "INVALID_TRAN_ID"
+        message: "Transaction ID must be numeric"
+      - condition: "DFHRESP(ENDFILE)"
+        http_status: 200
+        notes: "Normal end of data, return partial results"

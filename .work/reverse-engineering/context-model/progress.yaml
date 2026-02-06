@@ -1,0 +1,182 @@
+# RE-003: Context Model Extraction Progress
+# Generated: 2026-02-05
+
+prompt_id: RE-003
+prompt_name: Context Model Extraction
+status: completed
+
+deliverables:
+  - file: docs/reverse-engineering/03-context-model/CONTEXT-MAP.md
+    status: completed
+    description: Bounded contexts and DDD relationships
+    sections:
+      - Executive Summary
+      - Bounded Context Inventory (7 contexts)
+      - Detailed Context Descriptions
+      - Context Relationship Diagram (Mermaid)
+      - DDD Relationship Types
+      - Data Ownership Matrix
+      - Microservices Mapping Recommendations
+      - Cross-References
+
+  - file: docs/reverse-engineering/03-context-model/COMMAREA-SPECIFICATION.md
+    status: completed
+    description: Complete COMMAREA field documentation
+    sections:
+      - Overview
+      - COMMAREA Structure Diagram
+      - Field-by-Field Specification
+      - State Transition Rules
+      - State Diagram (Mermaid)
+      - Extended COMMAREA Sections
+      - Modernization Implications
+      - Validation Rules
+      - Source References
+
+  - file: docs/reverse-engineering/03-context-model/NAVIGATION-FLOWS.md
+    status: completed
+    description: State machines and user journeys
+    sections:
+      - Transaction ID Mapping
+      - Program Navigation Graph (Mermaid)
+      - Menu Structure Analysis
+      - State Machine Diagrams (Mermaid)
+      - XCTL vs RETURN TRANSID Patterns
+      - User Journey Maps (Mermaid sequence diagrams)
+      - Screen Flow Mapping
+      - Navigation Key Mappings
+      - Modernization Implications
+
+bounded_contexts_identified:
+  - name: Authentication
+    programs: [COSGN00C]
+    transaction_id: CC00
+    data_files: [USRSEC]
+    relationship: upstream
+
+  - name: User Administration
+    programs: [COUSR00C, COUSR01C, COUSR02C, COUSR03C]
+    transaction_id: CA00 (via menu)
+    data_files: [USRSEC]
+    relationship: downstream/conformist
+
+  - name: Account Management
+    programs: [COACTVWC, COACTUPC]
+    transaction_id: CM00 (via menu)
+    data_files: [ACCTDAT, CUSTDAT, CARDDAT, CCXREF]
+    relationship: shared_kernel with Card Management
+
+  - name: Card Management
+    programs: [COCRDLIC, COCRDSLC, COCRDUPC]
+    transaction_id: CM00 (via menu)
+    data_files: [CARDDAT, CCXREF]
+    relationship: shared_kernel with Account Management
+
+  - name: Transaction Processing
+    programs: [COTRN00C, COTRN01C, COTRN02C]
+    transaction_id: CM00 (via menu)
+    data_files: [TRANSACT, ACCTDAT, CCXREF]
+    relationship: customer_supplier, shared_kernel with Bill Payment
+
+  - name: Bill Payment
+    programs: [COBIL00C]
+    transaction_id: CM00 (via menu)
+    data_files: [ACCTDAT, TRANSACT, CCXREF]
+    relationship: shared_kernel with Transaction Processing
+
+  - name: Batch Processing
+    programs: [CBTRN01C, CBTRN02C, CBTRN03C, CBACT01C, CBACT02C, CBACT03C, CBACT04C, CBCUS01C, CBEXPORT, CBIMPORT]
+    transaction_id: N/A (batch)
+    data_files: [All files]
+    relationship: separate_ways
+
+source_files_analyzed:
+  copybooks:
+    - app/cpy/COCOM01Y.cpy
+    - app/cpy/COADM02Y.cpy
+    - app/cpy/COMEN02Y.cpy
+  programs:
+    - app/cbl/COSGN00C.cbl
+    - app/cbl/COADM01C.cbl
+    - app/cbl/COMEN01C.cbl
+    - app/cbl/COUSR00C.cbl
+    - app/cbl/COUSR01C.cbl
+    - app/cbl/COUSR02C.cbl
+    - app/cbl/COUSR03C.cbl
+    - app/cbl/COACTVWC.cbl
+    - app/cbl/COACTUPC.cbl
+    - app/cbl/COCRDLIC.cbl
+    - app/cbl/COCRDSLC.cbl
+    - app/cbl/COCRDUPC.cbl
+    - app/cbl/COTRN00C.cbl
+    - app/cbl/COTRN01C.cbl
+    - app/cbl/COTRN02C.cbl
+    - app/cbl/COBIL00C.cbl
+    - app/cbl/CORPT00C.cbl
+  batch_programs:
+    - app/cbl/CBTRN01C.cbl
+    - app/cbl/CBTRN02C.cbl
+    - app/cbl/CBTRN03C.cbl
+    - app/cbl/CBACT01C.cbl
+    - app/cbl/CBACT02C.cbl
+    - app/cbl/CBACT03C.cbl
+    - app/cbl/CBACT04C.cbl
+    - app/cbl/CBCUS01C.cbl
+    - app/cbl/CBEXPORT.cbl
+    - app/cbl/CBIMPORT.cbl
+
+cross_references:
+  - docs/reverse-engineering/01-domain-model/DOMAIN-MODEL.md
+  - docs/reverse-engineering/02-data-model/ (pending)
+
+diagrams_generated:
+  - type: mermaid_graph
+    name: Context Relationship Diagram
+    location: CONTEXT-MAP.md
+
+  - type: mermaid_diagram
+    name: COMMAREA Structure
+    location: COMMAREA-SPECIFICATION.md
+
+  - type: mermaid_stateDiagram
+    name: COMMAREA State Transitions
+    location: COMMAREA-SPECIFICATION.md
+
+  - type: mermaid_graph
+    name: Program Navigation Graph
+    location: NAVIGATION-FLOWS.md
+
+  - type: mermaid_stateDiagram
+    name: Application State Machine
+    location: NAVIGATION-FLOWS.md
+
+  - type: mermaid_stateDiagram
+    name: Individual Program State Machine
+    location: NAVIGATION-FLOWS.md
+
+  - type: mermaid_sequence
+    name: Admin User Journey
+    location: NAVIGATION-FLOWS.md
+
+  - type: mermaid_sequence
+    name: User Bill Payment Journey
+    location: NAVIGATION-FLOWS.md
+
+  - type: mermaid_sequence
+    name: Transaction Inquiry Journey
+    location: NAVIGATION-FLOWS.md
+
+verification:
+  bounded_contexts_have_clear_data_ownership: true
+  context_relationships_match_program_dependencies: true
+  commarea_field_mapping_complete: true
+  mermaid_diagrams_valid: true
+  cross_reference_to_domain_model: true
+
+notes:
+  - Admin menu has 6 options including 2 DB2 extension programs
+  - User menu has 11 options including pending authorization view
+  - COPAUS0C (Pending Auth) exists in menu but may not be deployed
+  - Transaction IDs are CC00 (signon), CA00 (admin), CM00 (user)
+  - All programs follow pseudo-conversational CICS pattern
+  - COMMAREA is approximately 155 bytes

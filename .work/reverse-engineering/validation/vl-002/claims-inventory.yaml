@@ -1,0 +1,2243 @@
+# =============================================================================
+# Claims Inventory for RE-002 Data Model Documentation
+# =============================================================================
+# This file catalogs every verifiable claim from the RE-002 data model
+# documentation suite. Each claim is assigned a unique ID and tracks the
+# source document, exact location, the assertion made, and validation status.
+#
+# Source Documents:
+#   - DATA-MODEL.md     (docs/reverse-engineering/02-data-model/DATA-MODEL.md)
+#   - DATA-DICTIONARY.md (docs/reverse-engineering/02-data-model/DATA-DICTIONARY.md)
+#   - DATA-LINEAGE.md   (docs/reverse-engineering/02-data-model/DATA-LINEAGE.md)
+#   - er-diagram.md     (docs/reverse-engineering/02-data-model/diagrams/er-diagram.md)
+#
+# Validation Status Values:
+#   not-started  - Claim has not been verified yet
+#   verified     - Claim confirmed against source artifact
+#   refuted      - Claim contradicted by source artifact
+#   partial      - Claim partially correct; details in notes
+#   inconclusive - Unable to verify (source unavailable or ambiguous)
+# =============================================================================
+
+metadata:
+  title: "RE-002 Data Model Claims Inventory"
+  version: "1.0"
+  created: "2026-02-06"
+  validation_task: "VL-002"
+  prompt_under_test: "RE-002 Data Model Extraction"
+  total_claims: 113
+  source_documents:
+    - id: DATA-MODEL
+      path: "docs/reverse-engineering/02-data-model/DATA-MODEL.md"
+      description: "Physical and logical data model documentation"
+    - id: DATA-DICTIONARY
+      path: "docs/reverse-engineering/02-data-model/DATA-DICTIONARY.md"
+      description: "Field-level data dictionary with SQL mappings"
+    - id: DATA-LINEAGE
+      path: "docs/reverse-engineering/02-data-model/DATA-LINEAGE.md"
+      description: "Batch data flow and transformation documentation"
+    - id: ER-DIAGRAM
+      path: "docs/reverse-engineering/02-data-model/diagrams/er-diagram.md"
+      description: "Entity-relationship diagrams in Mermaid format"
+
+# =============================================================================
+# CATEGORY 1: Copybook File Reference Claims
+# =============================================================================
+# These claims assert that specific copybook files exist, define specific
+# record structures, and have specific record lengths.
+# =============================================================================
+
+copybook_file_claims:
+
+  - id: CPY-001
+    claim: "CVACT01Y.cpy defines the Account record with RECLN 300 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT table, line ~27"
+        quote: "Record Size: 300 bytes (fixed) | CVACT01Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 2, line ~65"
+        quote: "Source Copybook: app/cpy/CVACT01Y.cpy, Record Length: 300 bytes"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-002
+    claim: "CVACT02Y.cpy defines the Card record with RECLN 150 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT table, line ~60"
+        quote: "Record Size: 150 bytes (fixed) | CVACT02Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 3, line ~117"
+        quote: "Source Copybook: app/cpy/CVACT02Y.cpy, Record Length: 150 bytes"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-003
+    claim: "CVACT03Y.cpy defines the Card XREF record with RECLN 50 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CCXREF table, line ~127"
+        quote: "Record Size: 50 bytes (fixed) | CVACT03Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 5, line ~224"
+        quote: "Source Copybook: app/cpy/CVACT03Y.cpy, Record Length: 50 bytes"
+    verification_target: "app/cpy/CVACT03Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-004
+    claim: "CVCUS01Y.cpy defines the Customer record with RECLN 500 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CUSTDAT table, line ~88"
+        quote: "Record Size: 500 bytes (fixed) | CVCUS01Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 4, line ~161"
+        quote: "Source Copybook: app/cpy/CVCUS01Y.cpy, Record Length: 500 bytes"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-005
+    claim: "CSUSR01Y.cpy defines the User Security record with RECLN 80 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 USRSEC table, line ~187"
+        quote: "Record Size: 80 bytes (fixed) | CSUSR01Y.cpy:17-23"
+      - document: DATA-DICTIONARY
+        location: "Section 7, line ~322"
+        quote: "Source Copybook: app/cpy/CSUSR01Y.cpy, Record Length: 80 bytes"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    verification_method: "Check file exists, inspect record at lines 17-23"
+    status: not-started
+    notes: ""
+
+  - id: CPY-006
+    claim: "CVTRA01Y.cpy defines the TCATBALF record with RECLN 50 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TCATBALF table, line ~217"
+        quote: "Record Size: 50 bytes (fixed) | CVTRA01Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 8, line ~362"
+        quote: "Source Copybook: app/cpy/CVTRA01Y.cpy, Record Length: 50 bytes"
+    verification_target: "app/cpy/CVTRA01Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-007
+    claim: "CVTRA02Y.cpy defines the DISCGRP record with RECLN 50 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 DISCGRP table, line ~248"
+        quote: "Record Size: 50 bytes (fixed) | CVTRA02Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 9, line ~393"
+        quote: "Source Copybook: app/cpy/CVTRA02Y.cpy, Record Length: 50 bytes"
+    verification_target: "app/cpy/CVTRA02Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-008
+    claim: "CVTRA03Y.cpy defines the TRANTYPE record with RECLN 60 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANTYPE table, line ~279"
+        quote: "Record Size: 60 bytes (fixed) | CVTRA03Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 10, line ~424"
+        quote: "Source Copybook: app/cpy/CVTRA03Y.cpy, Record Length: 60 bytes"
+    verification_target: "app/cpy/CVTRA03Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-009
+    claim: "CVTRA04Y.cpy defines the TRANCATG record with RECLN 60 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANCATG table, line ~300"
+        quote: "Record Size: 60 bytes (fixed) | CVTRA04Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 11, line ~458"
+        quote: "Source Copybook: app/cpy/CVTRA04Y.cpy, Record Length: 60 bytes"
+    verification_target: "app/cpy/CVTRA04Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-010
+    claim: "CVTRA05Y.cpy defines the Transaction record with RECLN 350 bytes"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 TRANSACT table, line ~152"
+        quote: "Record Size: 350 bytes (fixed) | CVTRA05Y.cpy:2"
+      - document: DATA-DICTIONARY
+        location: "Section 6, line ~260"
+        quote: "Source Copybook: app/cpy/CVTRA05Y.cpy, Record Length: 350 bytes"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    verification_method: "Check file exists, inspect record length definition"
+    status: not-started
+    notes: ""
+
+  - id: CPY-011
+    claim: "CVTRA06Y.cpy defines the Daily Transaction record with RECLN 350 bytes, same layout as CVTRA05Y but with DALYTRAN prefix"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.3 DALYTRAN, line ~330"
+        quote: "Record Size: 350 bytes ... Same layout as TRANSACT (CVTRA05Y.cpy) but uses DALYTRAN- prefix"
+    verification_target: "app/cpy/CVTRA06Y.cpy"
+    verification_method: "Check file exists, compare layout to CVTRA05Y.cpy, verify DALYTRAN prefix"
+    status: not-started
+    notes: ""
+
+  - id: CPY-012
+    claim: "CVTRA07Y.cpy defines the Report layout used by CBTRN03C"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 4.3, line ~444"
+        quote: "Report Layout (CVTRA07Y.cpy)"
+    verification_target: "app/cpy/CVTRA07Y.cpy"
+    verification_method: "Check file exists and contains report layout fields"
+    status: not-started
+    notes: ""
+
+# =============================================================================
+# CATEGORY 2: JCL File Claims
+# =============================================================================
+# These claims assert that specific JCL files exist and contain VSAM cluster
+# definitions at specific line numbers with specific properties.
+# =============================================================================
+
+jcl_file_claims:
+
+  - id: JCL-001
+    claim: "ACCTFILE.jcl defines ACCTDAT as KSDS at line 44, with dataset name at line 36"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT table"
+        quote: "VSAM Type: KSDS | ACCTFILE.jcl:44 ... Dataset Name: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS | ACCTFILE.jcl:36"
+    verification_target: "app/jcl/ACCTFILE.jcl"
+    verification_checks:
+      - "Line 36 contains dataset name AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS"
+      - "Line 44 contains KSDS definition"
+    status: not-started
+    notes: ""
+
+  - id: JCL-002
+    claim: "CARDFILE.jcl defines CARDDAT with AIX at lines 50, 85-86, 92"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT table"
+        quote: "KSDS with AIX | CARDFILE.jcl:50-92 ... Dataset Name: CARDFILE.jcl:50 ... AIX: CARDFILE.jcl:85 ... NONUNIQUEKEY: CARDFILE.jcl:86"
+    verification_target: "app/jcl/CARDFILE.jcl"
+    verification_checks:
+      - "Line 50 contains dataset name AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS"
+      - "Line 85 contains AIX definition with KEYS(11 16)"
+      - "Line 86 contains NONUNIQUEKEY"
+      - "Line 92 referenced in VSAM type range"
+    status: not-started
+    notes: ""
+
+  - id: JCL-003
+    claim: "CUSTFILE.jcl defines CUSTDAT as KSDS at line 46"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CUSTDAT table"
+        quote: "VSAM Type: KSDS | CUSTFILE.jcl:46 ... Dataset Name: AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS | CUSTFILE.jcl:46"
+    verification_target: "app/jcl/CUSTFILE.jcl"
+    verification_checks:
+      - "Line 46 contains KSDS definition and/or dataset name"
+    status: not-started
+    notes: ""
+
+  - id: JCL-004
+    claim: "XREFFILE.jcl defines CCXREF with AIX at lines 39, 74-75, 102"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CCXREF table"
+        quote: "KSDS with AIX | XREFFILE.jcl:39-102 ... Dataset Name: XREFFILE.jcl:39 ... AIX: XREFFILE.jcl:74 ... NONUNIQUEKEY: XREFFILE.jcl:75"
+    verification_target: "app/jcl/XREFFILE.jcl"
+    verification_checks:
+      - "Line 39 contains dataset name AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS"
+      - "Line 74 contains AIX definition with KEYS(11,25)"
+      - "Line 75 contains NONUNIQUEKEY"
+      - "Line 102 referenced in range"
+    status: not-started
+    notes: ""
+
+  - id: JCL-005
+    claim: "TRANFILE.jcl defines TRANSACT with AIX at lines 49, 84-85, 111"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 TRANSACT table"
+        quote: "KSDS with AIX | TRANFILE.jcl:49-111 ... Dataset Name: TRANFILE.jcl:49 ... AIX: TRANFILE.jcl:84 ... NONUNIQUEKEY: TRANFILE.jcl:85"
+    verification_target: "app/jcl/TRANFILE.jcl"
+    verification_checks:
+      - "Line 49 contains dataset name AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS"
+      - "Line 84 contains AIX definition with KEYS(26 304)"
+      - "Line 85 contains NONUNIQUEKEY"
+      - "Line 111 referenced in range"
+    status: not-started
+    notes: ""
+
+  - id: JCL-006
+    claim: "DUSRSECJ.jcl defines USRSEC as KSDS"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 USRSEC table"
+        quote: "VSAM Type: KSDS (CICS-managed) | DUSRSECJ.jcl"
+    verification_target: "app/jcl/DUSRSECJ.jcl"
+    verification_checks:
+      - "File exists and defines USRSEC KSDS cluster"
+    status: not-started
+    notes: ""
+
+  - id: JCL-007
+    claim: "TCATBALF.jcl defines TCATBALF as KSDS at line 36"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TCATBALF table"
+        quote: "VSAM Type: KSDS | TCATBALF.jcl:36 ... Dataset Name: AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS | TCATBALF.jcl:36"
+    verification_target: "app/jcl/TCATBALF.jcl"
+    verification_checks:
+      - "Line 36 contains KSDS definition and dataset name"
+    status: not-started
+    notes: ""
+
+  - id: JCL-008
+    claim: "DISCGRP.jcl defines DISCGRP as KSDS at line 36"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 DISCGRP table"
+        quote: "VSAM Type: KSDS | DISCGRP.jcl:36 ... Dataset Name: AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS | DISCGRP.jcl:36"
+    verification_target: "app/jcl/DISCGRP.jcl"
+    verification_checks:
+      - "Line 36 contains KSDS definition and dataset name"
+    status: not-started
+    notes: ""
+
+  - id: JCL-009
+    claim: "TRANTYPE.jcl defines TRANTYPE as KSDS at line 36"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANTYPE table"
+        quote: "VSAM Type: KSDS | TRANTYPE.jcl:36 ... Dataset Name: AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS | TRANTYPE.jcl:36"
+    verification_target: "app/jcl/TRANTYPE.jcl"
+    verification_checks:
+      - "Line 36 contains KSDS definition and dataset name"
+    status: not-started
+    notes: ""
+
+  - id: JCL-010
+    claim: "TRANCATG.jcl defines TRANCATG as KSDS at line 36"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANCATG table"
+        quote: "VSAM Type: KSDS | TRANCATG.jcl:36 ... Dataset Name: AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS | TRANCATG.jcl:36"
+    verification_target: "app/jcl/TRANCATG.jcl"
+    verification_checks:
+      - "Line 36 contains KSDS definition and dataset name"
+    status: not-started
+    notes: ""
+
+# =============================================================================
+# CATEGORY 3: COBOL Program Line Reference Claims
+# =============================================================================
+# These claims assert that specific business logic exists at specific line
+# numbers in COBOL source files.
+# =============================================================================
+
+cobol_line_reference_claims:
+
+  - id: CBL-001
+    claim: "CBTRN02C.cbl lines 380-392 contain card lookup validation logic"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 5.2 Business Rules"
+        quote: "Card Validity | CBTRN02C:380-392 | Card must exist in CCXREF"
+      - document: DATA-LINEAGE
+        location: "Section 2.4 Validation Rules"
+        quote: "Card lookup | CBTRN02C:380-392 | INVALID CARD NUMBER FOUND"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "380-392"
+    expected_logic: "CCXREF lookup to validate card number exists"
+    status: not-started
+    notes: ""
+
+  - id: CBL-002
+    claim: "CBTRN02C.cbl lines 393-399 contain account lookup validation"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 2.4 Validation Rules"
+        quote: "Account lookup | CBTRN02C:393-399 | ACCOUNT RECORD NOT FOUND"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "393-399"
+    expected_logic: "Account record existence check after card lookup"
+    status: not-started
+    notes: ""
+
+  - id: CBL-003
+    claim: "CBTRN02C.cbl lines 403-413 contain credit limit check logic"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 5.2 Business Rules"
+        quote: "Credit Limit Check | CBTRN02C:403-413 | ACCT-CREDIT-LIMIT >= computed balance"
+      - document: DATA-LINEAGE
+        location: "Section 2.4 Validation Rules"
+        quote: "Credit limit | CBTRN02C:403-413 | OVERLIMIT TRANSACTION"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "403-413"
+    expected_logic: "COMPUTE WS-TEMP-BAL and compare against ACCT-CREDIT-LIMIT"
+    status: not-started
+    notes: ""
+
+  - id: CBL-004
+    claim: "CBTRN02C.cbl lines 414-420 contain account expiration check"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 5.2 Business Rules"
+        quote: "Account Expiration | CBTRN02C:414-420 | ACCT-EXPIRAION-DATE >= transaction date"
+      - document: DATA-LINEAGE
+        location: "Section 2.4 Validation Rules"
+        quote: "Account expiration | CBTRN02C:414-420 | TRANSACTION RECEIVED AFTER ACCT EXPIRATION"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "414-420"
+    expected_logic: "Date comparison ACCT-EXPIRAION-DATE vs transaction date"
+    status: not-started
+    notes: ""
+
+  - id: CBL-005
+    claim: "CBTRN02C.cbl lines 467-542 contain TCATBAL update logic"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 2.3 Transaction Category Balance Update"
+        quote: "Transaction Category Balance Update (CBTRN02C:467-542)"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "467-542"
+    expected_logic: "Key construction from XREF-ACCT-ID/TYPE-CD/CAT-CD and ADD DALYTRAN-AMT TO TRAN-CAT-BAL"
+    status: not-started
+    notes: ""
+
+  - id: CBL-006
+    claim: "CBTRN02C.cbl lines 545-560 contain account update logic"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 2.3 Account Update Logic (CBTRN02C:545-560)"
+        quote: "ADD DALYTRAN-AMT TO ACCT-CURR-BAL, conditional update of CYC-CREDIT/CYC-DEBIT"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "545-560"
+    expected_logic: "ADD to ACCT-CURR-BAL; IF positive ADD to CYC-CREDIT ELSE ADD to CYC-DEBIT"
+    status: not-started
+    notes: ""
+
+  - id: CBL-007
+    claim: "CBTRN02C.cbl lines 692-704 contain timestamp generation logic"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 2.3 Timestamp Generation"
+        quote: "Timestamp Generation (CBTRN02C:692-704) ... MOVE FUNCTION CURRENT-DATE TO COBOL-TS"
+    verification_target: "app/cbl/CBTRN02C.cbl"
+    verification_line_range: "692-704"
+    expected_logic: "FUNCTION CURRENT-DATE formatted as DB2 timestamp YYYY-MM-DD-HH.MM.SS.nnnnnn"
+    status: not-started
+    notes: ""
+
+  - id: CBL-008
+    claim: "CBACT04C.cbl lines 350-370 contain account update after interest calculation"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 3.5 Account Balance Update (CBACT04C:350-370)"
+        quote: "ADD WS-TOTAL-INT TO ACCT-CURR-BAL, MOVE 0 TO ACCT-CURR-CYC-CREDIT, MOVE 0 TO ACCT-CURR-CYC-DEBIT"
+    verification_target: "app/cbl/CBACT04C.cbl"
+    verification_line_range: "350-370"
+    expected_logic: "Add total interest to balance, reset cycle credits and debits to zero"
+    status: not-started
+    notes: ""
+
+  - id: CBL-009
+    claim: "CBACT04C.cbl lines 436-460 contain interest rate fallback to DEFAULT group"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 3.6 Interest Rate Fallback (CBACT04C:436-460)"
+        quote: "IF DISCGRP-STATUS = '23' ... MOVE 'DEFAULT' TO FD-DIS-ACCT-GROUP-ID"
+    verification_target: "app/cbl/CBACT04C.cbl"
+    verification_line_range: "436-460"
+    expected_logic: "Check VSAM status 23 (not found) and fall back to DEFAULT group"
+    status: not-started
+    notes: ""
+
+  - id: CBL-010
+    claim: "CBACT04C.cbl lines 462-470 contain interest calculation formula"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 3.3 Interest Calculation Formula (CBACT04C:462-470)"
+        quote: "COMPUTE WS-MONTHLY-INT = ( TRAN-CAT-BAL * DIS-INT-RATE) / 1200"
+    verification_target: "app/cbl/CBACT04C.cbl"
+    verification_line_range: "462-470"
+    expected_logic: "Monthly interest = (balance * annual rate) / 1200"
+    status: not-started
+    notes: ""
+
+  - id: CBL-011
+    claim: "CBACT04C.cbl lines 473-515 contain interest transaction generation"
+    source_documents:
+      - document: DATA-LINEAGE
+        location: "Section 3.4 Interest Transaction Generation (CBACT04C:473-515)"
+        quote: "TRAN-TYPE-CD = '01', TRAN-CAT-CD = '05', TRAN-SOURCE = 'System'"
+    verification_target: "app/cbl/CBACT04C.cbl"
+    verification_line_range: "473-515"
+    expected_logic: "Build transaction record with hardcoded type 01, category 05, source System"
+    status: not-started
+    notes: ""
+
+# =============================================================================
+# CATEGORY 4: PIC Clause Claims (Field Definitions per Entity)
+# =============================================================================
+# These claims assert specific COBOL PIC clauses for fields within each entity.
+# =============================================================================
+
+pic_clause_claims:
+
+  # --- ACCOUNT entity (13 fields) ---
+
+  - id: PIC-ACCT-001
+    claim: "ACCT-ID has PIC 9(11) at offset 0, length 11"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #1"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-002
+    claim: "ACCT-ACTIVE-STATUS has PIC X(01) at offset 11, length 1"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #2"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-003
+    claim: "ACCT-CURR-BAL has PIC S9(10)V99 at offset 12, length 12"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #3"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-004
+    claim: "ACCT-CREDIT-LIMIT has PIC S9(10)V99 at offset 24, length 12"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #4"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-005
+    claim: "ACCT-CASH-CREDIT-LIMIT has PIC S9(10)V99 at offset 36, length 12"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #5"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-006
+    claim: "ACCT-OPEN-DATE has PIC X(10) at offset 48, length 10"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #6"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-007
+    claim: "ACCT-EXPIRAION-DATE has PIC X(10) at offset 58, length 10"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #7"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+    notes: "Note: field name has typo EXPIRAION (missing T) - verify spelling in source"
+
+  - id: PIC-ACCT-008
+    claim: "ACCT-REISSUE-DATE has PIC X(10) at offset 68, length 10"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #8"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-009
+    claim: "ACCT-CURR-CYC-CREDIT has PIC S9(10)V99 at offset 78, length 12"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #9"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-010
+    claim: "ACCT-CURR-CYC-DEBIT has PIC S9(10)V99 at offset 90, length 12"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #10"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-011
+    claim: "ACCT-ADDR-ZIP has PIC X(10) at offset 102, length 10"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #11"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-012
+    claim: "ACCT-GROUP-ID has PIC X(10) at offset 112, length 10"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #12"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  - id: PIC-ACCT-013
+    claim: "ACCOUNT FILLER has PIC X(178) at offset 122, length 178"
+    entity: ACCOUNT
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 2, field #13"
+    verification_target: "app/cpy/CVACT01Y.cpy"
+    status: not-started
+
+  # --- CARD entity (7 fields) ---
+
+  - id: PIC-CARD-001
+    claim: "CARD-NUM has PIC X(16) at offset 0, length 16"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #1"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+
+  - id: PIC-CARD-002
+    claim: "CARD-ACCT-ID has PIC 9(11) at offset 16, length 11"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #2"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+
+  - id: PIC-CARD-003
+    claim: "CARD-CVV-CD has PIC 9(03) at offset 27, length 3"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #3"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+
+  - id: PIC-CARD-004
+    claim: "CARD-EMBOSSED-NAME has PIC X(50) at offset 30, length 50"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #4"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+
+  - id: PIC-CARD-005
+    claim: "CARD-EXPIRAION-DATE has PIC X(10) at offset 80, length 10"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #5"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+    notes: "Note: field name has typo EXPIRAION (missing T) - verify spelling in source"
+
+  - id: PIC-CARD-006
+    claim: "CARD-ACTIVE-STATUS has PIC X(01) at offset 90, length 1"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #6"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+
+  - id: PIC-CARD-007
+    claim: "CARD FILLER has PIC X(59) at offset 91, length 59"
+    entity: CARD
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 3, field #7"
+    verification_target: "app/cpy/CVACT02Y.cpy"
+    status: not-started
+
+  # --- CUSTOMER entity (19 fields) ---
+
+  - id: PIC-CUST-001
+    claim: "CUST-ID has PIC 9(09) at offset 0, length 9"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CUSTDAT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #1"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-002
+    claim: "CUST-FIRST-NAME has PIC X(25) at offset 9, length 25"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #2"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-003
+    claim: "CUST-MIDDLE-NAME has PIC X(25) at offset 34, length 25"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #3"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-004
+    claim: "CUST-LAST-NAME has PIC X(25) at offset 59, length 25"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #4"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-005
+    claim: "CUST-ADDR-LINE-1 has PIC X(50) at offset 84, length 50"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #5"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-006
+    claim: "CUST-ADDR-LINE-2 has PIC X(50) at offset 134, length 50"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #6"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-007
+    claim: "CUST-ADDR-LINE-3 has PIC X(50) at offset 184, length 50"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #7"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-008
+    claim: "CUST-ADDR-STATE-CD has PIC X(02) at offset 234, length 2"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #8"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-009
+    claim: "CUST-ADDR-COUNTRY-CD has PIC X(03) at offset 236, length 3"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #9"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-010
+    claim: "CUST-ADDR-ZIP has PIC X(10) at offset 239, length 10"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #10"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-011
+    claim: "CUST-PHONE-NUM-1 has PIC X(15) at offset 249, length 15"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #11"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-012
+    claim: "CUST-PHONE-NUM-2 has PIC X(15) at offset 264, length 15"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #12"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-013
+    claim: "CUST-SSN has PIC 9(09) at offset 279, length 9"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #13"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-014
+    claim: "CUST-GOVT-ISSUED-ID has PIC X(20) at offset 288, length 20"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #14"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-015
+    claim: "CUST-DOB-YYYY-MM-DD has PIC X(10) at offset 308, length 10"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #15"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-016
+    claim: "CUST-EFT-ACCOUNT-ID has PIC X(10) at offset 318, length 10"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #16"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-017
+    claim: "CUST-PRI-CARD-HOLDER-IND has PIC X(01) at offset 328, length 1"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #17"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-018
+    claim: "CUST-FICO-CREDIT-SCORE has PIC 9(03) at offset 329, length 3"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #18"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  - id: PIC-CUST-019
+    claim: "CUSTOMER FILLER has PIC X(168) at offset 332, length 168"
+    entity: CUSTOMER
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, field #19"
+    verification_target: "app/cpy/CVCUS01Y.cpy"
+    status: not-started
+
+  # --- CARD_XREF entity (4 fields) ---
+
+  - id: PIC-XREF-001
+    claim: "XREF-CARD-NUM has PIC X(16) at offset 0, length 16"
+    entity: CARD_XREF
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CCXREF physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 5, field #1"
+    verification_target: "app/cpy/CVACT03Y.cpy"
+    status: not-started
+
+  - id: PIC-XREF-002
+    claim: "XREF-CUST-ID has PIC 9(09) at offset 16, length 9"
+    entity: CARD_XREF
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 5, field #2"
+    verification_target: "app/cpy/CVACT03Y.cpy"
+    status: not-started
+
+  - id: PIC-XREF-003
+    claim: "XREF-ACCT-ID has PIC 9(11) at offset 25, length 11"
+    entity: CARD_XREF
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 5, field #3"
+    verification_target: "app/cpy/CVACT03Y.cpy"
+    status: not-started
+
+  - id: PIC-XREF-004
+    claim: "CARD_XREF FILLER has PIC X(14) at offset 36, length 14"
+    entity: CARD_XREF
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 5, field #4"
+    verification_target: "app/cpy/CVACT03Y.cpy"
+    status: not-started
+
+  # --- TRANSACTION entity (14 fields) ---
+
+  - id: PIC-TRAN-001
+    claim: "TRAN-ID has PIC X(16) at offset 0, length 16"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 TRANSACT physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #1"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-002
+    claim: "TRAN-TYPE-CD has PIC X(02) at offset 16, length 2"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #2"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-003
+    claim: "TRAN-CAT-CD has PIC 9(04) at offset 18, length 4"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #3"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-004
+    claim: "TRAN-SOURCE has PIC X(10) at offset 22, length 10"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #4"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-005
+    claim: "TRAN-DESC has PIC X(100) at offset 32, length 100"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #5"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-006
+    claim: "TRAN-AMT has PIC S9(09)V99 at offset 132, length 11"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #6"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-007
+    claim: "TRAN-MERCHANT-ID has PIC 9(09) at offset 143, length 9"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #7"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-008
+    claim: "TRAN-MERCHANT-NAME has PIC X(50) at offset 152, length 50"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #8"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-009
+    claim: "TRAN-MERCHANT-CITY has PIC X(50) at offset 202, length 50"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #9"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-010
+    claim: "TRAN-MERCHANT-ZIP has PIC X(10) at offset 252, length 10"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #10"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-011
+    claim: "TRAN-CARD-NUM has PIC X(16) at offset 262, length 16"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #11"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-012
+    claim: "TRAN-ORIG-TS has PIC X(26) at offset 278, length 26"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #12"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-013
+    claim: "TRAN-PROC-TS has PIC X(26) at offset 304, length 26"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #13"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  - id: PIC-TRAN-014
+    claim: "TRANSACTION FILLER has PIC X(20) at offset 330, length 20"
+    entity: TRANSACTION
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, field #14"
+    verification_target: "app/cpy/CVTRA05Y.cpy"
+    status: not-started
+
+  # --- USER_SECURITY entity (6 fields) ---
+
+  - id: PIC-USR-001
+    claim: "SEC-USR-ID has PIC X(08) at offset 0, length 8"
+    entity: USER_SECURITY
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 USRSEC physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 7, field #1"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    status: not-started
+
+  - id: PIC-USR-002
+    claim: "SEC-USR-FNAME has PIC X(20) at offset 8, length 20"
+    entity: USER_SECURITY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 7, field #2"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    status: not-started
+
+  - id: PIC-USR-003
+    claim: "SEC-USR-LNAME has PIC X(20) at offset 28, length 20"
+    entity: USER_SECURITY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 7, field #3"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    status: not-started
+
+  - id: PIC-USR-004
+    claim: "SEC-USR-PWD has PIC X(08) at offset 48, length 8"
+    entity: USER_SECURITY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 7, field #4"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    status: not-started
+
+  - id: PIC-USR-005
+    claim: "SEC-USR-TYPE has PIC X(01) at offset 56, length 1"
+    entity: USER_SECURITY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 7, field #5"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    status: not-started
+
+  - id: PIC-USR-006
+    claim: "SEC-USR-FILLER has PIC X(23) at offset 57, length 23"
+    entity: USER_SECURITY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 7, field #6"
+    verification_target: "app/cpy/CSUSR01Y.cpy"
+    status: not-started
+
+  # --- TRAN_CAT_BAL entity (5 fields) ---
+
+  - id: PIC-TCB-001
+    claim: "TRANCAT-ACCT-ID has PIC 9(11) at offset 0, length 11"
+    entity: TRAN_CAT_BAL
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TCATBALF physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 8, field #1"
+    verification_target: "app/cpy/CVTRA01Y.cpy"
+    status: not-started
+
+  - id: PIC-TCB-002
+    claim: "TRANCAT-TYPE-CD has PIC X(02) at offset 11, length 2"
+    entity: TRAN_CAT_BAL
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 8, field #2"
+    verification_target: "app/cpy/CVTRA01Y.cpy"
+    status: not-started
+
+  - id: PIC-TCB-003
+    claim: "TRANCAT-CD has PIC 9(04) at offset 13, length 4"
+    entity: TRAN_CAT_BAL
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 8, field #3"
+    verification_target: "app/cpy/CVTRA01Y.cpy"
+    status: not-started
+
+  - id: PIC-TCB-004
+    claim: "TRAN-CAT-BAL has PIC S9(09)V99 at offset 17, length 11"
+    entity: TRAN_CAT_BAL
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 8, field #4"
+    verification_target: "app/cpy/CVTRA01Y.cpy"
+    status: not-started
+
+  - id: PIC-TCB-005
+    claim: "TRAN_CAT_BAL FILLER has PIC X(22) at offset 28, length 22"
+    entity: TRAN_CAT_BAL
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 8, field #5"
+    verification_target: "app/cpy/CVTRA01Y.cpy"
+    status: not-started
+
+  # --- DISCLOSURE_GROUP entity (5 fields) ---
+
+  - id: PIC-DIS-001
+    claim: "DIS-ACCT-GROUP-ID has PIC X(10) at offset 0, length 10"
+    entity: DISCLOSURE_GROUP
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 DISCGRP physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 9, field #1"
+    verification_target: "app/cpy/CVTRA02Y.cpy"
+    status: not-started
+
+  - id: PIC-DIS-002
+    claim: "DIS-TRAN-TYPE-CD has PIC X(02) at offset 10, length 2"
+    entity: DISCLOSURE_GROUP
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 9, field #2"
+    verification_target: "app/cpy/CVTRA02Y.cpy"
+    status: not-started
+
+  - id: PIC-DIS-003
+    claim: "DIS-TRAN-CAT-CD has PIC 9(04) at offset 12, length 4"
+    entity: DISCLOSURE_GROUP
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 9, field #3"
+    verification_target: "app/cpy/CVTRA02Y.cpy"
+    status: not-started
+
+  - id: PIC-DIS-004
+    claim: "DIS-INT-RATE has PIC S9(04)V99 at offset 16, length 6"
+    entity: DISCLOSURE_GROUP
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 9, field #4"
+    verification_target: "app/cpy/CVTRA02Y.cpy"
+    status: not-started
+
+  - id: PIC-DIS-005
+    claim: "DISCLOSURE_GROUP FILLER has PIC X(28) at offset 22, length 28"
+    entity: DISCLOSURE_GROUP
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 9, field #5"
+    verification_target: "app/cpy/CVTRA02Y.cpy"
+    status: not-started
+
+  # --- TRAN_TYPE entity (3 fields) ---
+
+  - id: PIC-TTP-001
+    claim: "TRAN-TYPE has PIC X(02) at offset 0, length 2"
+    entity: TRAN_TYPE
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANTYPE physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 10, field #1"
+    verification_target: "app/cpy/CVTRA03Y.cpy"
+    status: not-started
+
+  - id: PIC-TTP-002
+    claim: "TRAN-TYPE-DESC has PIC X(50) at offset 2, length 50"
+    entity: TRAN_TYPE
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 10, field #2"
+    verification_target: "app/cpy/CVTRA03Y.cpy"
+    status: not-started
+
+  - id: PIC-TTP-003
+    claim: "TRAN_TYPE FILLER has PIC X(08) at offset 52, length 8"
+    entity: TRAN_TYPE
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 10, field #3"
+    verification_target: "app/cpy/CVTRA03Y.cpy"
+    status: not-started
+
+  # --- TRAN_CATEGORY entity (4 fields) ---
+
+  - id: PIC-TCG-001
+    claim: "TRAN-TYPE-CD has PIC X(02) at offset 0, length 2"
+    entity: TRAN_CATEGORY
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANCATG physical layout"
+      - document: DATA-DICTIONARY
+        location: "Section 11, field #1"
+    verification_target: "app/cpy/CVTRA04Y.cpy"
+    status: not-started
+
+  - id: PIC-TCG-002
+    claim: "TRAN-CAT-CD has PIC 9(04) at offset 2, length 4"
+    entity: TRAN_CATEGORY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 11, field #2"
+    verification_target: "app/cpy/CVTRA04Y.cpy"
+    status: not-started
+
+  - id: PIC-TCG-003
+    claim: "TRAN-CAT-TYPE-DESC has PIC X(50) at offset 6, length 50"
+    entity: TRAN_CATEGORY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 11, field #3"
+    verification_target: "app/cpy/CVTRA04Y.cpy"
+    status: not-started
+
+  - id: PIC-TCG-004
+    claim: "TRAN_CATEGORY FILLER has PIC X(04) at offset 56, length 4"
+    entity: TRAN_CATEGORY
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 11, field #4"
+    verification_target: "app/cpy/CVTRA04Y.cpy"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 5: Record Length Claims
+# =============================================================================
+# These claims assert the total record lengths for each VSAM file.
+# =============================================================================
+
+record_length_claims:
+
+  - id: RECLN-001
+    claim: "ACCTDAT has a fixed record length of 300 bytes"
+    entity: ACCTDAT
+    documented_value: 300
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT table"
+      - document: DATA-DICTIONARY
+        location: "Section 2"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVACT01Y.cpy - sum field lengths"
+      - "app/jcl/ACCTFILE.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-002
+    claim: "CARDDAT has a fixed record length of 150 bytes"
+    entity: CARDDAT
+    documented_value: 150
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT table"
+      - document: DATA-DICTIONARY
+        location: "Section 3"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVACT02Y.cpy - sum field lengths"
+      - "app/jcl/CARDFILE.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-003
+    claim: "CUSTDAT has a fixed record length of 500 bytes"
+    entity: CUSTDAT
+    documented_value: 500
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CUSTDAT table"
+      - document: DATA-DICTIONARY
+        location: "Section 4"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVCUS01Y.cpy - sum field lengths"
+      - "app/jcl/CUSTFILE.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-004
+    claim: "CCXREF has a fixed record length of 50 bytes"
+    entity: CCXREF
+    documented_value: 50
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CCXREF table"
+      - document: DATA-DICTIONARY
+        location: "Section 5"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVACT03Y.cpy - sum field lengths"
+      - "app/jcl/XREFFILE.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-005
+    claim: "TRANSACT has a fixed record length of 350 bytes"
+    entity: TRANSACT
+    documented_value: 350
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 TRANSACT table"
+      - document: DATA-DICTIONARY
+        location: "Section 6"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVTRA05Y.cpy - sum field lengths"
+      - "app/jcl/TRANFILE.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-006
+    claim: "USRSEC has a fixed record length of 80 bytes"
+    entity: USRSEC
+    documented_value: 80
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 USRSEC table"
+      - document: DATA-DICTIONARY
+        location: "Section 7"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CSUSR01Y.cpy - sum field lengths"
+      - "app/jcl/DUSRSECJ.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-007
+    claim: "TCATBALF has a fixed record length of 50 bytes"
+    entity: TCATBALF
+    documented_value: 50
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TCATBALF table"
+      - document: DATA-DICTIONARY
+        location: "Section 8"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVTRA01Y.cpy - sum field lengths"
+      - "app/jcl/TCATBALF.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-008
+    claim: "DISCGRP has a fixed record length of 50 bytes"
+    entity: DISCGRP
+    documented_value: 50
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 DISCGRP table"
+      - document: DATA-DICTIONARY
+        location: "Section 9"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVTRA02Y.cpy - sum field lengths"
+      - "app/jcl/DISCGRP.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-009
+    claim: "TRANTYPE has a fixed record length of 60 bytes"
+    entity: TRANTYPE
+    documented_value: 60
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANTYPE table"
+      - document: DATA-DICTIONARY
+        location: "Section 10"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVTRA03Y.cpy - sum field lengths"
+      - "app/jcl/TRANTYPE.jcl - RECORDSIZE parameter"
+    status: not-started
+
+  - id: RECLN-010
+    claim: "TRANCATG has a fixed record length of 60 bytes"
+    entity: TRANCATG
+    documented_value: 60
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANCATG table"
+      - document: DATA-DICTIONARY
+        location: "Section 11"
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships diagram"
+    verification_targets:
+      - "app/cpy/CVTRA04Y.cpy - sum field lengths"
+      - "app/jcl/TRANCATG.jcl - RECORDSIZE parameter"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 6: VSAM Key Claims
+# =============================================================================
+# These claims assert the primary key and alternate index key definitions
+# for each VSAM file.
+# =============================================================================
+
+vsam_key_claims:
+
+  - id: KEY-001
+    claim: "ACCTDAT primary key is KEYS(11 0) - 11 bytes at offset 0"
+    entity: ACCTDAT
+    key_spec: "KEYS(11 0)"
+    key_field: ACCT-ID
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 ACCTDAT table"
+        quote: "Primary Key: ACCT-ID (positions 1-11) | KEYS(11 0)"
+    verification_target: "app/jcl/ACCTFILE.jcl"
+    status: not-started
+
+  - id: KEY-002
+    claim: "CARDDAT primary key is KEYS(16 0) - 16 bytes at offset 0"
+    entity: CARDDAT
+    key_spec: "KEYS(16 0)"
+    key_field: CARD-NUM
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT table"
+    verification_target: "app/jcl/CARDFILE.jcl"
+    status: not-started
+
+  - id: KEY-003
+    claim: "CARDDAT AIX key is KEYS(11 16) - 11 bytes at offset 16"
+    entity: CARDDAT
+    key_spec: "KEYS(11 16)"
+    key_field: CARD-ACCT-ID
+    is_alternate: true
+    uniqueness: NONUNIQUEKEY
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CARDDAT table and Section 3 AIX Summary"
+        quote: "Alternate Index: CARD-ACCT-ID (positions 17-27, KEYS(11 16))"
+    verification_target: "app/jcl/CARDFILE.jcl"
+    status: not-started
+
+  - id: KEY-004
+    claim: "CUSTDAT primary key is KEYS(9 0) - 9 bytes at offset 0"
+    entity: CUSTDAT
+    key_spec: "KEYS(9 0)"
+    key_field: CUST-ID
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CUSTDAT table"
+    verification_target: "app/jcl/CUSTFILE.jcl"
+    status: not-started
+
+  - id: KEY-005
+    claim: "CCXREF primary key is KEYS(16 0) - 16 bytes at offset 0"
+    entity: CCXREF
+    key_spec: "KEYS(16 0)"
+    key_field: XREF-CARD-NUM
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CCXREF table"
+    verification_target: "app/jcl/XREFFILE.jcl"
+    status: not-started
+
+  - id: KEY-006
+    claim: "CCXREF AIX key is KEYS(11,25) - 11 bytes at offset 25"
+    entity: CCXREF
+    key_spec: "KEYS(11,25)"
+    key_field: XREF-ACCT-ID
+    is_alternate: true
+    uniqueness: NONUNIQUEKEY
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 CCXREF table and Section 3 AIX Summary"
+        quote: "Alternate Index: XREF-ACCT-ID (positions 26-36, KEYS(11,25))"
+    verification_target: "app/jcl/XREFFILE.jcl"
+    status: not-started
+
+  - id: KEY-007
+    claim: "TRANSACT primary key is KEYS(16 0) - 16 bytes at offset 0"
+    entity: TRANSACT
+    key_spec: "KEYS(16 0)"
+    key_field: TRAN-ID
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 TRANSACT table"
+    verification_target: "app/jcl/TRANFILE.jcl"
+    status: not-started
+
+  - id: KEY-008
+    claim: "TRANSACT AIX key is KEYS(26 304) - 26 bytes at offset 304"
+    entity: TRANSACT
+    key_spec: "KEYS(26 304)"
+    key_field: TRAN-PROC-TS
+    is_alternate: true
+    uniqueness: NONUNIQUEKEY
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 TRANSACT table and Section 3 AIX Summary"
+        quote: "Alternate Index: TRAN-PROC-TS (positions 305-330, KEYS(26 304))"
+    verification_target: "app/jcl/TRANFILE.jcl"
+    status: not-started
+
+  - id: KEY-009
+    claim: "USRSEC primary key is KEYS(8,0) - 8 bytes at offset 0"
+    entity: USRSEC
+    key_spec: "KEYS(8,0)"
+    key_field: SEC-USR-ID
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.1 USRSEC table"
+    verification_target: "app/jcl/DUSRSECJ.jcl"
+    status: not-started
+    notes: "USRSEC is described as CICS-managed; key spec may not be in JCL"
+
+  - id: KEY-010
+    claim: "TCATBALF primary key is KEYS(17 0) - 17 bytes composite key at offset 0"
+    entity: TCATBALF
+    key_spec: "KEYS(17 0)"
+    key_field: "TRAN-CAT-KEY (ACCT-ID + TYPE-CD + CAT-CD)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TCATBALF table"
+        quote: "Primary Key: Composite: ACCT-ID + TYPE-CD + CAT-CD (17 bytes) | KEYS(17 0)"
+    verification_target: "app/jcl/TCATBALF.jcl"
+    status: not-started
+
+  - id: KEY-011
+    claim: "DISCGRP primary key is KEYS(16 0) - 16 bytes composite key at offset 0"
+    entity: DISCGRP
+    key_spec: "KEYS(16 0)"
+    key_field: "DIS-GROUP-KEY (GROUP-ID + TYPE-CD + CAT-CD)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 DISCGRP table"
+        quote: "Primary Key: Composite: GROUP-ID + TYPE-CD + CAT-CD (16 bytes) | KEYS(16 0)"
+    verification_target: "app/jcl/DISCGRP.jcl"
+    status: not-started
+
+  - id: KEY-012
+    claim: "TRANTYPE primary key is KEYS(2 0) - 2 bytes at offset 0"
+    entity: TRANTYPE
+    key_spec: "KEYS(2 0)"
+    key_field: TRAN-TYPE
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANTYPE table"
+        quote: "Primary Key: TRAN-TYPE (2 bytes) | KEYS(2 0)"
+    verification_target: "app/jcl/TRANTYPE.jcl"
+    status: not-started
+
+  - id: KEY-013
+    claim: "TRANCATG primary key is KEYS(6 0) - 6 bytes composite key at offset 0"
+    entity: TRANCATG
+    key_spec: "KEYS(6 0)"
+    key_field: "TRAN-CAT-KEY (TYPE-CD + CAT-CD)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 1.2 TRANCATG table"
+        quote: "Primary Key: Composite: TYPE-CD + CAT-CD (6 bytes) | KEYS(6 0)"
+    verification_target: "app/jcl/TRANCATG.jcl"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 7: SQL Type Mapping Claims
+# =============================================================================
+# These claims assert the COBOL-to-SQL type mappings documented in the
+# data dictionary.
+# =============================================================================
+
+sql_type_mapping_claims:
+
+  - id: SQL-001
+    claim: "S9(10)V99 maps to DECIMAL(12,2)"
+    cobol_pic: "S9(10)V99"
+    sql_type: "DECIMAL(12,2)"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.2 Numeric Types and Section 2 ACCOUNT entity"
+        quote: "PIC S9(n)V99 -> DECIMAL(n+2,2)"
+    verification_method: "Confirm n+2 = 10+2 = 12 matches DECIMAL(12,2)"
+    status: not-started
+
+  - id: SQL-002
+    claim: "S9(09)V99 maps to DECIMAL(11,2)"
+    cobol_pic: "S9(09)V99"
+    sql_type: "DECIMAL(11,2)"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.2 Numeric Types and Section 6 TRANSACTION entity"
+        quote: "PIC S9(n)V99 -> DECIMAL(n+2,2)"
+    verification_method: "Confirm n+2 = 9+2 = 11 matches DECIMAL(11,2)"
+    status: not-started
+
+  - id: SQL-003
+    claim: "S9(04)V99 maps to DECIMAL(6,2)"
+    cobol_pic: "S9(04)V99"
+    sql_type: "DECIMAL(6,2)"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.2 Numeric Types and Section 9 DISCLOSURE_GROUP entity"
+        quote: "PIC S9(n)V99 -> DECIMAL(n+2,2)"
+    verification_method: "Confirm n+2 = 4+2 = 6 matches DECIMAL(6,2)"
+    status: not-started
+
+  - id: SQL-004
+    claim: "9(11) maps to BIGINT"
+    cobol_pic: "9(11)"
+    sql_type: "BIGINT"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.2 Numeric Types and Section 2 ACCOUNT entity"
+        quote: "PIC 9(n) -> NUMERIC(n) or BIGINT ... ACCT-ID 9(11) -> BIGINT"
+    verification_method: "Confirm mapping rule and applied instances"
+    status: not-started
+
+  - id: SQL-005
+    claim: "9(09) maps to BIGINT"
+    cobol_pic: "9(09)"
+    sql_type: "BIGINT"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4 CUSTOMER entity"
+        quote: "CUST-ID 9(09) -> BIGINT"
+    verification_method: "Confirm mapping rule and applied instances"
+    status: not-started
+
+  - id: SQL-006
+    claim: "X(n) maps to VARCHAR(n) or CHAR(n)"
+    cobol_pic: "X(n)"
+    sql_type: "VARCHAR(n) or CHAR(n)"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.1 Alphanumeric Types"
+        quote: "PIC X(n) -> VARCHAR(n) or CHAR(n) | Use CHAR for fixed-length codes"
+    verification_method: "Confirm mapping rule is consistently applied across entities"
+    status: not-started
+
+  - id: SQL-007
+    claim: "X(10) date fields (YYYY-MM-DD format) map to DATE"
+    cobol_pic: "X(10)"
+    sql_type: "DATE"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.5 Date/Time Types"
+        quote: "PIC X(10) (YYYY-MM-DD) -> DATE"
+    verification_method: "Confirm date fields like ACCT-OPEN-DATE are mapped to DATE"
+    status: not-started
+
+  - id: SQL-008
+    claim: "X(26) timestamp fields (DB2 timestamp format) map to TIMESTAMP"
+    cobol_pic: "X(26)"
+    sql_type: "TIMESTAMP"
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 1.5 Date/Time Types"
+        quote: "PIC X(26) (DB2 timestamp) -> TIMESTAMP"
+    verification_method: "Confirm timestamp fields like TRAN-ORIG-TS and TRAN-PROC-TS are mapped to TIMESTAMP"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 8: Relationship Cardinality Claims
+# =============================================================================
+# These claims assert the entity relationships documented in DATA-MODEL
+# section 2.2 and the ER diagram.
+# =============================================================================
+
+relationship_claims:
+
+  - id: REL-001
+    claim: "CUSTOMER to CCXREF is 1:N (one customer can have multiple cards)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram and Cardinality Summary Table"
+        quote: "CUSTOMER ||--o{ CARD_XREF"
+    verification_method: "Verify CCXREF contains XREF-CUST-ID as non-unique FK"
+    status: not-started
+
+  - id: REL-002
+    claim: "ACCOUNT to CCXREF is 1:N (one account can have multiple cards via XREF)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram and Cardinality Summary Table"
+        quote: "ACCOUNT ||--o{ CARD_XREF"
+    verification_method: "Verify CCXREF contains XREF-ACCT-ID as non-unique FK"
+    status: not-started
+
+  - id: REL-003
+    claim: "ACCOUNT to CARD is 1:N (one account can have multiple cards)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram and Cardinality Summary Table"
+        quote: "ACCOUNT ||--o{ CARD"
+    verification_method: "Verify CARDDAT contains CARD-ACCT-ID as non-unique FK (AIX)"
+    status: not-started
+
+  - id: REL-004
+    claim: "CARD to TRANSACTION is 1:N (one card generates many transactions)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram and Cardinality Summary Table"
+        quote: "CARD ||--o{ TRANSACTION"
+    verification_method: "Verify TRANSACT contains TRAN-CARD-NUM field"
+    status: not-started
+
+  - id: REL-005
+    claim: "ACCOUNT to TCATBALF is 1:N (one account has balances in multiple categories)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram and Cardinality Summary Table"
+        quote: "ACCOUNT ||--o{ TRAN_CAT_BAL"
+    verification_method: "Verify TCATBALF contains TRANCAT-ACCT-ID as part of composite key"
+    status: not-started
+
+  - id: REL-006
+    claim: "DISCGRP to ACCOUNT is N:1 (many accounts share same disclosure group)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+        quote: "DISCGRP -> ACCOUNT | N:1"
+    verification_method: "Verify ACCOUNT contains ACCT-GROUP-ID referencing DISCGRP"
+    status: not-started
+
+  - id: REL-007
+    claim: "TRANTYPE to TRANSACTION is 1:N (one type code used by many transactions)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Cardinality Summary Table"
+    verification_method: "Verify TRANSACT contains TRAN-TYPE-CD referencing TRANTYPE"
+    status: not-started
+
+  - id: REL-008
+    claim: "TRANCATG to TRANSACTION is 1:N (one category used by many transactions)"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 2.2 Relationship Cardinalities"
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram and Cardinality Summary Table"
+        quote: "TRAN_CATEGORY ||--o{ TRANSACTION"
+    verification_method: "Verify TRANSACT contains TRAN-CAT-CD referencing TRANCATG"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 9: Quantitative Claims
+# =============================================================================
+# These claims assert specific counts and quantities stated in the
+# documentation.
+# =============================================================================
+
+quantitative_claims:
+
+  - id: QTY-001
+    claim: "The data model contains 10 entities"
+    documented_value: 10
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Document Information table"
+        quote: "Total Entities: 10"
+      - document: DATA-MODEL
+        location: "Document Information table"
+        quote: "Input Artifacts: 10 copybooks"
+    verification_method: "Count distinct entities defined across all documentation"
+    entity_list:
+      - ACCOUNT (ACCTDAT)
+      - CARD (CARDDAT)
+      - CUSTOMER (CUSTDAT)
+      - CARD_XREF (CCXREF)
+      - TRANSACTION (TRANSACT)
+      - USER_SECURITY (USRSEC)
+      - TRAN_CAT_BAL (TCATBALF)
+      - DISCLOSURE_GROUP (DISCGRP)
+      - TRAN_TYPE (TRANTYPE)
+      - TRAN_CATEGORY (TRANCATG)
+    status: not-started
+
+  - id: QTY-002
+    claim: "The data model contains 87 total fields across all entities"
+    documented_value: 87
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Document Information table"
+        quote: "Total Fields: 87"
+    verification_method: "Sum field counts per entity from data dictionary"
+    field_count_breakdown:
+      ACCOUNT: 13
+      CARD: 7
+      CUSTOMER: 19
+      CARD_XREF: 4
+      TRANSACTION: 14
+      USER_SECURITY: 6
+      TRAN_CAT_BAL: 5
+      DISCLOSURE_GROUP: 5
+      TRAN_TYPE: 3
+      TRAN_CATEGORY: 4
+      computed_total: 80
+    status: not-started
+    notes: "Sum of documented per-entity fields is 80, not 87. This discrepancy needs investigation - FILLER fields may or may not be counted, or transient file fields may be included."
+
+  - id: QTY-003
+    claim: "The data model is sourced from 10 copybooks"
+    documented_value: 10
+    source_documents:
+      - document: DATA-MODEL
+        location: "Document Information table"
+        quote: "Input Artifacts: 10 copybooks"
+    verification_method: "Count copybooks referenced in documentation"
+    copybook_list:
+      - CVACT01Y.cpy
+      - CVACT02Y.cpy
+      - CVACT03Y.cpy
+      - CVCUS01Y.cpy
+      - CSUSR01Y.cpy
+      - CVTRA01Y.cpy
+      - CVTRA02Y.cpy
+      - CVTRA03Y.cpy
+      - CVTRA04Y.cpy
+      - CVTRA05Y.cpy
+    status: not-started
+    notes: "CVTRA06Y.cpy (daily tran) and CVTRA07Y.cpy (report) are also referenced but may not be counted as 'entity-defining' copybooks"
+
+  - id: QTY-004
+    claim: "The data model is sourced from 10 JCL definitions"
+    documented_value: 10
+    source_documents:
+      - document: DATA-MODEL
+        location: "Document Information table"
+        quote: "Input Artifacts: 10 JCL definitions"
+    verification_method: "Count JCL files referenced in documentation"
+    jcl_list:
+      - ACCTFILE.jcl
+      - CARDFILE.jcl
+      - CUSTFILE.jcl
+      - XREFFILE.jcl
+      - TRANFILE.jcl
+      - DUSRSECJ.jcl
+      - TCATBALF.jcl
+      - DISCGRP.jcl
+      - TRANTYPE.jcl
+      - TRANCATG.jcl
+    status: not-started
+
+  - id: QTY-005
+    claim: "The data model is sourced from 5 batch programs"
+    documented_value: 5
+    source_documents:
+      - document: DATA-MODEL
+        location: "Document Information table"
+        quote: "Input Artifacts: 5 batch programs"
+    verification_method: "Count batch programs referenced in documentation"
+    programs_referenced:
+      - CBTRN02C.cbl
+      - CBTRN03C.cbl
+      - CBACT04C.cbl
+    status: not-started
+    notes: "Only 3 batch programs are explicitly analyzed in DATA-LINEAGE. The claim of 5 may include CBACT01C-04C or other CB* programs referenced in DATA-MODEL section 4.2."
+
+  - id: QTY-006
+    claim: "ACCOUNT entity has 13 fields"
+    documented_value: 13
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 2, ACCOUNT entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-007
+    claim: "CARD entity has 7 fields"
+    documented_value: 7
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 3, CARD entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-008
+    claim: "CUSTOMER entity has 19 fields"
+    documented_value: 19
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 4, CUSTOMER entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-009
+    claim: "CARD_XREF entity has 4 fields"
+    documented_value: 4
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 5, CARD_XREF entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-010
+    claim: "TRANSACTION entity has 14 fields"
+    documented_value: 14
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 6, TRANSACTION entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-011
+    claim: "USER_SECURITY entity has 6 fields"
+    documented_value: 6
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 7, USER_SECURITY entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-012
+    claim: "TRAN_CAT_BAL entity has 5 fields"
+    documented_value: 5
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 8, TRAN_CAT_BAL entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-013
+    claim: "DISCLOSURE_GROUP entity has 5 fields"
+    documented_value: 5
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 9, DISCLOSURE_GROUP entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-014
+    claim: "TRAN_TYPE entity has 3 fields"
+    documented_value: 3
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 10, TRAN_TYPE entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+  - id: QTY-015
+    claim: "TRAN_CATEGORY entity has 4 fields"
+    documented_value: 4
+    source_documents:
+      - document: DATA-DICTIONARY
+        location: "Section 11, TRAN_CATEGORY entity table"
+    verification_method: "Count rows in entity field table"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 10: Data File Claims
+# =============================================================================
+# These claims assert the number and existence of ASCII and EBCDIC data files.
+# =============================================================================
+
+data_file_claims:
+
+  - id: DAT-001
+    claim: "There are 9 ASCII data files in app/data/ASCII/"
+    documented_value: 9
+    source_documents:
+      - document: DATA-MODEL
+        location: "Implied by entity coverage"
+    verification_method: "Count files in app/data/ASCII/ directory"
+    expected_files:
+      - acctdata.txt
+      - carddata.txt
+      - cardxref.txt
+      - custdata.txt
+      - dailytran.txt
+      - discgrp.txt
+      - tcatbal.txt
+      - trancatg.txt
+      - trantype.txt
+    status: not-started
+
+  - id: DAT-002
+    claim: "There are 13 EBCDIC data files in app/data/EBCDIC/"
+    documented_value: 13
+    source_documents:
+      - document: DATA-MODEL
+        location: "Implied by entity coverage"
+    verification_method: "Count files in app/data/EBCDIC/ directory"
+    expected_files:
+      - AWS.M2.CARDDEMO.ACCDATA.PS
+      - AWS.M2.CARDDEMO.ACCTDATA.PS
+      - AWS.M2.CARDDEMO.CARDDATA.PS
+      - AWS.M2.CARDDEMO.CARDXREF.PS
+      - AWS.M2.CARDDEMO.CUSTDATA.PS
+      - AWS.M2.CARDDEMO.DALYTRAN.PS
+      - AWS.M2.CARDDEMO.DALYTRAN.PS.INIT
+      - AWS.M2.CARDDEMO.DISCGRP.PS
+      - AWS.M2.CARDDEMO.EXPORT.DATA.PS
+      - AWS.M2.CARDDEMO.TCATBALF.PS
+      - AWS.M2.CARDDEMO.TRANCATG.PS
+      - AWS.M2.CARDDEMO.TRANTYPE.PS
+      - AWS.M2.CARDDEMO.USRSEC.PS
+    status: not-started
+
+# =============================================================================
+# CATEGORY 11: COMP-3 Claims
+# =============================================================================
+# These claims assert the absence of COMP-3 packed decimal usage.
+# =============================================================================
+
+comp3_claims:
+
+  - id: COMP3-001
+    claim: "CardDemo does NOT use COMP-3 (packed decimal) for any fields"
+    source_documents:
+      - document: DATA-MODEL
+        location: "Section 7.1 Numeric Storage Format"
+        quote: "CardDemo uses DISPLAY format (not COMP-3) for all signed decimal fields"
+      - document: DATA-DICTIONARY
+        location: "Section 1.3"
+        quote: "Packed Decimal (COMP-3) - NOT USED IN CARDDEMO"
+    verification_method: "Search all copybooks and COBOL programs for COMP-3 usage"
+    verification_target: "app/cpy/*.cpy and app/cbl/*.cbl"
+    status: not-started
+
+# =============================================================================
+# CATEGORY 12: ER Diagram Consistency Claims
+# =============================================================================
+# These claims verify that the ER diagram is consistent with the data model
+# and data dictionary.
+# =============================================================================
+
+er_diagram_claims:
+
+  - id: ERD-001
+    claim: "ER diagram shows 10 entities matching the data dictionary entity count"
+    source_documents:
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram"
+    entities_in_diagram:
+      - CUSTOMER
+      - ACCOUNT
+      - CARD
+      - CARD_XREF
+      - TRANSACTION
+      - TRAN_CAT_BAL
+      - DISCLOSURE_GROUP
+      - TRAN_TYPE
+      - TRAN_CATEGORY
+      - USER_SECURITY
+    verification_method: "Count entity blocks in Mermaid erDiagram"
+    status: not-started
+
+  - id: ERD-002
+    claim: "ER diagram shows 10 relationships in the complete diagram"
+    source_documents:
+      - document: ER-DIAGRAM
+        location: "Complete ER Diagram relationship lines"
+    relationships_in_diagram:
+      - "CUSTOMER ||--o{ CARD_XREF"
+      - "ACCOUNT ||--o{ CARD_XREF"
+      - "ACCOUNT ||--o{ CARD"
+      - "CARD ||--o{ TRANSACTION"
+      - "ACCOUNT ||--o{ TRAN_CAT_BAL"
+      - "DISCLOSURE_GROUP ||--o{ TRAN_CAT_BAL"
+      - "TRAN_TYPE ||--o{ TRAN_CATEGORY"
+      - "TRAN_CATEGORY ||--o{ TRANSACTION"
+      - "TRAN_CATEGORY ||--o{ TRAN_CAT_BAL"
+      - "TRAN_CATEGORY ||--o{ DISCLOSURE_GROUP"
+    verification_method: "Count relationship lines in Mermaid erDiagram"
+    status: not-started
+
+  - id: ERD-003
+    claim: "ER diagram Cardinality Summary Table lists 9 rows"
+    source_documents:
+      - document: ER-DIAGRAM
+        location: "Cardinality Summary Table"
+    verification_method: "Count rows in the cardinality summary table"
+    status: not-started
+    notes: "DATA-MODEL section 2.2 lists 8 relationships; ER diagram cardinality table lists 9 (adds TRAN_TYPE->TRAN_CATEGORY). Verify this discrepancy."
+
+  - id: ERD-004
+    claim: "ER diagram field definitions match DATA-DICTIONARY PIC clauses for all entities"
+    source_documents:
+      - document: ER-DIAGRAM
+        location: "Entity attribute annotations in Mermaid"
+      - document: DATA-DICTIONARY
+        location: "All entity sections"
+    verification_method: "Cross-reference each entity's fields and PIC clause annotations between ER diagram and data dictionary"
+    status: not-started
+
+  - id: ERD-005
+    claim: "Physical File Relationships diagram shows correct record sizes for all 10 files"
+    source_documents:
+      - document: ER-DIAGRAM
+        location: "Physical File Relationships flowchart"
+    expected_sizes:
+      ACCTDAT: "300 bytes"
+      CARDDAT: "150 bytes"
+      CUSTDAT: "500 bytes"
+      TRANSACT: "350 bytes"
+      CCXREF: "50 bytes"
+      TCATBALF: "50 bytes"
+      DISCGRP: "50 bytes"
+      TRANTYPE: "60 bytes"
+      TRANCATG: "60 bytes"
+      USRSEC: "80 bytes"
+    verification_method: "Read record sizes from Physical File Relationships Mermaid diagram"
+    status: not-started
+
+# =============================================================================
+# Summary Statistics
+# =============================================================================
+
+summary:
+  categories:
+    - name: "Copybook File References"
+      prefix: CPY
+      count: 12
+    - name: "JCL File References"
+      prefix: JCL
+      count: 10
+    - name: "COBOL Line References"
+      prefix: CBL
+      count: 11
+    - name: "PIC Clause Definitions"
+      prefix: PIC
+      count: 80
+    - name: "Record Lengths"
+      prefix: RECLN
+      count: 10
+    - name: "VSAM Keys"
+      prefix: KEY
+      count: 13
+    - name: "SQL Type Mappings"
+      prefix: SQL
+      count: 8
+    - name: "Relationship Cardinalities"
+      prefix: REL
+      count: 8
+    - name: "Quantitative Assertions"
+      prefix: QTY
+      count: 15
+    - name: "Data Files"
+      prefix: DAT
+      count: 2
+    - name: "COMP-3 Absence"
+      prefix: COMP3
+      count: 1
+    - name: "ER Diagram Consistency"
+      prefix: ERD
+      count: 5
+  total_claims: 175
+  status_breakdown:
+    not-started: 175
+    verified: 0
+    refuted: 0
+    partial: 0
+    inconclusive: 0

@@ -1,0 +1,468 @@
+# RE-006 JCL Job Inventory
+# Comprehensive catalog of all 33 JCL jobs in CardDemo
+
+metadata:
+  total_jobs: 33
+  generated: "2026-02-05"
+  categories: 8
+
+jobs:
+  # ==========================================================================
+  # VSAM FILE DEFINITION JOBS (10)
+  # ==========================================================================
+  vsam_definition:
+    ACCTFILE:
+      purpose: "Define and load account master VSAM"
+      program: IDCAMS
+      steps: [STEP05, STEP10, STEP15]
+      vsam_cluster: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+      key_spec: "11 bytes at offset 0"
+      record_size: 300
+      input_files:
+        - AWS.M2.CARDDEMO.ACCTDATA.PS
+      output_files:
+        - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+
+    CARDFILE:
+      purpose: "Define card master VSAM with AIX"
+      program: IDCAMS
+      steps: [CLCIFIL, STEP05, STEP10, STEP15, STEP40, STEP50, STEP60, OPCIFIL]
+      vsam_cluster: AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS
+      key_spec: "16 bytes at offset 0"
+      record_size: 150
+      aix_spec: "11 bytes at offset 16 (Account ID)"
+      cics_files: [CARDDAT, CARDAIX]
+      input_files:
+        - AWS.M2.CARDDEMO.CARDDATA.PS
+      output_files:
+        - AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDDATA.VSAM.AIX
+        - AWS.M2.CARDDEMO.CARDDATA.VSAM.AIX.PATH
+
+    CUSTFILE:
+      purpose: "Define customer master VSAM"
+      program: IDCAMS
+      steps: [CLCIFIL, STEP05, STEP10, STEP15, OPCIFIL]
+      vsam_cluster: AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS
+      key_spec: "9 bytes at offset 0"
+      record_size: 500
+      cics_files: [CUSTDAT]
+      input_files:
+        - AWS.M2.CARDDEMO.CUSTDATA.PS
+      output_files:
+        - AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS
+
+    XREFFILE:
+      purpose: "Define card-to-account cross-reference VSAM with AIX"
+      program: IDCAMS
+      steps: [STEP05, STEP10, STEP15, STEP20, STEP25, STEP30]
+      vsam_cluster: AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+      key_spec: "16 bytes at offset 0 (Card Number)"
+      record_size: 50
+      aix_spec: "11 bytes at offset 25 (Account ID)"
+      input_files:
+        - AWS.M2.CARDDEMO.CARDXREF.PS
+      output_files:
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX.PATH
+
+    TRANFILE:
+      purpose: "Define transaction master VSAM with AIX"
+      program: IDCAMS
+      steps: [CLCIFIL, STEP05, STEP10, STEP15, STEP20, STEP25, STEP30, OPCIFIL]
+      vsam_cluster: AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+      key_spec: "16 bytes at offset 0 (Transaction ID)"
+      record_size: 350
+      aix_spec: "26 bytes at offset 304 (Processed Timestamp)"
+      cics_files: [TRANSACT, CXACAIX]
+      input_files:
+        - AWS.M2.CARDDEMO.DALYTRAN.PS.INIT
+      output_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX.PATH
+
+    TRANTYPE:
+      purpose: "Define transaction type reference VSAM"
+      program: IDCAMS
+      steps: [STEP05, STEP10, STEP15]
+      vsam_cluster: AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS
+      key_spec: "2 bytes at offset 0"
+      record_size: 60
+      input_files:
+        - AWS.M2.CARDDEMO.TRANTYPE.PS
+      output_files:
+        - AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS
+
+    TRANCATG:
+      purpose: "Define transaction category reference VSAM"
+      program: IDCAMS
+      steps: [STEP05, STEP10, STEP15]
+      vsam_cluster: AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS
+      key_spec: "6 bytes at offset 0"
+      record_size: 60
+      input_files:
+        - AWS.M2.CARDDEMO.TRANCATG.PS
+      output_files:
+        - AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS
+
+    TCATBALF:
+      purpose: "Define transaction category balance VSAM"
+      program: IDCAMS
+      steps: [STEP05, STEP10, STEP15]
+      vsam_cluster: AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+      key_spec: "17 bytes at offset 0 (Acct+Type+Cat)"
+      record_size: 50
+      input_files:
+        - AWS.M2.CARDDEMO.TCATBALF.PS
+      output_files:
+        - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+
+    DISCGRP:
+      purpose: "Define disclosure group reference VSAM"
+      program: IDCAMS
+      steps: [STEP05, STEP10, STEP15]
+      vsam_cluster: AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS
+      key_spec: "16 bytes at offset 0"
+      record_size: 50
+      input_files:
+        - AWS.M2.CARDDEMO.DISCGRP.PS
+      output_files:
+        - AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS
+
+    DUSRSECJ:
+      purpose: "Define user security VSAM with inline data"
+      program: IEBGENER, IDCAMS
+      steps: [PREDEL, STEP01, STEP02, STEP03]
+      vsam_cluster: AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS
+      key_spec: "8 bytes at offset 0 (User ID)"
+      record_size: 80
+      inline_data: true
+      users_defined: 10
+      output_files:
+        - AWS.M2.CARDDEMO.USRSEC.PS
+        - AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS
+
+  # ==========================================================================
+  # GDG BASE DEFINITION JOBS (4)
+  # ==========================================================================
+  gdg_definition:
+    DEFGDGB:
+      purpose: "Define GDG bases for transaction processing"
+      program: IDCAMS
+      steps: [STEP05]
+      gdg_bases:
+        - name: AWS.M2.CARDDEMO.TRANSACT.BKUP
+          limit: 5
+        - name: AWS.M2.CARDDEMO.TRANSACT.DALY
+          limit: 5
+        - name: AWS.M2.CARDDEMO.TRANREPT
+          limit: 5
+        - name: AWS.M2.CARDDEMO.TCATBALF.BKUP
+          limit: 5
+        - name: AWS.M2.CARDDEMO.SYSTRAN
+          limit: 5
+        - name: AWS.M2.CARDDEMO.TRANSACT.COMBINED
+          limit: 5
+
+    DEFGDGD:
+      purpose: "Define GDG bases for reference data backups"
+      program: IDCAMS, IEBGENER
+      steps: [STEP10, STEP20, STEP30, STEP40, STEP50, STEP60]
+      gdg_bases:
+        - name: AWS.M2.CARDDEMO.TRANTYPE.BKUP
+          limit: 5
+        - name: AWS.M2.CARDDEMO.TRANCATG.PS.BKUP
+          limit: 5
+        - name: AWS.M2.CARDDEMO.DISCGRP.BKUP
+          limit: 5
+      initial_generations: true
+
+    REPTFILE:
+      purpose: "Define transaction report GDG base"
+      program: IDCAMS
+      steps: [STEP05]
+      gdg_bases:
+        - name: AWS.M2.CARDDEMO.TRANREPT
+          limit: 10
+
+    DALYREJS:
+      purpose: "Define daily rejects GDG base"
+      program: IDCAMS
+      steps: [STEP05]
+      gdg_bases:
+        - name: AWS.M2.CARDDEMO.DALYREJS
+          limit: 5
+
+  # ==========================================================================
+  # TRANSACTION PROCESSING JOBS (5) - CRITICAL
+  # ==========================================================================
+  transaction_processing:
+    POSTTRAN:
+      purpose: "Post daily transactions to transaction master"
+      program: CBTRN02C
+      steps: [STEP15]
+      criticality: HIGH
+      input_files:
+        - AWS.M2.CARDDEMO.DALYTRAN.PS
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.DALYREJS(+1)
+      updates_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+
+    INTCALC:
+      purpose: "Calculate interest and fees on account balances"
+      program: CBACT04C
+      steps: [STEP15]
+      criticality: HIGH
+      parm: "YYYYMMDD00"
+      input_files:
+        - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX.PATH
+        - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+        - AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.SYSTRAN(+1)
+
+    COMBTRAN:
+      purpose: "Combine backup with system transactions and reload VSAM"
+      program: SORT, IDCAMS
+      steps: [STEP05R, STEP10]
+      criticality: HIGH
+      input_files:
+        - AWS.M2.CARDDEMO.TRANSACT.BKUP(0)
+        - AWS.M2.CARDDEMO.SYSTRAN(0)
+      output_files:
+        - AWS.M2.CARDDEMO.TRANSACT.COMBINED(+1)
+      updates_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+
+    TRANBKP:
+      purpose: "Backup and redefine transaction VSAM"
+      program: REPROC, IDCAMS
+      steps: [STEP05R, STEP05, STEP10]
+      uses_proc: REPROC
+      criticality: HIGH
+      input_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.TRANSACT.BKUP(+1)
+      deletes_redefines:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX
+
+    TRANIDX:
+      purpose: "Create/rebuild alternate index on transaction VSAM"
+      program: IDCAMS
+      steps: [STEP20, STEP25, STEP30]
+      aix_spec: "26 bytes at offset 304 (Processed Timestamp)"
+      input_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX.PATH
+
+  # ==========================================================================
+  # REPORTING JOBS (3)
+  # ==========================================================================
+  reporting:
+    TRANREPT:
+      purpose: "Generate transaction detail report with date filtering"
+      program: REPROC, SORT, CBTRN03C
+      steps: [STEP05R, STEP05R, STEP10R]
+      uses_proc: REPROC
+      parameters:
+        start_date: "PARM-START-DATE"
+        end_date: "PARM-END-DATE"
+      input_files:
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS
+        - AWS.M2.CARDDEMO.DATEPARM
+      output_files:
+        - AWS.M2.CARDDEMO.TRANSACT.BKUP(+1)
+        - AWS.M2.CARDDEMO.TRANSACT.DALY(+1)
+        - AWS.M2.CARDDEMO.TRANREPT(+1)
+
+    PRTCATBL:
+      purpose: "Print transaction category balance report"
+      program: REPROC, SORT
+      steps: [DELDEF, STEP05R, STEP10R]
+      uses_proc: REPROC
+      input_files:
+        - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.TCATBALF.BKUP(+1)
+        - AWS.M2.CARDDEMO.TCATBALF.REPT
+
+    REPTFILE:
+      purpose: "Define transaction report GDG base"
+      program: IDCAMS
+      steps: [STEP05]
+      # Note: Also listed under GDG definition
+
+  # ==========================================================================
+  # CICS FILE MANAGEMENT JOBS (2)
+  # ==========================================================================
+  cics_file_management:
+    CLOSEFIL:
+      purpose: "Close VSAM files in CICS region"
+      program: SDSF
+      steps: [CLCIFIL]
+      cics_commands:
+        - "CEMT SET FIL(TRANSACT) CLO"
+        - "CEMT SET FIL(CCXREF) CLO"
+        - "CEMT SET FIL(ACCTDAT) CLO"
+        - "CEMT SET FIL(CXACAIX) CLO"
+        - "CEMT SET FIL(USRSEC) CLO"
+      cics_region: CICSAWSA
+
+    OPENFIL:
+      purpose: "Open VSAM files in CICS region"
+      program: SDSF
+      steps: [OPCIFIL]
+      cics_commands:
+        - "CEMT SET FIL(TRANSACT) OPE"
+        - "CEMT SET FIL(CCXREF) OPE"
+        - "CEMT SET FIL(ACCTDAT) OPE"
+        - "CEMT SET FIL(CXACAIX) OPE"
+        - "CEMT SET FIL(USRSEC) OPE"
+      cics_region: CICSAWSA
+
+  # ==========================================================================
+  # DATA READ/EXTRACT JOBS (4)
+  # ==========================================================================
+  data_read_extract:
+    READACCT:
+      purpose: "Extract account data to multiple formats"
+      program: CBACT01C
+      steps: [PREDEL, STEP05]
+      input_files:
+        - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.ACCTDATA.PSCOMP (LRECL=107, FB)
+        - AWS.M2.CARDDEMO.ACCTDATA.ARRYPS (LRECL=110, FB)
+        - AWS.M2.CARDDEMO.ACCTDATA.VBPS (LRECL=84, VB)
+
+    READCARD:
+      purpose: "Read card master file"
+      program: CBACT02C
+      steps: [STEP05]
+      input_files:
+        - AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS
+
+    READCUST:
+      purpose: "Read customer master file"
+      program: CBCUS01C
+      steps: [STEP05]
+      input_files:
+        - AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS
+
+    READXREF:
+      purpose: "Read cross-reference file"
+      program: CBACT03C
+      steps: [STEP05]
+      input_files:
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+
+  # ==========================================================================
+  # DATA IMPORT/EXPORT JOBS (2)
+  # ==========================================================================
+  data_import_export:
+    CBEXPORT:
+      purpose: "Export 5 VSAM files to unified export VSAM"
+      program: IDCAMS, CBEXPORT
+      steps: [STEP01, STEP02]
+      export_vsam:
+        name: AWS.M2.CARDDEMO.EXPORT.DATA
+        key_spec: "4 bytes at offset 28"
+        record_size: 500
+      input_files:
+        - AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS
+        - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        - AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS
+      output_files:
+        - AWS.M2.CARDDEMO.EXPORT.DATA
+
+    CBIMPORT:
+      purpose: "Import from export file and split into normalized files"
+      program: CBIMPORT
+      steps: [STEP01]
+      input_files:
+        - AWS.M2.CARDDEMO.EXPORT.DATA
+      output_files:
+        - AWS.M2.CARDDEMO.CUSTDATA.IMPORT (LRECL=500)
+        - AWS.M2.CARDDEMO.ACCTDATA.IMPORT (LRECL=300)
+        - AWS.M2.CARDDEMO.CARDXREF.IMPORT (LRECL=50)
+        - AWS.M2.CARDDEMO.TRANSACT.IMPORT (LRECL=350)
+        - AWS.M2.CARDDEMO.IMPORT.ERRORS (LRECL=132)
+
+  # ==========================================================================
+  # OTHER/UTILITY JOBS (4)
+  # ==========================================================================
+  other:
+    CBADMCDJ:
+      purpose: "Define CICS resources for CardDemo application"
+      program: DFHCSDUP
+      steps: [STEP1]
+      defines:
+        library: COM2DOLL
+        mapsets: 17
+        programs: 16
+        transactions: 5
+      cics_group: CARDDEMO
+
+    WAITSTEP:
+      purpose: "Timing delay utility"
+      program: COBSWAIT
+      steps: [WAIT]
+      parm: "Centiseconds (00003600 = 36 seconds)"
+
+    ESDSRRDS:
+      purpose: "Define alternate VSAM types (ESDS, RRDS)"
+      program: IEBGENER, IDCAMS
+      steps: [PREDEL, STEP01, STEP02, STEP03, STEP04, STEP05]
+      defines:
+        - type: ESDS
+          name: AWS.M2.CARDDEMO.USRSEC.VSAM.ESDS
+        - type: RRDS
+          name: AWS.M2.CARDDEMO.USRSEC.VSAM.RRDS
+
+    DEFCUST:
+      purpose: "Alternate customer VSAM definition (deprecated)"
+      program: IDCAMS
+      steps: [STEP05, STEP05]
+      status: deprecated
+      notes: "Uses different naming convention (AWS.CCDA, AWS.CUSTDATA)"
+
+# ==========================================================================
+# PROGRAM TO JOB MAPPING
+# ==========================================================================
+program_mapping:
+  CBACT01C: READACCT
+  CBACT02C: READCARD
+  CBACT03C: READXREF
+  CBACT04C: INTCALC
+  CBCUS01C: READCUST
+  CBTRN01C: null  # Referenced but not in standalone JCL
+  CBTRN02C: POSTTRAN
+  CBTRN03C: TRANREPT
+  CBEXPORT: CBEXPORT
+  CBIMPORT: CBIMPORT
+  COBSWAIT: WAITSTEP
+  IDCAMS: multiple  # Used in 25+ jobs
+  IEBGENER: multiple
+  IEFBR14: multiple
+  SORT: [COMBTRAN, TRANREPT, PRTCATBL]
+  SDSF: [CLOSEFIL, OPENFIL]
+  DFHCSDUP: CBADMCDJ

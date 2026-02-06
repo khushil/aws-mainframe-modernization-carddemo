@@ -1,0 +1,43 @@
+validation_id: VL-003
+title: Context Model Validation
+target: RE-003 Context Model
+started: "2026-02-06"
+completed: "2026-02-06"
+status: complete
+verdict: FAIL
+score: 80.6
+findings:
+  critical: 0
+  major: 4
+  minor: 6
+  hallucinations: 0
+phases:
+  phase_1_inventory:
+    status: complete
+    description: Document inventory and prerequisite check
+    artifact: document-inventory.yaml
+  phase_2_commarea:
+    status: complete
+    description: COMMAREA field-by-field verification
+    artifact: commarea-verification.yaml
+    result: "14/14 fields correct, 4/4 conditions correct, 0 fabricated fields"
+  phase_3_transactions:
+    status: complete
+    description: Transaction ID verification
+    artifact: transaction-verification.yaml
+    result: "3/3 documented correct, 14/17 missing from table"
+  phase_4_navigation:
+    status: complete
+    description: Navigation flow verification
+    artifact: navigation-verification.yaml
+    result: "5/17 BMS names wrong, 5 PF3 paths missing, XCTL routing correct"
+  phase_5_contexts:
+    status: complete
+    description: Bounded context verification
+    artifact: context-verification.yaml
+    result: "7/7 contexts correct, 3 programs missing, data ownership nuances"
+  phase_6_report:
+    status: complete
+    description: Score calculation and final report generation
+    artifact: ../../../docs/reverse-engineering/validation/VL-003-context-model-report.md
+report_path: docs/reverse-engineering/validation/VL-003-context-model-report.md

@@ -1,0 +1,262 @@
+phase: 4
+title: Navigation Flow Verification
+status: complete
+doc_file: docs/reverse-engineering/03-context-model/NAVIGATION-FLOWS.md
+
+sign_on_routing:
+  claim: "COSGN00C routes to COADM01C (admin) or COMEN01C (user) via XCTL"
+  source: "COSGN00C.cbl:230-240"
+  verified: true
+  evidence: >
+    Line 230: IF CDEMO-USRTYP-ADMIN
+    Line 231-233: EXEC CICS XCTL PROGRAM ('COADM01C') COMMAREA(CARDDEMO-COMMAREA)
+    Line 236-238: EXEC CICS XCTL PROGRAM ('COMEN01C') COMMAREA(CARDDEMO-COMMAREA)
+
+admin_menu_routing:
+  claim: "COADM01C routes to COUSR00C-03C, COTRTLIC, COTRTUPC via dynamic XCTL"
+  source: "COADM01C.cbl:146-148, COADM02Y.cpy:19-54"
+  verified: true
+  evidence: >
+    COADM01C.cbl:146: XCTL PROGRAM(CDEMO-ADMIN-OPT-PGMNAME(WS-OPTION))
+    COADM02Y.cpy defines 6 options: COUSR00C, COUSR01C, COUSR02C, COUSR03C, COTRTLIC, COTRTUPC
+  doc_accuracy: correct
+
+user_menu_routing:
+  claim: "COMEN01C routes to 11 programs via dynamic XCTL"
+  source: "COMEN01C.cbl:185-187, COMEN02Y.cpy:19-91"
+  verified: true
+  evidence: >
+    COMEN01C.cbl:185: XCTL PROGRAM(CDEMO-MENU-OPT-PGMNAME(WS-OPTION))
+    COMEN02Y.cpy defines 11 options: COACTVWC, COACTUPC, COCRDLIC, COCRDSLC, COCRDUPC,
+    COTRN00C, COTRN01C, COTRN02C, CORPT00C, COBIL00C, COPAUS0C
+  doc_accuracy: correct
+
+extension_programs:
+  - name: COTRTLIC
+    doc_location: "NAVIGATION-FLOWS.md line 46"
+    actual_path: "app/app-transaction-type-db2/cbl/COTRTLIC.cbl"
+    exists: true
+    is_hallucination: false
+    note: "Extension directory, not core app/cbl/"
+
+  - name: COTRTUPC
+    doc_location: "NAVIGATION-FLOWS.md line 47"
+    actual_path: "app/app-transaction-type-db2/cbl/COTRTUPC.cbl"
+    exists: true
+    is_hallucination: false
+    note: "Extension directory, not core app/cbl/"
+
+  - name: COPAUS0C
+    doc_location: "NAVIGATION-FLOWS.md line 62"
+    actual_path: "app/app-authorization-ims-db2-mq/cbl/COPAUS0C.cbl"
+    exists: true
+    is_hallucination: false
+    note: "Extension directory, not core app/cbl/"
+
+pf3_return_paths:
+  verified_correct:
+    - path: "COUSR00C → CA00 (COADM01C)"
+      source: "COUSR00C.cbl:515 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COUSR01C → CA00 (COADM01C)"
+      source: "COUSR01C.cbl:176 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COUSR02C → CA00 (COADM01C)"
+      source: "COUSR02C.cbl:259 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COUSR03C → CA00 (COADM01C)"
+      source: "COUSR03C.cbl:206 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COACTVWC → CM00 (COMEN01C)"
+      source: "COACTVWC.cbl:349 — EXEC CICS XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COACTUPC → CM00 (COMEN01C)"
+      source: "COACTUPC.cbl:956 — EXEC CICS XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COCRDLIC → CM00 (COMEN01C)"
+      source: "COCRDLIC.cbl:402 — EXEC CICS XCTL PROGRAM(LIT-MENUPGM)"
+      correct: true
+    - path: "COTRN00C → CM00 (COMEN01C)"
+      source: "COTRN00C.cbl:519 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+    - path: "COBIL00C → CM00 (COMEN01C)"
+      source: "COBIL00C.cbl:282 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      correct: true
+
+  missing_from_graph:
+    - path: "COCRDSLC → CM00"
+      source: "COCRDSLC.cbl:331 — EXEC CICS XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      note: "PF3 return from card view not shown in graph"
+    - path: "COCRDUPC → CM00"
+      source: "COCRDUPC.cbl:473 — EXEC CICS XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      note: "PF3 return from card update not shown in graph"
+    - path: "COTRN01C → CM00"
+      source: "COTRN01C.cbl:206 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      note: "PF3 return from transaction view not shown in graph"
+    - path: "COTRN02C → CM00"
+      source: "COTRN02C.cbl:509 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      note: "PF3 return from transaction add not shown in graph"
+    - path: "CORPT00C → CM00"
+      source: "CORPT00C.cbl:549 — XCTL PROGRAM(CDEMO-TO-PROGRAM)"
+      note: "PF3 return from reports not shown in graph"
+
+inter_program_xctl:
+  note: >
+    COCRDLIC has XCTL to CCARD-NEXT-PROG (lines 538, 566) which allows navigation
+    to COCRDSLC and COCRDUPC directly from the card list. Similarly, COUSR00C has
+    XCTL paths to COUSR02C/COUSR03C (lines 197, 207). These intra-context navigation
+    paths are not shown in the navigation graph, which only shows menu→program paths.
+  severity: minor
+
+link_statements:
+  claim: "No LINK statements in source"
+  verified: true
+  note: "Grep for 'EXEC CICS LINK' in app/cbl/ returned 0 matches. Doc correctly does not claim any."
+
+bms_mapset_verification:
+  doc_location: "NAVIGATION-FLOWS.md lines 377-395"
+  findings:
+    correct_entries:
+      - mapset: COSGN00
+        map: COSGN0A
+        program: COSGN00C
+        source: "COSGN00.bms:19,26"
+        correct: true
+      - mapset: COADM01
+        map: COADM1A
+        program: COADM01C
+        source: "COADM01.bms:19,26"
+        correct: true
+      - mapset: COMEN01
+        map: COMEN1A
+        program: COMEN01C
+        source: "COMEN01.bms:19,26"
+        correct: true
+      - mapset: COUSR00
+        map: COUSR0A
+        program: COUSR00C
+        source: "COUSR00.bms:19,26"
+        correct: true
+      - mapset: COUSR01
+        map: COUSR1A
+        program: COUSR01C
+        source: "COUSR01.bms:19,26"
+        correct: true
+      - mapset: COUSR02
+        map: COUSR2A
+        program: COUSR02C
+        source: "COUSR02.bms:19,26"
+        correct: true
+      - mapset: COUSR03
+        map: COUSR3A
+        program: COUSR03C
+        source: "COUSR03.bms:19,26"
+        correct: true
+      - mapset: COTRN00
+        map: COTRN0A
+        program: COTRN00C
+        source: "COTRN00.bms:19,26"
+        correct: true
+      - mapset: COTRN01
+        map: COTRN1A
+        program: COTRN01C
+        source: "COTRN01.bms:19,26"
+        correct: true
+      - mapset: COTRN02
+        map: COTRN2A
+        program: COTRN02C
+        source: "COTRN02.bms:19,26"
+        correct: true
+      - mapset: COBIL00
+        map: COBIL0A
+        program: COBIL00C
+        source: "COBIL00.bms:19,26"
+        correct: true
+      - mapset: CORPT00
+        map: CORPT0A
+        program: CORPT00C
+        source: "CORPT00.bms:19,26"
+        correct: true
+
+    incorrect_entries:
+      - doc_mapset: COACTVW
+        doc_map: COACTVWA
+        actual_mapset: COACTVW
+        actual_map: CACTVWA
+        program: COACTVWC
+        source: "COACTVW.bms:20,25"
+        error: "Map name wrong — doc says COACTVWA, actual is CACTVWA"
+        severity: major
+
+      - doc_mapset: COACTU1
+        doc_map: COACTU1A
+        actual_mapset: COACTUP
+        actual_map: CACTUPA
+        program: COACTUPC
+        source: "COACTUP.bms:20,25"
+        error: "Both mapset and map names wrong — doc says COACTU1/COACTU1A, actual is COACTUP/CACTUPA"
+        severity: major
+
+      - doc_mapset: COCRDL1
+        doc_map: COCRDL1A
+        actual_mapset: COCRDLI
+        actual_map: CCRDLIA
+        program: COCRDLIC
+        source: "COCRDLI.bms:20,25"
+        error: "Both mapset and map names wrong — doc says COCRDL1/COCRDL1A, actual is COCRDLI/CCRDLIA"
+        severity: major
+
+      - doc_mapset: COCRDS1
+        doc_map: COCRDS1A
+        actual_mapset: COCRDSL
+        actual_map: CCRDSLA
+        program: COCRDSLC
+        source: "COCRDSL.bms:20,25"
+        error: "Both mapset and map names wrong — doc says COCRDS1/COCRDS1A, actual is COCRDSL/CCRDSLA"
+        severity: major
+
+      - doc_mapset: COCRDUP
+        doc_map: COCRDU1A
+        actual_mapset: COCRDUP
+        actual_map: CCRDUPA
+        program: COCRDUPC
+        source: "COCRDUP.bms:20,25"
+        error: "Map name wrong — doc says COCRDU1A, actual is CCRDUPA"
+        severity: major
+
+  bms_summary:
+    total_entries: 17
+    correct: 12
+    incorrect: 5
+    accuracy: "70.6% (12/17)"
+    severity: major
+    note: >
+      5 of 17 BMS mapset entries contain incorrect mapset and/or map names.
+      All errors are in the account/card management programs that use the
+      CCARD-prefixed naming convention (CACTVWA, CACTUPA, CCRDLIA, CCRDSLA, CCRDUPA)
+      rather than the CO-prefixed convention used by other programs.
+
+missing_programs_in_graph:
+  - program: COBSWAIT.cbl
+    acceptable: true
+    reason: "Utility with no TRANSID, no XCTL, no LINK. Not an online transaction program."
+  - program: CSUTLDTC.cbl
+    acceptable: true
+    reason: "Date utility, not an online transaction program."
+
+summary:
+  navigation_paths_correct: true
+  sign_on_routing_verified: true
+  menu_structures_verified: true
+  pf3_returns_partially_documented: true
+  extension_programs_exist: true
+  bms_mapset_errors: 5
+  missing_pf3_paths: 5
+  missing_transids: 14
+  findings:
+    major:
+      - "5 of 17 BMS mapset/map names are incorrect (COACTVWA→CACTVWA, COACTU1/COACTU1A→COACTUP/CACTUPA, COCRDL1/COCRDL1A→COCRDLI/CCRDLIA, COCRDS1/COCRDS1A→COCRDSL/CCRDSLA, COCRDU1A→CCRDUPA)"
+      - "5 PF3 return paths missing from navigation graph (COCRDSLC, COCRDUPC, COTRN01C, COTRN02C, CORPT00C)"
+    minor:
+      - "Inter-program XCTL paths (e.g., COCRDLIC→COCRDSLC/COCRDUPC) not shown in graph"
+      - "Extension programs not distinguished from core programs in navigation graph"

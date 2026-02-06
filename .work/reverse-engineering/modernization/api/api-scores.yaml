@@ -1,0 +1,355 @@
+# CardDemo API Candidate Scoring Matrix
+# RE-011: API Candidate Identification
+# Generated: 2026-02-05
+
+scoring_methodology:
+  description: "4-Factor weighted scoring framework for API suitability assessment"
+  factors:
+    statelessness:
+      weight: 0.30
+      description: "Ability to operate without session state"
+      scale: "1-5 (5=fully stateless, 1=highly stateful)"
+    data_simplicity:
+      weight: 0.25
+      description: "Complexity of input/output structures"
+      scale: "1-5 (5=simple primitives, 1=complex nested structures)"
+    business_value:
+      weight: 0.25
+      description: "Frequency of use and business criticality"
+      scale: "1-5 (5=core business operation, 1=administrative/rare)"
+    isolation:
+      weight: 0.20
+      description: "Dependencies on other programs"
+      scale: "1-5 (5=standalone, 1=many dependencies)"
+  formula: "(S*0.30) + (D*0.25) + (B*0.25) + (I*0.20)"
+  thresholds:
+    high: 3.75
+    medium: 3.00
+    low: 2.50
+
+programs:
+  # HIGH PRIORITY (Score >= 3.75)
+  - program: COCRDSLC
+    function: "View Card Details"
+    source_file: "app/cbl/COCRDSLC.cbl"
+    scores:
+      statelessness: 5
+      data_simplicity: 5
+      business_value: 4
+      isolation: 5
+    weighted_score: 4.75
+    priority: high
+    api_endpoint: "GET /cards/{cardNumber}"
+    rationale: "Single file read, no session state, simple card record output"
+    files_accessed:
+      - name: CARDDAT
+        mode: read
+
+  - program: COACTVWC
+    function: "View Account Details"
+    source_file: "app/cbl/COACTVWC.cbl"
+    scores:
+      statelessness: 5
+      data_simplicity: 4
+      business_value: 5
+      isolation: 4
+    weighted_score: 4.55
+    priority: high
+    api_endpoint: "GET /accounts/{accountId}"
+    rationale: "Core business operation, stateless reads from 3 files, complex but structured output"
+    files_accessed:
+      - name: CXACAIX
+        mode: read
+      - name: ACCTDAT
+        mode: read
+      - name: CUSTDAT
+        mode: read
+
+  - program: COTRN01C
+    function: "View Transaction Details"
+    source_file: "app/cbl/COTRN01C.cbl"
+    scores:
+      statelessness: 5
+      data_simplicity: 4
+      business_value: 4
+      isolation: 5
+    weighted_score: 4.50
+    priority: high
+    api_endpoint: "GET /transactions/{transactionId}"
+    rationale: "Single file read, stateless, transaction record with merchant details"
+    files_accessed:
+      - name: TRANSACT
+        mode: read
+
+  - program: COSGN00C
+    function: "User Authentication"
+    source_file: "app/cbl/COSGN00C.cbl"
+    scores:
+      statelessness: 4
+      data_simplicity: 5
+      business_value: 5
+      isolation: 4
+    weighted_score: 4.45
+    priority: high
+    api_endpoint: "POST /auth/token"
+    rationale: "Essential for API security, simple I/O, creates session context"
+    files_accessed:
+      - name: USRSEC
+        mode: read
+
+  - program: COCRDLIC
+    function: "List Cards for Account"
+    source_file: "app/cbl/COCRDLIC.cbl"
+    scores:
+      statelessness: 4
+      data_simplicity: 4
+      business_value: 4
+      isolation: 4
+    weighted_score: 4.00
+    priority: high
+    api_endpoint: "GET /accounts/{accountId}/cards"
+    rationale: "Stateless browse operation, moderate complexity with pagination"
+    files_accessed:
+      - name: CARDAIX
+        mode: browse
+
+  - program: COTRN00C
+    function: "List Transactions"
+    source_file: "app/cbl/COTRN00C.cbl"
+    scores:
+      statelessness: 4
+      data_simplicity: 3
+      business_value: 4
+      isolation: 4
+    weighted_score: 3.75
+    priority: high
+    api_endpoint: "GET /transactions"
+    rationale: "Pagination state needed, returns array of transactions"
+    files_accessed:
+      - name: TRANSACT
+        mode: browse
+
+  - program: COBIL00C
+    function: "Bill Payment"
+    source_file: "app/cbl/COBIL00C.cbl"
+    scores:
+      statelessness: 3
+      data_simplicity: 4
+      business_value: 5
+      isolation: 3
+    weighted_score: 3.75
+    priority: high
+    api_endpoint: "POST /accounts/{accountId}/payments"
+    rationale: "High business value write operation, multi-file transaction"
+    files_accessed:
+      - name: ACCTDAT
+        mode: read_update
+      - name: CXACAIX
+        mode: read
+      - name: TRANSACT
+        mode: write
+
+  # MEDIUM PRIORITY (Score 3.00 - 3.74)
+  - program: COUSR00C
+    function: "List Users"
+    source_file: "app/cbl/COUSR00C.cbl"
+    scores:
+      statelessness: 4
+      data_simplicity: 4
+      business_value: 2
+      isolation: 4
+    weighted_score: 3.50
+    priority: medium
+    api_endpoint: "GET /admin/users"
+    rationale: "Admin-only, browse operation with pagination"
+    files_accessed:
+      - name: USRSEC
+        mode: browse
+
+  - program: COUSR03C
+    function: "Delete User"
+    source_file: "app/cbl/COUSR03C.cbl"
+    scores:
+      statelessness: 3
+      data_simplicity: 5
+      business_value: 2
+      isolation: 4
+    weighted_score: 3.40
+    priority: medium
+    api_endpoint: "DELETE /admin/users/{userId}"
+    rationale: "Admin-only, simple delete operation"
+    files_accessed:
+      - name: USRSEC
+        mode: delete
+
+  - program: COCRDUPC
+    function: "Update Card"
+    source_file: "app/cbl/COCRDUPC.cbl"
+    scores:
+      statelessness: 3
+      data_simplicity: 3
+      business_value: 4
+      isolation: 3
+    weighted_score: 3.25
+    priority: medium
+    api_endpoint: "PUT /cards/{cardNumber}"
+    rationale: "Write operation with validation, card status updates"
+    files_accessed:
+      - name: CARDDAT
+        mode: read_update
+
+  - program: COUSR01C
+    function: "Create User"
+    source_file: "app/cbl/COUSR01C.cbl"
+    scores:
+      statelessness: 3
+      data_simplicity: 4
+      business_value: 2
+      isolation: 4
+    weighted_score: 3.20
+    priority: medium
+    api_endpoint: "POST /admin/users"
+    rationale: "Admin-only, user provisioning"
+    files_accessed:
+      - name: USRSEC
+        mode: write
+
+  - program: COUSR02C
+    function: "Update User"
+    source_file: "app/cbl/COUSR02C.cbl"
+    scores:
+      statelessness: 3
+      data_simplicity: 4
+      business_value: 2
+      isolation: 4
+    weighted_score: 3.20
+    priority: medium
+    api_endpoint: "PUT /admin/users/{userId}"
+    rationale: "Admin-only, user profile updates"
+    files_accessed:
+      - name: USRSEC
+        mode: read_update
+
+  # LOW PRIORITY (Score 2.50 - 2.99)
+  - program: COTRN02C
+    function: "Add Transaction"
+    source_file: "app/cbl/COTRN02C.cbl"
+    scores:
+      statelessness: 2
+      data_simplicity: 2
+      business_value: 4
+      isolation: 3
+    weighted_score: 2.70
+    priority: low
+    api_endpoint: "POST /transactions"
+    rationale: "Complex write with validation, multiple dependencies"
+    files_accessed:
+      - name: TRANSACT
+        mode: write
+      - name: ACCTDAT
+        mode: read_update
+      - name: CARDDAT
+        mode: read
+
+  - program: COACTUPC
+    function: "Update Account"
+    source_file: "app/cbl/COACTUPC.cbl"
+    scores:
+      statelessness: 2
+      data_simplicity: 2
+      business_value: 4
+      isolation: 2
+    weighted_score: 2.45
+    priority: low
+    api_endpoint: "PUT /accounts/{accountId}"
+    rationale: "Complex multi-file update with cascading effects"
+    files_accessed:
+      - name: ACCTDAT
+        mode: read_update
+      - name: CARDDAT
+        mode: read_update
+      - name: CUSTDAT
+        mode: read
+
+  - program: CORPT00C
+    function: "Report Submission"
+    source_file: "app/cbl/CORPT00C.cbl"
+    scores:
+      statelessness: 2
+      data_simplicity: 3
+      business_value: 2
+      isolation: 2
+    weighted_score: 2.25
+    priority: low
+    api_endpoint: null
+    rationale: "Batch-oriented, async processing required"
+
+  # NOT SUITABLE (Score < 2.50)
+  - program: COADM01C
+    function: "Admin Menu Navigation"
+    source_file: "app/cbl/COADM01C.cbl"
+    scores:
+      statelessness: 1
+      data_simplicity: 5
+      business_value: 1
+      isolation: 2
+    weighted_score: 2.15
+    priority: not_suitable
+    api_endpoint: null
+    rationale: "UI navigation only, no business logic"
+
+  - program: COMEN01C
+    function: "User Menu Navigation"
+    source_file: "app/cbl/COMEN01C.cbl"
+    scores:
+      statelessness: 1
+      data_simplicity: 5
+      business_value: 1
+      isolation: 2
+    weighted_score: 2.15
+    priority: not_suitable
+    api_endpoint: null
+    rationale: "UI navigation only, no business logic"
+
+  - program: COBSWAIT
+    function: "Batch Job Wait Handler"
+    source_file: "app/cbl/COBSWAIT.cbl"
+    scores:
+      statelessness: 1
+      data_simplicity: 5
+      business_value: 1
+      isolation: 1
+    weighted_score: 1.80
+    priority: not_suitable
+    api_endpoint: null
+    rationale: "Internal batch coordination, not user-facing"
+
+summary:
+  total_programs: 18
+  by_priority:
+    high: 7
+    medium: 5
+    low: 3
+    not_suitable: 3
+  recommended_for_api: 15
+  implementation_waves:
+    wave_1:
+      name: "Read-Only APIs (Lowest Risk)"
+      count: 4
+      programs:
+        - COACTVWC
+        - COCRDSLC
+        - COTRN01C
+        - COSGN00C
+    wave_2:
+      name: "List Operations"
+      count: 2
+      programs:
+        - COTRN00C
+        - COCRDLIC
+    wave_3:
+      name: "Write Operations"
+      count: 2
+      programs:
+        - COBIL00C
+        - COCRDUPC

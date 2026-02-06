@@ -1,0 +1,85 @@
+codebase_statistics:
+  generated: "2026-02-05"
+
+  programs:
+    total: 29
+    online_cics: 19
+    batch: 10
+    total_loc: 19496
+    largest_program:
+      name: COACTUPC
+      loc: 4236
+    smallest_program:
+      name: COBSWAIT
+      loc: 41
+
+  copybooks:
+    total: 29
+    total_loc: 2748
+    largest_copybook:
+      name: CSLKPCDY
+      loc: 1318
+    deprecated: 1  # UNUSED1Y
+
+  screens:
+    total_bms_mapsets: 17
+    categories:
+      authentication: 1
+      navigation: 2
+      account: 2
+      card: 3
+      transaction: 3
+      payment: 1
+      user_admin: 4
+      reports: 1
+
+  jcl:
+    total: 33
+    categories:
+      vsam_definition: 10
+      gdg_definition: 4
+      transaction_processing: 5
+      reporting: 3
+      cics_file_management: 2
+      data_extract: 4
+      data_import_export: 2
+      utility: 3
+
+  vsam:
+    total_clusters: 10
+    core_files: 6
+    reference_files: 4
+    alternate_indexes: 3
+    gdg_bases: 11
+
+  cics:
+    transactions: 3
+    transaction_ids:
+      - CC00  # Sign-on
+      - CA00  # Admin menu
+      - CM00  # User menu
+
+  domain:
+    bounded_contexts: 7
+    core_entities: 6
+    business_rules: 59
+    domain_events: 23
+
+  security:
+    total_findings: 10
+    critical: 6
+    high: 2
+    medium: 2
+    pci_dss_compliance: 15  # percent
+
+  modernization:
+    readiness_score: 3.53  # out of 5
+    api_candidates_total: 18
+    api_candidates_suitable: 15
+    api_candidates_high_priority: 7
+    migration_waves: 4
+
+  documentation:
+    total_documents: 36
+    sections: 9
+    status: complete

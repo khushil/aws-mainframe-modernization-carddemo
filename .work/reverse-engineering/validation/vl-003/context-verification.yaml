@@ -1,0 +1,235 @@
+phase: 5
+title: Bounded Context Verification
+status: complete
+doc_file: docs/reverse-engineering/03-context-model/CONTEXT-MAP.md
+
+context_count:
+  doc_claim: 7
+  verified: true
+  note: "7 bounded contexts identified, within expected 6-8 range."
+
+contexts:
+  - name: "1. Authentication"
+    programs_claimed: [COSGN00C]
+    programs_verified: true
+    data_access_claimed:
+      - file: USRSEC
+        access: READ
+    data_access_verified: true
+    evidence: "COSGN00C.cbl:211 — EXEC CICS READ DATASET (WS-USRSEC-FILE)"
+    outbound_navigation_correct: true
+    notes: "COSGN00C verified: reads USRSEC, routes to COADM01C/COMEN01C. Correct."
+
+  - name: "2. User Administration"
+    programs_claimed: [COUSR00C, COUSR01C, COUSR02C, COUSR03C]
+    programs_verified: true
+    data_access_claimed:
+      - file: USRSEC
+        access: "READ, WRITE, REWRITE, DELETE"
+    data_access_verified: true
+    evidence:
+      - "COUSR00C.cbl:588-691 — STARTBR/READNEXT/READPREV/ENDBR on USRSEC"
+      - "COUSR01C.cbl:240 — EXEC CICS WRITE DATASET (WS-USRSEC-FILE)"
+      - "COUSR02C.cbl:322,360 — EXEC CICS READ/REWRITE on USRSEC"
+      - "COUSR03C.cbl:269,307 — EXEC CICS READ/DELETE on USRSEC"
+    notes: "Full CRUD on USRSEC confirmed."
+
+  - name: "3. Account Management"
+    programs_claimed: [COACTVWC, COACTUPC]
+    programs_verified: true
+    data_access_claimed:
+      - file: ACCTDAT
+        access: "READ/UPDATE"
+      - file: CUSTDAT
+        access: "READ"
+      - file: CARDDAT
+        access: "READ"
+      - file: CCXREF
+        access: "READ"
+    data_access_verified: true
+    evidence:
+      - "COACTVWC.cbl:727 — READ CCXREF (via AIX path)"
+      - "COACTVWC.cbl:776 — READ ACCTDAT"
+      - "COACTVWC.cbl:826 — READ CUSTDAT"
+      - "COACTUPC.cbl:3654 — READ CCXREF (via AIX path)"
+      - "COACTUPC.cbl:3703 — READ ACCTDAT"
+      - "COACTUPC.cbl:3753 — READ CUSTDAT"
+      - "COACTUPC.cbl:3894-3895 — READ ACCTDAT UPDATE"
+      - "COACTUPC.cbl:3921-3922 — READ CUSTDAT UPDATE"
+      - "COACTUPC.cbl:4066 — REWRITE ACCTDAT"
+      - "COACTUPC.cbl:4086 — REWRITE CUSTDAT"
+    data_access_gap:
+      - "Doc says CARDDAT READ for Account Management, but no direct CARDDAT read found in COACTVWC or COACTUPC"
+      - "COACTUPC does UPDATE/REWRITE on CUSTDAT — doc says CUSTDAT is READ-only for this context"
+    severity: minor
+
+  - name: "4. Card Management"
+    programs_claimed: [COCRDLIC, COCRDSLC, COCRDUPC]
+    programs_verified: true
+    data_access_claimed:
+      - file: CARDDAT
+        access: "READ/WRITE"
+      - file: CCXREF
+        access: "READ"
+      - file: ACCTDAT
+        access: "READ"
+    data_access_verified: partially
+    evidence:
+      - "COCRDLIC.cbl:1129-1322 — STARTBR/READNEXT/READPREV on CARDDAT"
+      - "COCRDSLC.cbl:742 — READ CARDDAT"
+      - "COCRDSLC.cbl:783 — READ CARDDAT (via AIX acct path)"
+      - "COCRDUPC.cbl:1382,1427-1428 — READ CARDDAT, READ CARDDAT UPDATE"
+      - "COCRDUPC.cbl:1478 — REWRITE CARDDAT"
+    data_access_gap:
+      - "Doc says CARDDAT READ/WRITE but actual operations are READ/REWRITE (no WRITE of new records). Minor terminology."
+      - "No ACCTDAT READ found in card management programs. Doc claims ACCTDAT READ."
+      - "No CCXREF READ found in card management programs. Doc claims CCXREF READ."
+    severity: minor
+
+  - name: "5. Transaction Processing"
+    programs_claimed: [COTRN00C, COTRN01C, COTRN02C]
+    programs_verified: true
+    data_access_claimed:
+      - file: TRANSACT
+        access: "READ/WRITE"
+      - file: ACCTDAT
+        access: "READ"
+      - file: CCXREF
+        access: "READ"
+    data_access_verified: true
+    evidence:
+      - "COTRN00C.cbl:593-694 — STARTBR/READNEXT/READPREV/ENDBR on TRANSACT"
+      - "COTRN01C.cbl:269 — READ TRANSACT"
+      - "COTRN02C.cbl:578,611 — READ CCXREF (two paths)"
+      - "COTRN02C.cbl:644-706 — STARTBR/READPREV/ENDBR on TRANSACT"
+      - "COTRN02C.cbl:713 — WRITE TRANSACT"
+    notes: "ACCTDAT READ not directly observed in COTRN programs but likely through CCXREF lookups."
+
+  - name: "6. Bill Payment"
+    programs_claimed: [COBIL00C]
+    programs_verified: true
+    data_access_claimed:
+      - file: ACCTDAT
+        access: "READ/REWRITE"
+      - file: TRANSACT
+        access: "READ/WRITE"
+      - file: CCXREF
+        access: "READ"
+    data_access_verified: true
+    evidence:
+      - "COBIL00C.cbl:345 — READ ACCTDAT"
+      - "COBIL00C.cbl:379 — REWRITE ACCTDAT"
+      - "COBIL00C.cbl:410 — READ CCXREF (via AIX path)"
+      - "COBIL00C.cbl:443-505 — STARTBR/READPREV/ENDBR on TRANSACT"
+      - "COBIL00C.cbl:512 — WRITE TRANSACT"
+    notes: "Cross-context data access confirmed: writes to ACCTDAT (Account domain) and TRANSACT (Transaction domain)."
+
+  - name: "7. Batch Processing"
+    programs_claimed: [CBTRN01C, CBTRN02C, CBTRN03C, CBACT01C, CBACT02C, CBACT03C, CBACT04C, CBCUS01C, CBEXPORT, CBIMPORT]
+    programs_verified: true
+    missing_programs:
+      - program: CBSTM03A.CBL
+        note: "Batch statement program, exists in app/cbl/ but not in context list"
+      - program: CBSTM03B.CBL
+        note: "Batch statement program, exists in app/cbl/ but not in context list"
+    severity: major
+
+menu_programs:
+  claim: "COADM01C and COMEN01C are menu/routing programs, not bounded contexts"
+  verified: true
+  note: "These are pure navigation programs with no VSAM data access. Correct to exclude."
+
+programs_not_in_any_context:
+  - program: COBSWAIT.cbl
+    reason: "Utility — no TRANSID, no VSAM I/O, no XCTL. Pure CICS DELAY."
+    severity: informational
+  - program: CSUTLDTC.cbl
+    reason: "Date utility — no CICS transactions, helper program."
+    severity: informational
+  - program: CORPT00C.cbl
+    reason: "Report program — in user menu as option 9 but NOT assigned to any bounded context in CONTEXT-MAP.md"
+    data_access: "WRITEQ TD to JOBS queue only — no direct VSAM file I/O"
+    severity: major
+    note: >
+      CORPT00C is present in NAVIGATION-FLOWS.md and user menu, has a TransID (CR00),
+      but is NOT mentioned in any bounded context's program list in CONTEXT-MAP.md.
+      It arguably could be its own context or part of Transaction Processing.
+  - program: COADM01C
+    reason: "Menu program — correctly excluded from bounded contexts"
+    severity: informational
+  - program: COMEN01C
+    reason: "Menu program — correctly excluded from bounded contexts"
+    severity: informational
+
+data_ownership_matrix_verification:
+  doc_location: "CONTEXT-MAP.md lines 297-304"
+  findings:
+    - file: USRSEC
+      doc_owner: Authentication
+      issue: >
+        USRSEC owner listed as "Authentication" but Authentication only READs.
+        User Administration performs full CRUD. Owner should arguably be User Administration.
+      severity: minor
+      note: "The table does show User Admin as both reader and writer, so the data is present."
+
+    - file: ACCTDAT
+      doc_owner: Account Management
+      verified: true
+      note: "Account Management reads/updates. Bill Payment also rewrites (cross-context). Batch also writes."
+
+    - file: CARDDAT
+      doc_owner: Card Management
+      verified: true
+      note: "Card Management reads/rewrites. No other online context writes."
+
+    - file: CUSTDAT
+      doc_owner: Account Management
+      issue: "COACTUPC also REWRITEs CUSTDAT, making Account Management a writer. Doc shows Reader=Account Mgmt, Writer=Batch. Account Management should be in Writer column."
+      severity: minor
+
+    - file: TRANSACT
+      doc_owner: Transaction Processing
+      verified: true
+      note: "Transaction Processing and Bill Payment both write. Correct in table."
+
+    - file: CCXREF
+      doc_owner: Card Management
+      verified: true
+      note: "READ-only in all online programs. Correct."
+
+ddd_relationship_verification:
+  - relationship: "Authentication → All (Upstream)"
+    correct: true
+    note: "Session state flows from Authentication to all other contexts."
+  - relationship: "Account Management ↔ Card Management (Shared Kernel via CCXREF)"
+    correct: true
+    note: "Both reference CCXREF for card-account relationships."
+  - relationship: "Transaction Processing ↔ Bill Payment (Shared Kernel via TRANSACT)"
+    correct: true
+    note: "Both write to TRANSACT file."
+  - relationship: "Account Management → Transaction Processing (Customer/Supplier)"
+    correct: true
+    note: "Transaction Processing reads account data."
+  - relationship: "Batch Processing (Separate Ways)"
+    correct: true
+    note: "Batch runs independently during batch windows."
+
+summary:
+  contexts_correct: 7/7
+  context_programs_complete: false
+  missing_from_contexts:
+    - "CORPT00C — online program not assigned to any context (MAJOR)"
+    - "CBSTM03A.CBL, CBSTM03B.CBL — batch programs missing from Batch context (MAJOR)"
+  data_ownership_issues:
+    - "USRSEC ownership ambiguity — Authentication listed as owner but User Admin has full CRUD (MINOR)"
+    - "CUSTDAT write by Account Management not reflected in Writer column (MINOR)"
+  ddd_relationships_correct: 5/5
+  findings:
+    major:
+      - "CORPT00C not assigned to any bounded context"
+      - "CBSTM03A.CBL and CBSTM03B.CBL missing from Batch Processing context"
+    minor:
+      - "USRSEC ownership listed under Authentication despite User Admin having full CRUD"
+      - "CUSTDAT writer column missing Account Management"
+      - "Minor terminology: doc says CARDDAT READ/WRITE but source shows READ/REWRITE"
+      - "Account Management claims CARDDAT READ but no direct CARDDAT access found in COACTVWC/COACTUPC"

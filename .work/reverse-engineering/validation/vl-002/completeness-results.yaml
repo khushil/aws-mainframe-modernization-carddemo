@@ -1,0 +1,540 @@
+###############################################################################
+# VL-002 Completeness Assessment Results
+# RE-002 Data Model Documentation vs. Actual Source Codebase
+#
+# Generated: 2026-02-06
+# Scope: All VSAM entities, reference files, copybook fields, data lineage,
+#         alternate indexes, relationships, and physical data files.
+###############################################################################
+
+metadata:
+  validation_id: VL-002
+  validation_type: completeness
+  target_artifact: RE-002 (Data Model Documentation)
+  date: "2026-02-06"
+  methodology: >-
+    Systematic comparison of RE-002 documentation content against the actual
+    source codebase artifacts including copybooks (app/cpy/), data files
+    (app/data/ASCII/, app/data/EBCDIC/), COBOL programs (app/cbl/), and
+    JCL definitions (app/jcl/).
+
+overall_score:
+  completeness_percentage: 95
+  rating: EXCELLENT
+  summary: >-
+    RE-002 documentation achieves comprehensive coverage of all core data
+    entities, fields, relationships, alternate indexes, and data lineage
+    flows. Only minor gaps exist around physical data file inventories and
+    a small field-count discrepancy in the DATA-DICTIONARY header.
+
+# ---------------------------------------------------------------------------
+# Section 1: VSAM Core Files Coverage
+# ---------------------------------------------------------------------------
+vsam_core_files:
+  expected_count: 6
+  documented_count: 6
+  coverage_percentage: 100
+  files:
+    - name: ACCTDAT
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-DICTIONARY section 2
+
+    - name: CARDDAT
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-DICTIONARY section 3
+
+    - name: CUSTDAT
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-DICTIONARY section 4
+
+    - name: TRANSACT
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-DICTIONARY section 6
+
+    - name: CCXREF
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-DICTIONARY section 5
+
+    - name: USRSEC
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-DICTIONARY section 7
+
+# ---------------------------------------------------------------------------
+# Section 2: Reference Files Coverage
+# ---------------------------------------------------------------------------
+reference_files:
+  expected_count: 4
+  documented_count: 4
+  coverage_percentage: 100
+  files:
+    - name: TCATBALF
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.2
+        - DATA-DICTIONARY section 8
+
+    - name: DISCGRP
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.2
+        - DATA-DICTIONARY section 9
+
+    - name: TRANTYPE
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.2
+        - DATA-DICTIONARY section 10
+
+    - name: TRANCATG
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.2
+        - DATA-DICTIONARY section 11
+
+# ---------------------------------------------------------------------------
+# Section 3: Field Coverage Per Entity
+# ---------------------------------------------------------------------------
+field_coverage:
+  total_source_fields: 80
+  total_documented_fields: 80
+  overall_field_coverage_percentage: 100
+  note: >-
+    The DATA-DICTIONARY header claims "87 fields". Manual count of leaf-level
+    fields across all 10 entities yields 80. The discrepancy of 7 likely
+    originates from counting group-level fields (e.g., TRAN-CAT-KEY,
+    DIS-GROUP-KEY, TRAN-CAT-KEY in CVTRA04Y). This is classified as a
+    MINOR quantitative inaccuracy.
+
+  entities:
+    - entity: ACCOUNT
+      copybook: CVACT01Y.cpy
+      source_field_count: 13
+      documented_field_count: 13
+      coverage_percentage: 100
+      source_fields:
+        - ACCT-ID
+        - ACCT-ACTIVE-STATUS
+        - ACCT-CURR-BAL
+        - ACCT-CREDIT-LIMIT
+        - ACCT-CASH-CREDIT-LIMIT
+        - ACCT-OPEN-DATE
+        - ACCT-EXPIRAION-DATE
+        - ACCT-REISSUE-DATE
+        - ACCT-CURR-CYC-CREDIT
+        - ACCT-CURR-CYC-DEBIT
+        - ACCT-ADDR-ZIP
+        - ACCT-GROUP-ID
+        - FILLER
+
+    - entity: CARD
+      copybook: CVACT02Y.cpy
+      source_field_count: 7
+      documented_field_count: 7
+      coverage_percentage: 100
+
+    - entity: CUSTOMER
+      copybook: CVCUS01Y.cpy
+      source_field_count: 19
+      documented_field_count: 19
+      coverage_percentage: 100
+
+    - entity: CARD_XREF
+      copybook: CVACT03Y.cpy
+      source_field_count: 4
+      documented_field_count: 4
+      coverage_percentage: 100
+
+    - entity: TRANSACTION
+      copybook: CVTRA05Y.cpy
+      source_field_count: 14
+      documented_field_count: 14
+      coverage_percentage: 100
+
+    - entity: USER_SECURITY
+      copybook: CSUSR01Y.cpy
+      source_field_count: 6
+      documented_field_count: 6
+      coverage_percentage: 100
+
+    - entity: TRAN_CAT_BAL
+      copybook: CVTRA01Y.cpy
+      source_field_count: 5
+      documented_field_count: 5
+      coverage_percentage: 100
+      note: Includes group key field
+
+    - entity: DISCLOSURE_GROUP
+      copybook: CVTRA02Y.cpy
+      source_field_count: 5
+      documented_field_count: 5
+      coverage_percentage: 100
+      note: Includes group key field
+
+    - entity: TRAN_TYPE
+      copybook: CVTRA03Y.cpy
+      source_field_count: 3
+      documented_field_count: 3
+      coverage_percentage: 100
+
+    - entity: TRAN_CATEGORY
+      copybook: CVTRA04Y.cpy
+      source_field_count: 4
+      documented_field_count: 4
+      coverage_percentage: 100
+      note: Includes group key field
+
+# ---------------------------------------------------------------------------
+# Section 4: FILLER Fields Coverage
+# ---------------------------------------------------------------------------
+filler_fields:
+  expected_count: 10
+  documented_count: 10
+  coverage_percentage: 100
+  fields:
+    - entity: ACCOUNT
+      filler_spec: "FILLER X(178)"
+      status: DOCUMENTED
+
+    - entity: CARD
+      filler_spec: "FILLER X(59)"
+      status: DOCUMENTED
+
+    - entity: CUSTOMER
+      filler_spec: "FILLER X(168)"
+      status: DOCUMENTED
+
+    - entity: CARD_XREF
+      filler_spec: "FILLER X(14)"
+      status: DOCUMENTED
+
+    - entity: TRANSACTION
+      filler_spec: "FILLER X(20)"
+      status: DOCUMENTED
+
+    - entity: USER_SECURITY
+      filler_spec: "SEC-USR-FILLER X(23)"
+      status: DOCUMENTED
+
+    - entity: TRAN_CAT_BAL
+      filler_spec: "FILLER X(22)"
+      status: DOCUMENTED
+
+    - entity: DISCLOSURE_GROUP
+      filler_spec: "FILLER X(28)"
+      status: DOCUMENTED
+
+    - entity: TRAN_TYPE
+      filler_spec: "FILLER X(08)"
+      status: DOCUMENTED
+
+    - entity: TRAN_CATEGORY
+      filler_spec: "FILLER X(04)"
+      status: DOCUMENTED
+
+# ---------------------------------------------------------------------------
+# Section 5: Transient / Staging Files Coverage
+# ---------------------------------------------------------------------------
+transient_staging_files:
+  expected_count: 2
+  documented_count: 2
+  coverage_percentage: 100
+  files:
+    - name: DALYTRAN
+      copybook: CVTRA06Y.cpy
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.3
+
+    - name: DALYREJS
+      copybook: null
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.3
+        - DATA-LINEAGE section 2.5
+
+# ---------------------------------------------------------------------------
+# Section 6: Physical Data Files Coverage
+# ---------------------------------------------------------------------------
+ascii_data_files:
+  expected_count: 9
+  documentation_status: PARTIALLY_COVERED
+  note: >-
+    Referenced collectively in documentation but not individually enumerated
+    as a separate inventory. This is a MINOR gap.
+  files:
+    - acctdata.txt
+    - carddata.txt
+    - cardxref.txt
+    - custdata.txt
+    - dailytran.txt
+    - discgrp.txt
+    - tcatbal.txt
+    - trancatg.txt
+    - trantype.txt
+
+ebcdic_data_files:
+  expected_count: 13
+  documentation_status: PARTIALLY_COVERED
+  note: >-
+    Dataset names are referenced individually through JCL citations
+    (e.g., AWS.M2.CARDDEMO.ACCTDATA.PS in ACCTFILE.jcl) but not
+    enumerated as a separate consolidated inventory. This is a MINOR gap.
+  files:
+    - AWS.M2.CARDDEMO.ACCDATA.PS
+    - AWS.M2.CARDDEMO.ACCTDATA.PS
+    - AWS.M2.CARDDEMO.CARDDATA.PS
+    - AWS.M2.CARDDEMO.CARDXREF.PS
+    - AWS.M2.CARDDEMO.CUSTDATA.PS
+    - AWS.M2.CARDDEMO.DALYTRAN.PS
+    - AWS.M2.CARDDEMO.DALYTRAN.PS.INIT
+    - AWS.M2.CARDDEMO.DISCGRP.PS
+    - AWS.M2.CARDDEMO.EXPORT.DATA.PS
+    - AWS.M2.CARDDEMO.TCATBALF.PS
+    - AWS.M2.CARDDEMO.TRANCATG.PS
+    - AWS.M2.CARDDEMO.TRANTYPE.PS
+    - AWS.M2.CARDDEMO.USRSEC.PS
+
+# ---------------------------------------------------------------------------
+# Section 7: Data Lineage Coverage
+# ---------------------------------------------------------------------------
+data_lineage:
+  expected_count: 3
+  documented_count: 3
+  coverage_percentage: 100
+  batch_programs:
+    - program: CBTRN02C
+      purpose: Transaction Posting
+      status: COVERED
+      documentation_references:
+        - DATA-LINEAGE sections 2.1-2.5
+      detail: Extensively documented
+
+    - program: CBTRN03C
+      purpose: Transaction Reporting
+      status: COVERED
+      documentation_references:
+        - DATA-LINEAGE sections 4.1-4.4
+
+    - program: CBACT04C
+      purpose: Interest Calculation
+      status: COVERED
+      documentation_references:
+        - DATA-LINEAGE sections 3.1-3.6
+
+# ---------------------------------------------------------------------------
+# Section 8: 88-Level Conditions / Value Domains Coverage
+# ---------------------------------------------------------------------------
+value_domains:
+  assessment: APPROPRIATE_COVERAGE
+  note: >-
+    The actual copybooks do NOT define any 88-level conditions. The
+    documentation correctly represents likely/expected value domains under
+    "Value Domains" tables rather than as 88-level conditions. This is
+    an accurate representation of the source.
+  documented_domains:
+    - field: ACCT-ACTIVE-STATUS
+      values: "'Y' / 'N'"
+      documentation_reference: DATA-DICTIONARY section 2
+
+    - field: CARD-ACTIVE-STATUS
+      values: "'Y' / 'N'"
+      documentation_reference: DATA-DICTIONARY section 3
+
+    - field: CUST-PRI-CARD-HOLDER-IND
+      values: "'Y' / 'N'"
+      documentation_reference: DATA-DICTIONARY section 4
+
+    - field: SEC-USR-TYPE
+      values: "'A' / 'U'"
+      documentation_reference: DATA-DICTIONARY section 7
+
+    - field: TRAN-SOURCE
+      values: "'System', 'Online', 'POS', 'ATM'"
+      documentation_reference: DATA-DICTIONARY section 6
+
+# ---------------------------------------------------------------------------
+# Section 9: Alternate Index Coverage
+# ---------------------------------------------------------------------------
+alternate_indexes:
+  expected_count: 3
+  documented_count: 3
+  coverage_percentage: 100
+  indexes:
+    - file: CARDDAT
+      aix_field: CARD-ACCT-ID
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-MODEL section 3
+        - er-diagram.md Alternate Index Relationships
+
+    - file: CCXREF
+      aix_field: XREF-ACCT-ID
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-MODEL section 3
+        - er-diagram.md Alternate Index Relationships
+
+    - file: TRANSACT
+      aix_field: TRAN-PROC-TS
+      status: COVERED
+      documentation_references:
+        - DATA-MODEL section 1.1
+        - DATA-MODEL section 3
+        - er-diagram.md Alternate Index Relationships
+
+# ---------------------------------------------------------------------------
+# Section 10: Group-Level Key Structures
+# ---------------------------------------------------------------------------
+group_level_keys:
+  expected_count: 3
+  documented_count: 3
+  coverage_percentage: 100
+  keys:
+    - key_name: TRAN-CAT-KEY
+      copybook: CVTRA01Y
+      status: DOCUMENTED
+      documentation_reference: DATA-MODEL section 1.2
+
+    - key_name: DIS-GROUP-KEY
+      copybook: CVTRA02Y
+      status: DOCUMENTED
+      documentation_reference: DATA-MODEL section 1.2
+
+    - key_name: TRAN-CAT-KEY
+      copybook: CVTRA04Y
+      status: DOCUMENTED
+      documentation_reference: DATA-MODEL section 1.2
+      note: Composite PK documented implicitly
+
+# ---------------------------------------------------------------------------
+# Section 11: Relationship Cardinalities
+# ---------------------------------------------------------------------------
+relationship_cardinalities:
+  expected_count: 8
+  documented_count: 8
+  coverage_percentage: 100
+  documentation_references:
+    - DATA-MODEL section 2.2
+    - er-diagram.md Cardinality Summary Table (9 entries, slightly expanded)
+  relationships:
+    - from: CUSTOMER
+      to: CCXREF
+      status: COVERED
+
+    - from: ACCOUNT
+      to: CCXREF
+      status: COVERED
+
+    - from: ACCOUNT
+      to: CARD
+      status: COVERED
+
+    - from: CARD
+      to: TRANSACTION
+      status: COVERED
+
+    - from: ACCOUNT
+      to: TCATBALF
+      status: COVERED
+
+    - from: DISCGRP
+      to: ACCOUNT
+      status: COVERED
+
+    - from: TRANTYPE
+      to: TRANSACTION
+      status: COVERED
+
+    - from: TRANCATG
+      to: TRANSACTION
+      status: COVERED
+
+# ---------------------------------------------------------------------------
+# Section 12: Completeness Gaps Summary
+# ---------------------------------------------------------------------------
+completeness_gaps:
+  critical: []
+  major: []
+  minor:
+    - id: GAP-MINOR-001
+      category: quantitative_inaccuracy
+      description: >-
+        DATA-DICTIONARY header claims "87 fields" but manual count of
+        leaf-level fields across 10 entities yields 80. The discrepancy
+        of 7 likely comes from counting group-level fields (e.g.,
+        TRAN-CAT-KEY, DIS-GROUP-KEY, TRAN-CAT-KEY in CVTRA04Y).
+      severity: MINOR
+      impact: Low - does not affect field-level accuracy of individual entities
+
+    - id: GAP-MINOR-002
+      category: missing_inventory
+      description: >-
+        ASCII data files (9 files in app/data/ASCII/) are not individually
+        enumerated as a separate inventory in the documentation. They are
+        referenced collectively.
+      severity: MINOR
+      impact: Low - the logical data model coverage is complete
+
+    - id: GAP-MINOR-003
+      category: missing_inventory
+      description: >-
+        EBCDIC data files (13 files in app/data/EBCDIC/) are not individually
+        enumerated as a separate consolidated inventory. Dataset names are
+        referenced through JCL citations but lack a single summary listing.
+      severity: MINOR
+      impact: Low - the logical data model coverage is complete
+
+# ---------------------------------------------------------------------------
+# Section 13: Coverage Dimension Summary
+# ---------------------------------------------------------------------------
+coverage_dimensions:
+  - dimension: Entity Coverage
+    metric: "10/10"
+    percentage: 100
+
+  - dimension: Field Coverage
+    metric: "80/80"
+    percentage: 100
+
+  - dimension: FILLER Coverage
+    metric: "10/10"
+    percentage: 100
+
+  - dimension: Alternate Index Coverage
+    metric: "3/3"
+    percentage: 100
+
+  - dimension: Data Lineage Coverage
+    metric: "3/3"
+    percentage: 100
+
+  - dimension: Relationship Coverage
+    metric: "8/8"
+    percentage: 100
+
+  - dimension: Transient File Coverage
+    metric: "2/2"
+    percentage: 100
+
+  - dimension: Group Key Coverage
+    metric: "3/3"
+    percentage: 100
+
+  - dimension: Physical Data File Inventories
+    metric: partial
+    percentage: null
+    note: Referenced but not individually enumerated as consolidated inventories

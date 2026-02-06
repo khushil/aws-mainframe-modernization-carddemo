@@ -1,0 +1,117 @@
+# RE-006 Batch Workflow Analysis Progress Tracker
+# Created: 2026-02-05
+# Purpose: Track extraction phases for context window compaction survival
+
+analysis_metadata:
+  prompt_id: RE-006
+  start_time: "2026-02-05T00:00:00Z"
+  completion_time: "2026-02-05T00:30:00Z"
+  total_jcl_files: 33
+  status: complete
+
+phases:
+  phase_1_setup:
+    status: completed
+    description: "Create work tracking infrastructure"
+    output:
+      - .work/reverse-engineering/specialized/batch-workflows/progress.yaml
+      - .work/reverse-engineering/specialized/batch-workflows/jcl-inventory.yaml
+      - .work/reverse-engineering/specialized/batch-workflows/dependencies.yaml
+
+  phase_2_inventory:
+    status: completed
+    description: "JCL inventory analysis"
+    categories:
+      vsam_definition:
+        status: completed
+        count: 10
+        files: [ACCTFILE, CARDFILE, CUSTFILE, XREFFILE, TRANFILE, TRANTYPE, TRANCATG, TCATBALF, DISCGRP, DUSRSECJ]
+      gdg_definition:
+        status: completed
+        count: 4
+        files: [DEFGDGB, DEFGDGD, REPTFILE, DALYREJS]
+      transaction_processing:
+        status: completed
+        count: 5
+        files: [POSTTRAN, INTCALC, COMBTRAN, TRANBKP, TRANIDX]
+      reporting:
+        status: completed
+        count: 3
+        files: [TRANREPT, PRTCATBL, REPTFILE]
+      cics_file_mgmt:
+        status: completed
+        count: 2
+        files: [CLOSEFIL, OPENFIL]
+      data_read_extract:
+        status: completed
+        count: 4
+        files: [READACCT, READCARD, READCUST, READXREF]
+      data_import_export:
+        status: completed
+        count: 2
+        files: [CBEXPORT, CBIMPORT]
+      other:
+        status: completed
+        count: 4
+        files: [CBADMCDJ, WAITSTEP, ESDSRRDS, DEFCUST]
+
+  phase_3_dependencies:
+    status: completed
+    description: "Dependency mapping"
+    sources_analyzed:
+      - app/scheduler/CardDemo.controlm
+      - app/scheduler/CardDemo.ca7
+      - scripts/run_full_batch.sh
+      - scripts/run_interest_calc.sh
+      - scripts/run_posting.sh
+
+  phase_4_dataflow:
+    status: completed
+    description: "Data flow diagrams"
+    diagrams_created:
+      - Daily Transaction Processing Flow
+      - Interest Calculation Flow
+      - Transaction Consolidation Flow
+      - Export/Import Flow
+      - Complete Job Dependency DAG
+
+  phase_5_recovery:
+    status: completed
+    description: "Restart/recovery procedures"
+    jobs_documented:
+      - POSTTRAN
+      - INTCALC
+      - TRANBKP
+      - COMBTRAN
+      - GDG management
+
+  phase_6_modernization:
+    status: completed
+    description: "Modernization recommendations"
+    recommendations:
+      event_driven: [POSTTRAN, CLOSEFIL/OPENFIL]
+      batch_appropriate: [INTCALC, TRANREPT, COMBTRAN]
+      gdg_migration: S3 versioning
+      observability: CloudWatch + Step Functions
+
+  phase_7_documentation:
+    status: completed
+    description: "Final documentation output"
+    output:
+      - docs/reverse-engineering/05-specialized/BATCH-WORKFLOWS.md
+
+verification:
+  jcl_files_documented: 33
+  batch_programs_mapped: 10
+  dependency_dag_complete: true
+  data_flow_diagrams: 4
+  restart_procedures: 5
+  modernization_aligned: true
+
+summary:
+  total_jobs: 33
+  vsam_clusters: 15
+  gdg_bases: 11
+  cobol_programs: 10
+  scheduler_workflows: 5
+  critical_jobs: 5

@@ -1,0 +1,359 @@
+openapi: 3.0.3
+info:
+  title: CardDemo Card API
+  description: |
+    API for credit card operations extracted from CardDemo COBOL programs.
+
+    **Source Programs:**
+    - COCRDSLC.cbl - Card Details View
+    - COCRDUPC.cbl - Card Update
+    - COCRDLIC.cbl - Card List
+
+    **Data Sources:**
+    - CARDDAT (Card Master)
+    - CARDAIX (Card Alternate Index by Account)
+  version: 1.0.0
+  contact:
+    name: CardDemo API Support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.carddemo.example.com/v1
+    description: Production server
+  - url: https://api-staging.carddemo.example.com/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Cards
+    description: Card management operations
+
+paths:
+  /cards/{cardNumber}:
+    get:
+      tags:
+        - Cards
+      summary: Get card details
+      description: |
+        Retrieves card information by card number.
+
+        **COBOL Source:** COCRDSLC.cbl (lines 736-777)
+
+        **Files Accessed:**
+        - CARDDAT (Card master by primary key)
+
+        **Security Note:** CVV is never returned in API responses.
+      operationId: getCard
+      parameters:
+        - name: cardNumber
+          in: path
+          required: true
+          description: 16-digit card number
+          schema:
+            type: string
+            pattern: '^\d{16}$'
+            example: "4111111111111111"
+      responses:
+        '200':
+          description: Card found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+              example:
+                cardNumber: "4111111111111111"
+                accountId: "00000000001"
+                embossedName: "JOHN Q PUBLIC"
+                expirationDate: "2025-12-31"
+                status: "ACTIVE"
+        '400':
+          description: Invalid card number format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_CARD_NUM"
+                  message: "Card number must be a 16-digit number"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "CARD_NOT_FOUND"
+                  message: "Card not found"
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags:
+        - Cards
+      summary: Update card details
+      description: |
+        Updates card information (status, embossed name).
+
+        **COBOL Source:** COCRDUPC.cbl
+
+        **Files Accessed:**
+        - CARDDAT (Card master - read/update)
+      operationId: updateCard
+      parameters:
+        - name: cardNumber
+          in: path
+          required: true
+          description: 16-digit card number
+          schema:
+            type: string
+            pattern: '^\d{16}$'
+            example: "4111111111111111"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardUpdateRequest'
+            example:
+              embossedName: "JOHN Q PUBLIC JR"
+              status: "INACTIVE"
+      responses:
+        '200':
+          description: Card updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Card not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /accounts/{accountId}/cards:
+    get:
+      tags:
+        - Cards
+      summary: List cards for account
+      description: |
+        Retrieves all cards associated with an account.
+
+        **COBOL Source:** COCRDLIC.cbl
+
+        **Files Accessed:**
+        - CARDAIX (Card alternate index by account ID)
+      operationId: listAccountCards
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: 11-digit account identifier
+          schema:
+            type: string
+            pattern: '^\d{11}$'
+            example: "00000000001"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of cards to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: cursor
+          in: query
+          required: false
+          description: Pagination cursor (card number to start after)
+          schema:
+            type: string
+            pattern: '^\d{16}$'
+      responses:
+        '200':
+          description: Cards found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardListResponse'
+              example:
+                items:
+                  - cardNumber: "4111111111111111"
+                    accountId: "00000000001"
+                    embossedName: "JOHN Q PUBLIC"
+                    expirationDate: "2025-12-31"
+                    status: "ACTIVE"
+                  - cardNumber: "4111111111111112"
+                    accountId: "00000000001"
+                    embossedName: "JANE Q PUBLIC"
+                    expirationDate: "2025-12-31"
+                    status: "ACTIVE"
+                pagination:
+                  hasMore: false
+                  nextCursor: null
+                  totalCount: 2
+        '400':
+          description: Invalid account ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found or no cards
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/token endpoint
+
+  schemas:
+    CardResponse:
+      type: object
+      required:
+        - cardNumber
+        - accountId
+        - status
+      properties:
+        cardNumber:
+          type: string
+          pattern: '^\d{16}$'
+          description: 16-digit card number
+          example: "4111111111111111"
+        accountId:
+          type: string
+          pattern: '^\d{11}$'
+          description: Associated account ID
+          example: "00000000001"
+        embossedName:
+          type: string
+          maxLength: 50
+          description: Name embossed on card
+          example: "JOHN Q PUBLIC"
+        expirationDate:
+          type: string
+          format: date
+          description: Card expiration date
+          example: "2025-12-31"
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+          description: Card status (mapped from CARD-ACTIVE-STATUS Y/N)
+
+    CardUpdateRequest:
+      type: object
+      properties:
+        embossedName:
+          type: string
+          maxLength: 50
+          description: Name to emboss on card
+          example: "JOHN Q PUBLIC JR"
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+          description: Card status
+
+    CardListResponse:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Pagination:
+      type: object
+      properties:
+        hasMore:
+          type: boolean
+          description: Whether more results are available
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor for next page
+        totalCount:
+          type: integer
+          description: Total number of items
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: "CARD_NOT_FOUND"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Card not found"
+            details:
+              type: object
+              additionalProperties: true
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

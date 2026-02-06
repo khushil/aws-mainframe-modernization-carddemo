@@ -1,0 +1,374 @@
+openapi: 3.0.3
+info:
+  title: CardDemo Transaction API
+  description: |
+    API for transaction operations extracted from CardDemo COBOL programs.
+
+    **Source Programs:**
+    - COTRN01C.cbl - Transaction View
+    - COTRN00C.cbl - Transaction List
+
+    **Data Sources:**
+    - TRANSACT (Transaction File - VSAM KSDS)
+  version: 1.0.0
+  contact:
+    name: CardDemo API Support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.carddemo.example.com/v1
+    description: Production server
+  - url: https://api-staging.carddemo.example.com/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Transactions
+    description: Transaction inquiry operations
+
+paths:
+  /transactions:
+    get:
+      tags:
+        - Transactions
+      summary: List transactions
+      description: |
+        Retrieves a paginated list of transactions.
+
+        **COBOL Source:** COTRN00C.cbl
+
+        **Pagination:**
+        - Cursor-based using transaction ID
+        - Default page size: 10 items
+        - Supports forward (PF8) and backward (PF7) navigation
+
+        **Files Accessed:**
+        - TRANSACT (Browse operation with STARTBR/READNEXT/READPREV)
+      operationId: listTransactions
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Transaction ID to start after (for pagination)
+          schema:
+            type: string
+            pattern: '^\d{16}$'
+            example: "0000000000000100"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of transactions to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: direction
+          in: query
+          required: false
+          description: Pagination direction
+          schema:
+            type: string
+            enum:
+              - forward
+              - backward
+            default: forward
+      responses:
+        '200':
+          description: Transactions found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+              example:
+                items:
+                  - transactionId: "0000000000000001"
+                    description: "AMAZON.COM PURCHASE"
+                    amount: 99.99
+                    date: "2024-01-15"
+                  - transactionId: "0000000000000002"
+                    description: "STARBUCKS COFFEE"
+                    amount: 5.75
+                    date: "2024-01-16"
+                pagination:
+                  firstId: "0000000000000001"
+                  lastId: "0000000000000010"
+                  currentPage: 1
+                  hasNextPage: true
+                  hasPrevPage: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_TRAN_ID"
+                  message: "Transaction ID must be numeric"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /transactions/{transactionId}:
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction details
+      description: |
+        Retrieves detailed information about a specific transaction.
+
+        **COBOL Source:** COTRN01C.cbl (lines 267-296)
+
+        **Files Accessed:**
+        - TRANSACT (Direct read by TRAN-ID key)
+
+        **Security Note:** Card number is masked in the response.
+      operationId: getTransaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: 16-character transaction identifier
+          schema:
+            type: string
+            pattern: '^\d{16}$'
+            example: "0000000000000001"
+      responses:
+        '200':
+          description: Transaction found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+              example:
+                transactionId: "0000000000000001"
+                typeCode: "01"
+                categoryCode: 5411
+                source: "POS TERM"
+                description: "AMAZON.COM PURCHASE"
+                amount: 99.99
+                cardNumber: "XXXX-XXXX-XXXX-1111"
+                originTimestamp: "2024-01-15T14:30:00Z"
+                processedTimestamp: "2024-01-15T14:30:05Z"
+                merchant:
+                  id: "123456789"
+                  name: "AMAZON.COM"
+                  city: "SEATTLE"
+                  zipCode: "98101"
+        '400':
+          description: Invalid transaction ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_TRAN_ID"
+                  message: "Transaction ID cannot be empty"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "TRAN_NOT_FOUND"
+                  message: "Transaction ID NOT found"
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/token endpoint
+
+  schemas:
+    TransactionResponse:
+      type: object
+      required:
+        - transactionId
+        - typeCode
+        - amount
+        - originTimestamp
+      properties:
+        transactionId:
+          type: string
+          pattern: '^\d{16}$'
+          description: 16-digit transaction identifier
+          example: "0000000000000001"
+        typeCode:
+          type: string
+          maxLength: 2
+          description: Transaction type code
+          example: "01"
+        categoryCode:
+          type: integer
+          description: Merchant category code (MCC)
+          example: 5411
+        source:
+          type: string
+          maxLength: 10
+          description: Transaction source
+          example: "POS TERM"
+        description:
+          type: string
+          maxLength: 100
+          description: Transaction description
+          example: "AMAZON.COM PURCHASE"
+        amount:
+          type: number
+          format: decimal
+          description: Transaction amount
+          example: 99.99
+        cardNumber:
+          type: string
+          pattern: '^XXXX-XXXX-XXXX-\d{4}$'
+          description: Masked card number (last 4 digits visible)
+          example: "XXXX-XXXX-XXXX-1111"
+        originTimestamp:
+          type: string
+          format: date-time
+          description: Original transaction timestamp
+          example: "2024-01-15T14:30:00Z"
+        processedTimestamp:
+          type: string
+          format: date-time
+          description: Processing timestamp
+          example: "2024-01-15T14:30:05Z"
+        merchant:
+          $ref: '#/components/schemas/Merchant'
+
+    Merchant:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^\d{9}$'
+          description: 9-digit merchant ID
+          example: "123456789"
+        name:
+          type: string
+          maxLength: 50
+          description: Merchant name
+          example: "AMAZON.COM"
+        city:
+          type: string
+          maxLength: 50
+          description: Merchant city
+          example: "SEATTLE"
+        zipCode:
+          type: string
+          maxLength: 10
+          description: Merchant ZIP code
+          example: "98101"
+
+    TransactionListResponse:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionSummary'
+        pagination:
+          $ref: '#/components/schemas/TransactionPagination'
+
+    TransactionSummary:
+      type: object
+      required:
+        - transactionId
+        - amount
+      properties:
+        transactionId:
+          type: string
+          pattern: '^\d{16}$'
+          description: 16-digit transaction identifier
+        description:
+          type: string
+          maxLength: 100
+          description: Transaction description
+        amount:
+          type: number
+          format: decimal
+          description: Transaction amount
+        date:
+          type: string
+          format: date
+          description: Transaction date
+
+    TransactionPagination:
+      type: object
+      properties:
+        firstId:
+          type: string
+          description: First transaction ID on current page
+        lastId:
+          type: string
+          description: Last transaction ID on current page
+        currentPage:
+          type: integer
+          description: Current page number
+        hasNextPage:
+          type: boolean
+          description: Whether more transactions exist
+        hasPrevPage:
+          type: boolean
+          description: Whether previous page exists
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              additionalProperties: true
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

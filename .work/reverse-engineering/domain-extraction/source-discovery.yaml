@@ -1,0 +1,318 @@
+# RE-001 Source File Discovery
+# Generated: 2026-02-05
+
+summary:
+  copybooks: 29
+  cobol_programs: 29
+  total_loc: ~22,244
+
+copybooks:
+  core_domain_entities:
+    - file: CVACT01Y.cpy
+      entity: Account
+      record_length: 300
+      lines: 21
+
+    - file: CVACT02Y.cpy
+      entity: Card
+      record_length: 150
+      lines: 15
+
+    - file: CVACT03Y.cpy
+      entity: CardCrossReference
+      record_length: 50
+      lines: 12
+
+    - file: CVCUS01Y.cpy
+      entity: Customer
+      record_length: 500
+      lines: 27
+
+    - file: CSUSR01Y.cpy
+      entity: User
+      record_length: 80
+      lines: 27
+
+    - file: COCOM01Y.cpy
+      entity: COMMAREA (Session)
+      record_length: variable
+      lines: 48
+
+  transaction_domain:
+    - file: CVTRA05Y.cpy
+      entity: Transaction
+      record_length: 350
+      lines: 22
+
+    - file: CVTRA06Y.cpy
+      entity: DailyTransaction
+      record_length: 350
+      lines: 22
+
+    - file: CVTRA01Y.cpy
+      entity: TransactionCategoryBalance
+      record_length: 50
+      lines: 14
+
+    - file: CVTRA02Y.cpy
+      entity: DisclosureGroup
+      record_length: 50
+      lines: 14
+
+    - file: CVTRA03Y.cpy
+      entity: TransactionType
+      record_length: 60
+      lines: 11
+
+    - file: CVTRA04Y.cpy
+      entity: TransactionCategory
+      record_length: 60
+      lines: 13
+
+    - file: CVTRA07Y.cpy
+      entity: TransactionReport
+      purpose: Report formatting
+      lines: 74
+
+  menu_navigation:
+    - file: COMEN02Y.cpy
+      purpose: Main menu options
+      lines: 102
+
+    - file: COADM02Y.cpy
+      purpose: Admin menu options
+      lines: 63
+
+    - file: COTTL01Y.cpy
+      purpose: Screen titles
+      lines: 28
+
+  utilities:
+    - file: CVCRD01Y.cpy
+      purpose: Card work areas with 88-levels
+      lines: 47
+
+    - file: CSDAT01Y.cpy
+      purpose: Date/time structures
+      lines: 59
+
+    - file: CSMSG01Y.cpy
+      purpose: Common messages
+      lines: 25
+
+    - file: CSMSG02Y.cpy
+      purpose: Abend data
+      lines: 36
+
+    - file: CSLKPCDY.cpy
+      purpose: Lookup codes (phone, state, ZIP)
+      lines: 1318
+
+    - file: CSSETATY.cpy
+      purpose: Set attribute macro
+      lines: 31
+
+    - file: CSSTRPFY.cpy
+      purpose: String processing
+      lines: varies
+
+    - file: CSUTLDPY.cpy
+      purpose: Utility display
+      lines: varies
+
+    - file: CSUTLDWY.cpy
+      purpose: Date edit work variables
+      lines: varies
+
+    - file: CVEXPORT.cpy
+      purpose: Export record structure
+      lines: 104
+
+    - file: CUSTREC.cpy
+      purpose: Customer record (alternate)
+      lines: varies
+
+    - file: CODATECN.cpy
+      purpose: Date constants
+      lines: varies
+
+    - file: UNUSED1Y.cpy
+      purpose: Reserved/unused
+      lines: varies
+
+cobol_programs:
+  online_cics:
+    - name: COSGN00C
+      function: Signon/Authentication
+      transaction: CC00
+      lines: 261
+
+    - name: COADM01C
+      function: Admin Menu Display
+      transaction: CADM
+      lines: varies
+
+    - name: COMEN01C
+      function: Main Menu Display
+      transaction: CM00
+      lines: varies
+
+    - name: COACTVWC
+      function: Account View
+      transaction: CAVW
+      lines: varies
+
+    - name: COACTUPC
+      function: Account/Customer Update
+      transaction: CAUP
+      lines: 4236
+
+    - name: COCRDLIC
+      function: Card List
+      transaction: CCLI
+      lines: 1459
+
+    - name: COCRDSLC
+      function: Card Select/View
+      transaction: CCDL
+      lines: varies
+
+    - name: COCRDUPC
+      function: Card Update
+      transaction: CCUP
+      lines: 1560
+
+    - name: COTRN00C
+      function: Transaction List
+      transaction: CTL0
+      lines: varies
+
+    - name: COTRN01C
+      function: Transaction View
+      transaction: CTV0
+      lines: varies
+
+    - name: COTRN02C
+      function: Transaction Add
+      transaction: CTA0
+      lines: varies
+
+    - name: COBIL00C
+      function: Bill Payment
+      transaction: CB00
+      lines: 573
+
+    - name: CORPT00C
+      function: Reports
+      transaction: CRPT
+      lines: varies
+
+    - name: COUSR00C
+      function: User List
+      lines: varies
+
+    - name: COUSR01C
+      function: User Add
+      lines: varies
+
+    - name: COUSR02C
+      function: User Update
+      lines: varies
+
+    - name: COUSR03C
+      function: User Delete
+      lines: varies
+
+    - name: COBSWAIT
+      function: Wait utility
+      lines: varies
+
+  batch_programs:
+    - name: CBTRN01C
+      function: Basic Transaction Posting
+      lines: varies
+
+    - name: CBTRN02C
+      function: Transaction Posting with Validation
+      lines: 732
+
+    - name: CBTRN03C
+      function: Interest Calculation
+      lines: varies
+
+    - name: CBACT01C
+      function: Account File Maintenance
+      lines: varies
+
+    - name: CBACT02C
+      function: Account File Maintenance
+      lines: varies
+
+    - name: CBACT03C
+      function: Account File Maintenance
+      lines: varies
+
+    - name: CBACT04C
+      function: Account File Maintenance
+      lines: varies
+
+    - name: CBCUS01C
+      function: Customer File Maintenance
+      lines: varies
+
+    - name: CBEXPORT
+      function: Data Export
+      lines: varies
+
+    - name: CBIMPORT
+      function: Data Import
+      lines: varies
+
+  utility_programs:
+    - name: CSUTLDTC
+      function: Utility Date/Time Conversion
+      lines: varies
+
+vsam_files:
+  - logical_name: ACCTDAT
+    record_key: ACCT-ID
+    record_length: 300
+    access: KSDS
+
+  - logical_name: CARDDAT
+    record_key: CARD-NUM
+    record_length: 150
+    access: KSDS
+
+  - logical_name: CUSTDAT
+    record_key: CUST-ID
+    record_length: 500
+    access: KSDS
+
+  - logical_name: TRANSACT
+    record_key: TRAN-ID
+    record_length: 350
+    access: KSDS
+
+  - logical_name: CCXREF
+    record_key: XREF-CARD-NUM
+    record_length: 50
+    access: KSDS with AIX
+
+  - logical_name: USRSEC
+    record_key: SEC-USR-ID
+    record_length: 80
+    access: KSDS
+
+  - logical_name: TCATBALF
+    record_key: ACCT-ID + TYPE + CAT
+    record_length: 50
+    access: KSDS composite
+
+  - logical_name: DALYTRAN
+    record_length: 350
+    access: Sequential input
+
+  - logical_name: DALYREJS
+    record_length: 430
+    access: Sequential output

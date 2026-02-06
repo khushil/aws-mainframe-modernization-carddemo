@@ -1,0 +1,230 @@
+# CardDemo DB2 Integration Inventory
+# Generated: 2026-02-05
+
+tables:
+  - name: CARDDEMO.TRANSACTION_TYPE
+    schema: CARDDEMO
+    purpose: Reference table for transaction type codes
+    dclgen_file: app/app-transaction-type-db2/dcl/DCLTRTYP.dcl
+    columns:
+      - name: TR_TYPE
+        type: CHAR(2)
+        nullable: false
+        cobol: PIC X(2)
+        description: Transaction type code (primary key)
+      - name: TR_DESCRIPTION
+        type: VARCHAR(50)
+        nullable: false
+        cobol: VARCHAR structure (level 49)
+        description: Transaction type description
+    programs_using:
+      - COTRTLIC (SELECT with cursor)
+      - COTRTUPC (SELECT, INSERT, UPDATE, DELETE)
+      - COBTUPDT (INSERT, UPDATE, DELETE)
+
+  - name: CARDDEMO.TRANSACTION_TYPE_CATEGORY
+    schema: CARDDEMO
+    purpose: Transaction type categorization for reporting
+    dclgen_file: app/app-transaction-type-db2/dcl/DCLTRCAT.dcl
+    columns:
+      - name: TRC_TYPE_CODE
+        type: CHAR(2)
+        nullable: false
+        cobol: PIC X(2)
+        description: Foreign key to TRANSACTION_TYPE
+      - name: TRC_TYPE_CATEGORY
+        type: CHAR(4)
+        nullable: false
+        cobol: PIC X(4)
+        description: Category code
+      - name: TRC_CAT_DATA
+        type: VARCHAR(50)
+        nullable: false
+        cobol: VARCHAR structure (level 49)
+        description: Category description
+    programs_using:
+      - COTRTLIC (referenced in cursor)
+      - COTRTUPC (referenced in includes)
+
+  - name: CARDDEMO.AUTHFRDS
+    schema: CARDDEMO
+    purpose: Fraud tracking for authorization transactions
+    dclgen_file: app/app-authorization-ims-db2-mq/dcl/AUTHFRDS.dcl
+    columns:
+      - name: CARD_NUM
+        type: CHAR(16)
+        nullable: false
+        cobol: PIC X(16)
+        description: Card number (part of composite PK)
+      - name: AUTH_TS
+        type: TIMESTAMP
+        nullable: false
+        cobol: PIC X(26)
+        description: Authorization timestamp (part of composite PK)
+      - name: AUTH_TYPE
+        type: CHAR(4)
+        nullable: true
+        cobol: PIC X(4)
+      - name: CARD_EXPIRY_DATE
+        type: CHAR(4)
+        nullable: true
+        cobol: PIC X(4)
+      - name: MESSAGE_TYPE
+        type: CHAR(6)
+        nullable: true
+        cobol: PIC X(6)
+      - name: MESSAGE_SOURCE
+        type: CHAR(6)
+        nullable: true
+        cobol: PIC X(6)
+      - name: AUTH_ID_CODE
+        type: CHAR(6)
+        nullable: true
+        cobol: PIC X(6)
+      - name: AUTH_RESP_CODE
+        type: CHAR(2)
+        nullable: true
+        cobol: PIC X(2)
+      - name: AUTH_RESP_REASON
+        type: CHAR(4)
+        nullable: true
+        cobol: PIC X(4)
+      - name: PROCESSING_CODE
+        type: CHAR(6)
+        nullable: true
+        cobol: PIC X(6)
+      - name: TRANSACTION_AMT
+        type: DECIMAL(12,2)
+        nullable: true
+        cobol: PIC S9(10)V9(2) COMP-3
+      - name: APPROVED_AMT
+        type: DECIMAL(12,2)
+        nullable: true
+        cobol: PIC S9(10)V9(2) COMP-3
+      - name: MERCHANT_CATAGORY_CODE
+        type: CHAR(4)
+        nullable: true
+        cobol: PIC X(4)
+      - name: ACQR_COUNTRY_CODE
+        type: CHAR(3)
+        nullable: true
+        cobol: PIC X(3)
+      - name: POS_ENTRY_MODE
+        type: SMALLINT
+        nullable: true
+        cobol: PIC S9(4) COMP
+      - name: MERCHANT_ID
+        type: CHAR(15)
+        nullable: true
+        cobol: PIC X(15)
+      - name: MERCHANT_NAME
+        type: VARCHAR(22)
+        nullable: true
+        cobol: VARCHAR structure
+      - name: MERCHANT_CITY
+        type: CHAR(13)
+        nullable: true
+        cobol: PIC X(13)
+      - name: MERCHANT_STATE
+        type: CHAR(2)
+        nullable: true
+        cobol: PIC X(2)
+      - name: MERCHANT_ZIP
+        type: CHAR(9)
+        nullable: true
+        cobol: PIC X(9)
+      - name: TRANSACTION_ID
+        type: CHAR(15)
+        nullable: true
+        cobol: PIC X(15)
+      - name: MATCH_STATUS
+        type: CHAR(1)
+        nullable: true
+        cobol: PIC X(1)
+      - name: AUTH_FRAUD
+        type: CHAR(1)
+        nullable: true
+        cobol: PIC X(1)
+      - name: FRAUD_RPT_DATE
+        type: DATE
+        nullable: true
+        cobol: PIC X(10)
+      - name: ACCT_ID
+        type: DECIMAL(11,0)
+        nullable: true
+        cobol: PIC S9(11)V COMP-3
+      - name: CUST_ID
+        type: DECIMAL(9,0)
+        nullable: true
+        cobol: PIC S9(9)V COMP-3
+    programs_using:
+      - COPAUS2C (INSERT, UPDATE)
+
+sql_patterns:
+  single_row_select:
+    program: COTRTUPC
+    line: 1475-1482
+    example: |
+      SELECT TR_TYPE, TR_DESCRIPTION
+        INTO :DCL-TR-TYPE, :DCL-TR-DESCRIPTION
+        FROM CARDDEMO.TRANSACTION_TYPE
+       WHERE TR_TYPE = :DCL-TR-TYPE
+
+  cursor_forward:
+    program: COTRTLIC
+    line: 338-352
+    example: |
+      DECLARE C-TR-TYPE-FORWARD CURSOR FOR
+        SELECT TR_TYPE, TR_DESCRIPTION
+          FROM CARDDEMO.TRANSACTION_TYPE
+         WHERE TR_TYPE >= :WS-START-KEY
+         ORDER BY TR_TYPE
+
+  cursor_backward:
+    program: COTRTLIC
+    line: 354-368
+    example: |
+      DECLARE C-TR-TYPE-BACKWARD CURSOR FOR
+        SELECT TR_TYPE, TR_DESCRIPTION
+          FROM CARDDEMO.TRANSACTION_TYPE
+         WHERE TR_TYPE < :WS-START-KEY
+         ORDER BY TR_TYPE DESC
+
+  insert_with_timestamp:
+    program: COPAUS2C
+    line: 141-198
+    features:
+      - TIMESTAMP_FORMAT function
+      - CURRENT DATE function
+      - INSERT-or-UPDATE pattern
+
+  update_with_current_date:
+    program: COPAUS2C
+    line: 222-229
+    features:
+      - CURRENT DATE for audit
+      - TIMESTAMP_FORMAT in WHERE
+
+  simple_crud:
+    program: COBTUPDT
+    operations:
+      insert: 137-148
+      update: 171-175
+      delete: 201-204
+
+sqlcode_handling:
+  - code: 0
+    meaning: Success
+    action: Continue processing
+  - code: +100
+    meaning: Not found / End of cursor
+    action: Set not-found flag
+  - code: -803
+    meaning: Duplicate key violation
+    action: Trigger UPDATE instead
+  - code: -532
+    meaning: Foreign key violation
+    action: Return error
+  - code: -911
+    meaning: Deadlock / Timeout
+    action: Retry or rollback

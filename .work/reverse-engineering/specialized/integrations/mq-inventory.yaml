@@ -1,0 +1,280 @@
+# CardDemo IBM MQ Integration Inventory
+# Generated: 2026-02-05
+
+queues:
+  authorization_module:
+    extension: app-authorization-ims-db2-mq
+    program: COPAUA0C
+    queues:
+      request:
+        name: AWS.M2.CARDDEMO.PAUTH.REQUEST
+        direction: input
+        purpose: Receives authorization request messages
+        trigger: CICS transaction start
+        message_format: CCPAURQY.cpy
+      reply:
+        name: AWS.M2.CARDDEMO.PAUTH.REPLY
+        direction: output
+        purpose: Sends authorization response messages
+        correlation: Uses CorrelID from request
+        message_format: CCPAURLY.cpy
+
+  account_service:
+    extension: app-vsam-mq
+    program: COACCT01
+    queues:
+      request:
+        name: Dynamic (from MQTM-QNAME)
+        direction: input
+        purpose: Receives account inquiry requests
+        trigger: MQ trigger message
+        message_format: INQA + Account ID
+      reply:
+        name: CARD.DEMO.REPLY.ACCT
+        direction: output
+        purpose: Sends account data responses
+        correlation: Uses MsgID/CorrelID from request
+      error:
+        name: CARD.DEMO.ERROR
+        direction: output
+        purpose: Sends error messages
+
+  date_service:
+    extension: app-vsam-mq
+    program: CODATE01
+    queues:
+      request:
+        name: Dynamic (from MQTM-QNAME)
+        direction: input
+        purpose: Receives date/time requests
+        trigger: MQ trigger message
+      reply:
+        name: CARD.DEMO.REPLY.DATE
+        direction: output
+        purpose: Sends formatted date/time
+        correlation: Uses MsgID/CorrelID from request
+      error:
+        name: CARD.DEMO.ERROR
+        direction: output
+        purpose: Sends error messages
+
+message_formats:
+  authorization_request:
+    copybook: app/app-authorization-ims-db2-mq/cpy/CCPAURQY.cpy
+    format: CSV-delimited
+    field_count: 18
+    fields:
+      - name: PA-RQ-AUTH-DATE
+        type: PIC X(06)
+        format: YYMMDD
+      - name: PA-RQ-AUTH-TIME
+        type: PIC X(06)
+        format: HHMMSS
+      - name: PA-RQ-CARD-NUM
+        type: PIC X(16)
+      - name: PA-RQ-AUTH-TYPE
+        type: PIC X(04)
+      - name: PA-RQ-CARD-EXPIRY-DATE
+        type: PIC X(04)
+        format: MMYY
+      - name: PA-RQ-MESSAGE-TYPE
+        type: PIC X(06)
+      - name: PA-RQ-MESSAGE-SOURCE
+        type: PIC X(06)
+      - name: PA-RQ-PROCESSING-CODE
+        type: PIC 9(06)
+      - name: PA-RQ-TRANSACTION-AMT
+        type: PIC +9(10).99
+      - name: PA-RQ-MERCHANT-CATAGORY-CODE
+        type: PIC X(04)
+      - name: PA-RQ-ACQR-COUNTRY-CODE
+        type: PIC X(03)
+      - name: PA-RQ-POS-ENTRY-MODE
+        type: PIC 9(02)
+      - name: PA-RQ-MERCHANT-ID
+        type: PIC X(15)
+      - name: PA-RQ-MERCHANT-NAME
+        type: PIC X(22)
+      - name: PA-RQ-MERCHANT-CITY
+        type: PIC X(13)
+      - name: PA-RQ-MERCHANT-STATE
+        type: PIC X(02)
+      - name: PA-RQ-MERCHANT-ZIP
+        type: PIC X(09)
+      - name: PA-RQ-TRANSACTION-ID
+        type: PIC X(15)
+    example: "240115,143022,1234567890123456,SALE,1225,0100,POS001,000000,+0000000125.50,5411,840,05,MER123456789012,ACME STORE,NEW YORK,NY,10001,TXN123456789012"
+
+  authorization_response:
+    copybook: app/app-authorization-ims-db2-mq/cpy/CCPAURLY.cpy
+    format: CSV-delimited
+    field_count: 6
+    fields:
+      - name: PA-RL-CARD-NUM
+        type: PIC X(16)
+      - name: PA-RL-TRANSACTION-ID
+        type: PIC X(15)
+      - name: PA-RL-AUTH-ID-CODE
+        type: PIC X(06)
+      - name: PA-RL-AUTH-RESP-CODE
+        type: PIC X(02)
+        values:
+          "00": Approved
+          "05": Declined
+      - name: PA-RL-AUTH-RESP-REASON
+        type: PIC X(04)
+        values:
+          "0000": No error
+          "3100": Card/Account not found
+          "4100": Insufficient funds
+          "4200": Card not active
+          "4300": Account closed
+          "5100": Card fraud
+          "5200": Merchant fraud
+          "9000": Other error
+      - name: PA-RL-APPROVED-AMT
+        type: PIC +9(10).99
+    example: "1234567890123456,TXN123456789012,143022,00,0000,+0000000125.50"
+
+  account_request:
+    format: Fixed fields
+    fields:
+      - name: WS-FUNC
+        type: PIC X(04)
+        description: Function code (INQA for inquiry)
+      - name: WS-KEY
+        type: PIC 9(11)
+        description: Account ID
+
+  account_response:
+    format: Labeled text
+    fields:
+      - label: "ACCOUNT ID : "
+        field: WS-ACCT-ID
+      - label: "ACCOUNT STATUS : "
+        field: WS-ACCT-ACTIVE-STATUS
+      - label: "BALANCE : "
+        field: WS-ACCT-CURR-BAL
+      - label: "CREDIT LIMIT : "
+        field: WS-ACCT-CREDIT-LIMIT
+      - label: "CASH LIMIT : "
+        field: WS-ACCT-CASH-CREDIT-LIMIT
+      - label: "OPEN DATE : "
+        field: WS-ACCT-OPEN-DATE
+      - label: "EXPR DATE : "
+        field: WS-ACCT-EXPIRAION-DATE
+      - label: "REIS DATE : "
+        field: WS-ACCT-REISSUE-DATE
+      - label: "CREDIT BAL : "
+        field: WS-ACCT-CURR-CYC-CREDIT
+      - label: "DEBIT BAL : "
+        field: WS-ACCT-CURR-CYC-DEBIT
+      - label: "GROUP ID : "
+        field: WS-ACCT-GROUP-ID
+
+  date_response:
+    format: Labeled text
+    example: "SYSTEM DATE : 02-05-2026SYSTEM TIME : 14:30:22"
+
+mq_api_patterns:
+  mqopen_input:
+    program: COPAUA0C
+    line: 255-283
+    options: MQOO-INPUT-SHARED
+    description: Open queue for shared input (GET)
+    pattern: |
+      MOVE MQOT-Q TO MQOD-OBJECTTYPE
+      MOVE WS-REQUEST-QNAME TO MQOD-OBJECTNAME
+      COMPUTE WS-OPTIONS = MQOO-INPUT-SHARED
+      CALL 'MQOPEN' USING HCONN OD OPTIONS HOBJ COMPCODE REASON
+
+  mqopen_output:
+    program: COACCT01
+    line: 256-287
+    options: MQOO-OUTPUT + MQOO-PASS-ALL-CONTEXT
+    description: Open queue for output (PUT)
+    pattern: |
+      COMPUTE MQ-OPTIONS = MQOO-OUTPUT + MQOO-PASS-ALL-CONTEXT + MQOO-FAIL-IF-QUIESCING
+      CALL 'MQOPEN' USING QMGR-HANDLE-CONN MQ-OBJECT-DESCRIPTOR MQ-OPTIONS MQ-HOBJ COMPCODE REASON
+
+  mqget_with_wait:
+    program: COPAUA0C
+    line: 386-431
+    options: MQGMO-NO-SYNCPOINT + MQGMO-WAIT + MQGMO-CONVERT + MQGMO-FAIL-IF-QUIESCING
+    description: Get message with timeout wait
+    pattern: |
+      COMPUTE MQGMO-OPTIONS = MQGMO-NO-SYNCPOINT + MQGMO-WAIT + MQGMO-CONVERT + MQGMO-FAIL-IF-QUIESCING
+      MOVE WS-WAIT-INTERVAL TO MQGMO-WAITINTERVAL
+      MOVE MQMI-NONE TO MQMD-MSGID
+      MOVE MQCI-NONE TO MQMD-CORRELID
+      CALL 'MQGET' USING HCONN HOBJ MD GMO BUFFLEN BUFFER DATALEN COMPCODE REASON
+      IF COMPCODE = MQCC-OK
+         MOVE MQMD-CORRELID TO WS-SAVE-CORRELID
+         MOVE MQMD-REPLYTOQ TO WS-REPLY-QNAME
+      END-IF
+
+  mqput1_reply:
+    program: COPAUA0C
+    line: 738-779
+    options: MQPMO-NO-SYNCPOINT + MQPMO-DEFAULT-CONTEXT
+    description: Send reply with correlation
+    pattern: |
+      MOVE MQMT-REPLY TO MQMD-MSGTYPE
+      MOVE WS-SAVE-CORRELID TO MQMD-CORRELID
+      MOVE MQMI-NONE TO MQMD-MSGID
+      MOVE MQPER-NOT-PERSISTENT TO MQMD-PERSISTENCE
+      MOVE 50 TO MQMD-EXPIRY
+      COMPUTE MQPMO-OPTIONS = MQPMO-NO-SYNCPOINT + MQPMO-DEFAULT-CONTEXT
+      CALL 'MQPUT1' USING HCONN OD MD PMO BUFFLEN BUFFER COMPCODE REASON
+
+  mqput_syncpoint:
+    program: COACCT01
+    line: 463-499
+    options: MQPMO-SYNCPOINT + MQPMO-DEFAULT-CONTEXT + MQPMO-FAIL-IF-QUIESCING
+    description: Put message within syncpoint
+    pattern: |
+      MOVE SAVE-MSGID TO MQMD-MSGID
+      MOVE SAVE-CORELID TO MQMD-CORRELID
+      MOVE MQFMT-STRING TO MQMD-FORMAT
+      COMPUTE MQMD-CODEDCHARSETID = MQCCSI-Q-MGR
+      COMPUTE MQPMO-OPTIONS = MQPMO-SYNCPOINT + MQPMO-DEFAULT-CONTEXT + MQPMO-FAIL-IF-QUIESCING
+      CALL 'MQPUT' USING HCONN HANDLE MD PMO BUFFLEN BUFFER COMPCODE REASON
+
+  mqclose:
+    program: COPAUA0C
+    line: 956-961
+    options: MQCO-NONE
+    description: Close queue handle
+    pattern: |
+      CALL 'MQCLOSE' USING HCONN HOBJ MQCO-NONE COMPCODE REASON
+
+copybooks_used:
+  mq_definitions:
+    - CMQODV  # Object Descriptor
+    - CMQMDV  # Message Descriptor
+    - CMQV    # MQ Constants
+    - CMQTML  # Trigger Message Layout
+    - CMQPMOV # Put Message Options
+    - CMQGMOV # Get Message Options
+
+mq_error_handling:
+  condition_codes:
+    - code: MQCC-OK
+      meaning: Success
+      value: 0
+    - code: MQCC-WARNING
+      meaning: Warning
+      value: 1
+    - code: MQCC-FAILED
+      meaning: Failed
+      value: 2
+  reason_codes:
+    - code: MQRC-NO-MSG-AVAILABLE
+      meaning: No message available (timeout)
+      action: Set no-more-messages flag
+    - code: MQRC-Q-FULL
+      meaning: Queue is full
+      action: Retry or error
+    - code: MQRC-NOT-AUTHORIZED
+      meaning: Not authorized for queue
+      action: Error with security alert

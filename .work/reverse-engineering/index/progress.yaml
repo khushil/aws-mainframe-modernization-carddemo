@@ -1,0 +1,30 @@
+generation:
+  started_at: "2026-02-05"
+  completed_at: "2026-02-05"
+  status: complete
+  steps:
+    - name: work-tracking-setup
+      status: complete
+    - name: modernization-readiness
+      status: complete
+      output: docs/reverse-engineering/07-modernization/MODERNIZATION-READINESS.md
+    - name: migration-roadmap
+      status: complete
+      output: docs/reverse-engineering/07-modernization/MIGRATION-ROADMAP.md
+    - name: appendix-program-inventory
+      status: complete
+      output: docs/reverse-engineering/appendices/PROGRAM-INVENTORY.md
+    - name: appendix-copybook-inventory
+      status: complete
+      output: docs/reverse-engineering/appendices/COPYBOOK-INVENTORY.md
+    - name: appendix-file-inventory
+      status: complete
+      output: docs/reverse-engineering/appendices/FILE-INVENTORY.md
+    - name: appendix-transaction-inventory
+      status: complete
+      output: docs/reverse-engineering/appendices/TRANSACTION-INVENTORY.md
+    - name: master-index
+      status: complete
+      output: docs/reverse-engineering/index.md
+    - name: final-verification
+      status: complete

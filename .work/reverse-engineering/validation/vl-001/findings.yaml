@@ -1,0 +1,229 @@
+##############################################################################
+# VL-001 Validation Findings
+# Generated: 2026-02-06
+# Validator: Claude Opus 4.6
+##############################################################################
+
+critical_findings: []
+  # No critical findings. Zero hallucinations, zero fabricated references.
+
+major_findings:
+  - id: MAJ-001
+    severity: MAJOR
+    category: completeness
+    title: "Copybook coverage gap - 13 of 29 copybooks missing"
+    description: >
+      The Source File References table in DOMAIN-MODEL.md lists 14 of 29
+      copybooks (48%). Missing copybooks include utility/infrastructure files
+      (CODATECN, COTTL01Y, CSDAT01Y, CSMSG02Y, CSSETATY, CSSTRPFY, CSUTLDPY,
+      CSUTLDWY, UNUSED1Y, CVEXPORT) and two domain-relevant files (CVCRD01Y
+      for card edit working storage, CUSTREC for customer record, CVTRA07Y
+      for transaction reporting).
+    affected_doc: DOMAIN-MODEL.md
+    section: "Source File References"
+    impact: >
+      Downstream consumers may not discover utility copybooks that provide
+      shared validation and formatting infrastructure.
+
+  - id: MAJ-002
+    severity: MAJOR
+    category: completeness
+    title: "Program coverage gap - 7 of 29 programs missing"
+    description: >
+      The following programs are not mentioned in any domain model document:
+      CBACT02C, CBACT03C, CBACT04C, CBEXPORT, CBIMPORT, COBSWAIT, CSUTLDTC.
+      CBACT01C is mentioned only in UBIQUITOUS-LANGUAGE.md as part of a range
+      'CBACT01C-04C'. The batch account programs (CBACT02C-04C) handle account
+      file operations that are part of the domain.
+    affected_doc: "All 4 docs"
+    section: "Program coverage"
+    impact: >
+      Batch utilities for account maintenance and data import/export are
+      not documented, creating gaps in modernization planning.
+
+  - id: MAJ-003
+    severity: MAJOR
+    category: completeness
+    title: "Missing 'Pending Authorization' menu option from docs"
+    description: >
+      COMEN02Y.cpy defines option 11 'Pending Authorization View' (COPAUS0C)
+      at lines 86-90. This online function is not mentioned in any domain model
+      doc. The UBIQUITOUS-LANGUAGE.md Menu and Screen Terms table stops at
+      'Bill Payment' and doesn't include this option.
+    affected_doc: UBIQUITOUS-LANGUAGE.md
+    section: "Menu and Screen Terms"
+    impact: >
+      A complete domain function (pending authorization viewing) is omitted.
+
+minor_findings:
+  - id: MIN-001
+    severity: MINOR
+    category: source_reference_accuracy
+    title: "CSMSG01Y.cpy:22 off by 1-2 lines"
+    description: >
+      UBIQUITOUS-LANGUAGE.md references CSMSG01Y.cpy:22 for 'Invalid Key'
+      message. Line 22 is actually a comment ('*'). The CCDA-MSG-INVALID-KEY
+      field is defined at lines 20-21.
+    affected_doc: UBIQUITOUS-LANGUAGE.md
+    section: "Validation and Error Terms"
+    line: 153
+
+  - id: MIN-002
+    severity: MINOR
+    category: source_reference_accuracy
+    title: "COCRDUPC.cbl:173 approximate for 'Input Error'"
+    description: >
+      UBIQUITOUS-LANGUAGE.md references COCRDUPC.cbl:173 for 'Input Error'.
+      Line 173 is the WS-RETURN-MSG PIC X(75) declaration. The actual INPUT-ERROR
+      88-level condition is part of the WS-EDIT-STATUS group starting around line 155.
+      This is a minor positional inaccuracy.
+    affected_doc: UBIQUITOUS-LANGUAGE.md
+    section: "Validation and Error Terms"
+    line: 150
+
+  - id: MIN-003
+    severity: MINOR
+    category: factual_accuracy
+    title: "Money value object PIC mismatch"
+    description: >
+      DOMAIN-MODEL.md Value Objects section states Money is 'PIC S9(10)V99'
+      generically. This matches account fields (ACCT-CURR-BAL etc.) but
+      transaction amounts use S9(09)V99 and transaction category balances
+      also use S9(09)V99. The doc correctly shows S9(09)V99 in the Transaction
+      entity table but the general Value Object description says S9(10)V99.
+    affected_doc: DOMAIN-MODEL.md
+    section: "Value Objects - Money"
+    line: 337
+
+  - id: MIN-004
+    severity: MINOR
+    category: quantitative_accuracy
+    title: "Source File References line counts off by 1"
+    description: >
+      Several copybook line counts in the Source File References table are
+      off by 1 from actual:
+      - COCOM01Y.cpy: listed as 48, actual 47
+      - CVACT01Y.cpy: listed as 21, actual 20
+      - CVACT02Y.cpy: listed as 15, actual 14
+      - CVACT03Y.cpy: listed as 12, actual 11
+      - CVCUS01Y.cpy: listed as 27, actual 26
+      - CSUSR01Y.cpy: listed as 27, actual 26 (content ends line 27 but file has 26 lines)
+      - CVTRA01Y.cpy: listed as 14, actual 13
+      - CVTRA02Y.cpy: listed as 14, actual 13
+      - CVTRA03Y.cpy: listed as 11, actual 10
+      - CVTRA04Y.cpy: listed as 13, actual 12
+      - CVTRA05Y.cpy: listed as 22, actual 21
+      - CVTRA06Y.cpy: listed as 22, actual 21
+      - COMEN02Y.cpy: listed as 102, actual 101
+      - COADM02Y.cpy: listed as 63, actual 62
+      All are systematically +1, likely counting the trailing newline or
+      using 1-based end-of-file position.
+    affected_doc: DOMAIN-MODEL.md
+    section: "Source File References"
+    lines: "459-474"
+
+  - id: MIN-005
+    severity: MINOR
+    category: quantitative_accuracy
+    title: "File counts - 29 programs/29 copybooks not 31/30"
+    description: >
+      Docs may reference '31 programs' and '30 copybooks' but actual counts
+      in the repository are 29 programs (*.cbl) and 29 copybooks (*.cpy).
+      However, the Source File References table only lists 14 copybooks which
+      is accurately characterized in the doc.
+    affected_doc: DOMAIN-MODEL.md
+    section: "Source File References"
+
+  - id: MIN-006
+    severity: MINOR
+    category: documentation_quality
+    title: "DOMAIN-MODEL.md lacks Table of Contents"
+    description: >
+      DOMAIN-MODEL.md is 475 lines. Documents over 200 lines benefit from
+      a Table of Contents for navigability. DOMAIN-EVENTS.md (482 lines)
+      similarly lacks a TOC.
+    affected_doc: DOMAIN-MODEL.md, DOMAIN-EVENTS.md
+    section: "Document structure"
+
+  - id: MIN-007
+    severity: MINOR
+    category: documentation_quality
+    title: "COADM02Y.cpy has COBOL sequence numbers in content"
+    description: >
+      The COADM02Y.cpy file uses traditional COBOL sequence numbers (columns
+      73-80) which is a legitimate source format variation. The docs reference
+      line numbers correctly for this file.
+    affected_doc: N/A
+    notes: "Not a doc error, noting for completeness"
+
+positive_findings:
+  - id: POS-001
+    title: "All PIC clauses exactly match source"
+    description: >
+      Every PIC clause in DOMAIN-MODEL.md entity tables was verified against
+      the corresponding copybook. All 50+ field definitions are exact matches
+      including signed fields (S prefix), decimal positions (V99), and lengths.
+
+  - id: POS-002
+    title: "All 88-level conditions correctly cited"
+    description: >
+      COCOM01Y.cpy lines 27-31 (CDEMO-USRTYP-ADMIN/USER, PGM-ENTER/REENTER)
+      are all correctly cited with exact values.
+
+  - id: POS-003
+    title: "CBTRN02C reference accuracy exceptional"
+    description: >
+      35 references to CBTRN02C.cbl were checked. All 35 point to the
+      correct line with the correct code. This is the most heavily
+      referenced file and accuracy is 100%.
+
+  - id: POS-004
+    title: "Business rule code excerpts are verbatim"
+    description: >
+      Code excerpts in BUSINESS-RULES.md for validation rules (BR-V001 through
+      BR-V023), calculation rules (BR-C001 through BR-C008), and rejection rules
+      (BR-R001 through BR-R005) all use correct COBOL variable names, operators,
+      and literal values.
+
+  - id: POS-005
+    title: "Zero hallucinations detected"
+    description: >
+      Grep sweep for CVCAR00Y, COUSR00Y, and S9(7)V99 returned 0 matches
+      across all 4 documents. No fabricated copybook names, program names,
+      or PIC specifications were found.
+
+  - id: POS-006
+    title: "Domain events correctly map to COBOL paragraphs"
+    description: >
+      DOMAIN-EVENTS.md Event Source References table correctly maps events
+      to paragraph names (e.g., READ-USER-SEC-FILE, WRITE-TRANSACT-FILE,
+      9200-WRITE-PROCESSING, 2000-POST-TRANSACTION). All paragraph names
+      exist in the cited source files.
+
+  - id: POS-007
+    title: "Mermaid diagrams syntactically correct"
+    description: >
+      All 12 Mermaid diagrams across the 4 documents use valid syntax:
+      classDiagram, stateDiagram-v2, flowchart TD, sequenceDiagram, mindmap,
+      graph TB. Directives and formatting are correct.
+
+  - id: POS-008
+    title: "Glossary richness exceeds threshold"
+    description: >
+      UBIQUITOUS-LANGUAGE.md contains approximately 312 term row entries,
+      well above the 100-term minimum threshold. Coverage spans all major
+      domain areas.
+
+  - id: POS-009
+    title: "Rejection code mapping is complete and accurate"
+    description: >
+      All 5 rejection codes (100, 101, 102, 103, 109) are accurately documented
+      in both BUSINESS-RULES.md and UBIQUITOUS-LANGUAGE.md with correct line
+      references, descriptions, and trigger conditions.
+
+  - id: POS-010
+    title: "Record lengths match copybook field totals"
+    description: >
+      Account (300 bytes), Card (150 bytes), Customer (500 bytes),
+      Transaction (350 bytes), User (80 bytes), Cross-reference (50 bytes)
+      all verified against copybook PIC clause arithmetic.

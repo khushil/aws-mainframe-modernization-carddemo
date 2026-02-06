@@ -1,0 +1,197 @@
+phase: 2
+title: COMMAREA Field-by-Field Verification
+status: complete
+source_file: app/cpy/COCOM01Y.cpy
+source_lines: 48
+doc_file: docs/reverse-engineering/03-context-model/COMMAREA-SPECIFICATION.md
+
+level_01_records:
+  - name: CARDDEMO-COMMAREA
+    source_line: 19
+    documented: true
+    correct: true
+
+level_05_groups:
+  - name: CDEMO-GENERAL-INFO
+    source_line: 20
+    documented: true
+    correct: true
+  - name: CDEMO-CUSTOMER-INFO
+    source_line: 32
+    documented: true
+    correct: true
+  - name: CDEMO-ACCOUNT-INFO
+    source_line: 37
+    documented: true
+    correct: true
+  - name: CDEMO-CARD-INFO
+    source_line: 40
+    documented: true
+    correct: true
+  - name: CDEMO-MORE-INFO
+    source_line: 42
+    documented: true
+    correct: true
+
+level_10_fields:
+  - name: CDEMO-FROM-TRANID
+    source_line: 21
+    source_pic: "PIC X(04)"
+    doc_pic: "PIC X(04)"
+    match: exact
+  - name: CDEMO-FROM-PROGRAM
+    source_line: 22
+    source_pic: "PIC X(08)"
+    doc_pic: "PIC X(08)"
+    match: exact
+  - name: CDEMO-TO-TRANID
+    source_line: 23
+    source_pic: "PIC X(04)"
+    doc_pic: "PIC X(04)"
+    match: exact
+  - name: CDEMO-TO-PROGRAM
+    source_line: 24
+    source_pic: "PIC X(08)"
+    doc_pic: "PIC X(08)"
+    match: exact
+  - name: CDEMO-USER-ID
+    source_line: 25
+    source_pic: "PIC X(08)"
+    doc_pic: "PIC X(08)"
+    match: exact
+  - name: CDEMO-USER-TYPE
+    source_line: 26
+    source_pic: "PIC X(01)"
+    doc_pic: "PIC X(01)"
+    match: exact
+  - name: CDEMO-PGM-CONTEXT
+    source_line: 29
+    source_pic: "PIC 9(01)"
+    doc_pic: "PIC 9(01)"
+    match: exact
+  - name: CDEMO-CUST-ID
+    source_line: 33
+    source_pic: "PIC 9(09)"
+    doc_pic: "PIC 9(09)"
+    match: exact
+  - name: CDEMO-CUST-FNAME
+    source_line: 34
+    source_pic: "PIC X(25)"
+    doc_pic: "PIC X(25)"
+    match: exact
+  - name: CDEMO-CUST-MNAME
+    source_line: 35
+    source_pic: "PIC X(25)"
+    doc_pic: "PIC X(25)"
+    match: exact
+  - name: CDEMO-CUST-LNAME
+    source_line: 36
+    source_pic: "PIC X(25)"
+    doc_pic: "PIC X(25)"
+    match: exact
+  - name: CDEMO-ACCT-ID
+    source_line: 38
+    source_pic: "PIC 9(11)"
+    doc_pic: "PIC 9(11)"
+    match: exact
+  - name: CDEMO-ACCT-STATUS
+    source_line: 39
+    source_pic: "PIC X(01)"
+    doc_pic: "PIC X(01)"
+    match: exact
+  - name: CDEMO-CARD-NUM
+    source_line: 41
+    source_pic: "PIC 9(16)"
+    doc_pic: "PIC 9(16)"
+    match: exact
+  - name: CDEMO-LAST-MAP
+    source_line: 43
+    source_pic: "PIC X(7)"
+    doc_pic: "PIC X(07)"
+    match: trivial_format_difference
+    note: "Source uses X(7), doc uses X(07). Semantically identical."
+  - name: CDEMO-LAST-MAPSET
+    source_line: 44
+    source_pic: "PIC X(7)"
+    doc_pic: "PIC X(07)"
+    match: trivial_format_difference
+    note: "Source uses X(7), doc uses X(07). Semantically identical."
+
+level_88_conditions:
+  - name: CDEMO-USRTYP-ADMIN
+    source_line: 27
+    source_value: "VALUE 'A'"
+    doc_value: "'A'"
+    correct: true
+  - name: CDEMO-USRTYP-USER
+    source_line: 28
+    source_value: "VALUE 'U'"
+    doc_value: "'U'"
+    correct: true
+  - name: CDEMO-PGM-ENTER
+    source_line: 30
+    source_value: "VALUE 0"
+    doc_value: "0"
+    correct: true
+  - name: CDEMO-PGM-REENTER
+    source_line: 31
+    source_value: "VALUE 1"
+    doc_value: "1"
+    correct: true
+
+source_reference_verification:
+  - claim: "COCOM01Y.cpy:19-45"
+    doc_location: "COMMAREA-SPECIFICATION.md line 499"
+    actual: "Lines 19-45 contain the full COMMAREA definition"
+    correct: true
+  - claim: "COCOM01Y.cpy:26-28"
+    doc_location: "COMMAREA-SPECIFICATION.md line 145"
+    actual: "Lines 26-28 are CDEMO-USER-TYPE with 88-levels"
+    correct: true
+  - claim: "COCOM01Y.cpy:27-28"
+    doc_location: "COMMAREA-SPECIFICATION.md line 503"
+    actual: "Lines 27-28 are the two 88-level conditions for user type"
+    correct: true
+  - claim: "COCOM01Y.cpy:29-31"
+    doc_location: "COMMAREA-SPECIFICATION.md line 164"
+    actual: "Lines 29-31 are CDEMO-PGM-CONTEXT with 88-levels"
+    correct: true
+  - claim: "COCOM01Y.cpy:30-31"
+    doc_location: "COMMAREA-SPECIFICATION.md line 504"
+    actual: "Lines 30-31 are the two 88-level conditions for program context"
+    correct: true
+  - claim: "COSGN00C.cbl:224-228"
+    doc_location: "COMMAREA-SPECIFICATION.md line 500"
+    actual: "Lines 224-228 contain session initialization (MOVE WS-TRANID, WS-PGMNAME, WS-USER-ID, SEC-USR-TYPE, ZEROS)"
+    correct: true
+
+byte_size_check:
+  doc_claim: "~155 bytes"
+  calculated: 155
+  breakdown:
+    CDEMO-GENERAL-INFO: 34  # 4+8+4+8+8+1+1
+    CDEMO-CUSTOMER-INFO: 84  # 9+25+25+25
+    CDEMO-ACCOUNT-INFO: 12  # 11+1
+    CDEMO-CARD-INFO: 16  # 16
+    CDEMO-MORE-INFO: 14  # 7+7
+  total: 160
+  note: "Calculated total is 160 bytes. Doc says ~155. The approximate marker (~) makes this acceptable but the actual calculation yields 160."
+  severity: minor
+
+fabricated_fields_check:
+  checked_for:
+    - CDEMO-PGM-NAME
+    - CDEMO-SCR-NAME
+    - CDEMO-MSG-TEXT
+  result: "None found in documentation — no fabricated fields"
+
+summary:
+  fields_correct: 14/14
+  groups_correct: 5/5
+  conditions_correct: 4/4
+  source_refs_correct: 6/6
+  fabricated_fields: 0
+  findings:
+    minor:
+      - "PIC X(7) vs X(07) formatting difference on CDEMO-LAST-MAP and CDEMO-LAST-MAPSET"
+      - "Byte size stated as ~155 but actual calculation is 160 bytes"

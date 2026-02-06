@@ -1,0 +1,316 @@
+# RE-006 Job Dependency Analysis
+# Inter-job dependencies and workflow sequences
+
+metadata:
+  generated: "2026-02-05"
+  scheduler_sources:
+    - app/scheduler/CardDemo.controlm
+    - app/scheduler/CardDemo.ca7
+    - scripts/run_full_batch.sh
+    - scripts/run_interest_calc.sh
+    - scripts/run_posting.sh
+
+# ==========================================================================
+# CONTROL-M WORKFLOW DEFINITIONS
+# ==========================================================================
+controlm_workflows:
+  DAILY-TransactionBackup:
+    frequency: Daily
+    schedule: "ALL days"
+    sequence:
+      - CLOSEFIL
+      - TRANBKP
+      - WAITSTEP
+      - OPENFIL
+    dependencies:
+      TRANBKP:
+        waits_for: CLOSEFIL
+      WAITSTEP:
+        waits_for: TRANBKP
+      OPENFIL:
+        waits_for: WAITSTEP
+
+  WEEKLY-DisclosureGroupsRefresh:
+    frequency: "Weekly (Saturday)"
+    depends_on: WEEKLY-TransactionTypesDBRefresh.MNTTRDB2
+    sequence:
+      - CLOSEFIL
+      - DISCGRP
+      - WAITSTEP
+      - OPENFIL
+    dependencies:
+      CLOSEFIL:
+        waits_for: MNTTRDB2 (external)
+      DISCGRP:
+        waits_for: CLOSEFIL
+      WAITSTEP:
+        waits_for: DISCGRP
+      OPENFIL:
+        waits_for: WAITSTEP
+
+  WEEKLY-TransactionTypesDBRefresh:
+    frequency: "Weekly (Saturday)"
+    jobs:
+      - MNTTRDB2
+      - TRANEXTR (triggered after MNTTRDB2)
+
+  MONTHLY-InterestCalculation:
+    frequency: Monthly
+    sequence:
+      - CLOSEFIL
+      - INTCALC
+      - COMBTRAN
+      - WAITSTEP
+      - OPENFIL
+    dependencies:
+      INTCALC:
+        waits_for: CLOSEFIL
+      COMBTRAN:
+        waits_for: INTCALC
+      WAITSTEP:
+        waits_for: COMBTRAN
+      OPENFIL:
+        waits_for: WAITSTEP
+
+# ==========================================================================
+# CA-7 WORKFLOW DEFINITIONS
+# ==========================================================================
+ca7_workflows:
+  main_processing:
+    CLOSEFIL:
+      triggers: [CBPAUP0J]
+    CBPAUP0J:
+      triggers: [POSTTRAN]
+    POSTTRAN:
+      triggers: [WAITSTEP]
+    WAITSTEP:
+      triggers: [OPENFIL]
+
+  transaction_type_refresh:
+    CLOSEFIL:
+      triggers: [TRANTYPE]
+    TRANTYPE:
+      triggers: [WAITSTEP]
+    WAITSTEP:
+      triggers: [CLOSEFIL1, CLOSEFIL2]
+    CLOSEFIL1:
+      triggers: [TRANCATG]
+    CLOSEFIL2:
+      triggers: [TCATBALF]
+    TRANCATG:
+      triggers: [WAITSTEP]
+    TCATBALF:
+      triggers: [WAITSTEP]
+
+  data_read_chain:
+    CLOSEFIL:
+      triggers: [READACCT]
+    READACCT:
+      triggers: [READCARD]
+    READCARD:
+      triggers: [READCUST]
+    READCUST:
+      triggers: [READXREF]
+    READXREF:
+      triggers: [WAITSTEP]
+    WAITSTEP:
+      triggers: [OPENFIL]
+
+  statement_processing:
+    CLOSEFIL:
+      triggers: [CREASTMT]
+    CREASTMT:
+      triggers: [TXT2PDF1]
+    TXT2PDF1:
+      triggers: [WAITSTEP]
+    WAITSTEP:
+      triggers: [OPENFIL]
+
+  reporting:
+    OPENFIL:
+      triggers: [CLOSEFIL]
+    CLOSEFIL:
+      triggers: [PRTCATBL]
+    PRTCATBL:
+      triggers: [WAITSTEP]
+    WAITSTEP:
+      triggers: [OPENFIL]
+
+# ==========================================================================
+# SHELL SCRIPT WORKFLOW DEFINITIONS
+# ==========================================================================
+shell_workflows:
+  run_full_batch.sh:
+    description: "Complete batch cycle including data refresh and processing"
+    sequence:
+      # Phase 1: Close CICS files
+      - job: CLOSEFIL
+        wait: 5s
+      # Phase 2: Data Refresh
+      - job: ACCTFILE
+      - job: CARDFILE
+      - job: XREFFILE
+      - job: CUSTFILE
+      - job: TRANBKP
+      - job: DISCGRP
+      - job: TCATBALF
+      - job: TRANTYPE
+      - job: DUSRSECJ
+        wait: 5s
+      # Phase 3: Core Processing
+      - job: POSTTRAN
+        wait: 10s
+      - job: INTCALC
+        wait: 5s
+      - job: TRANBKP
+      - job: COMBTRAN
+        wait: 5s
+      - job: TRANIDX
+        wait: 5s
+      # Phase 4: Reopen files
+      - job: OPENFIL
+
+  run_posting.sh:
+    description: "Transaction posting workflow"
+    sequence:
+      - job: CLOSEFIL
+        wait: 5s
+      - job: ACCTFILE
+      - job: TCATBALF
+      - job: TRANBKP
+      - job: POSTTRAN
+        wait: 10s
+      - job: TRANIDX
+        wait: 5s
+      - job: OPENFIL
+
+  run_interest_calc.sh:
+    description: "Interest calculation cycle"
+    sequence:
+      - job: CLOSEFIL
+        wait: 5s
+      - job: INTCALC
+        wait: 5s
+      - job: TRANBKP
+      - job: COMBTRAN
+        wait: 5s
+      - job: TRANIDX
+        wait: 5s
+      - job: OPENFIL
+
+# ==========================================================================
+# DATA DEPENDENCIES
+# ==========================================================================
+data_dependencies:
+  # Files that must exist before job can run
+  POSTTRAN:
+    requires:
+      - AWS.M2.CARDDEMO.DALYTRAN.PS
+      - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+      - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+      - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+      - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+    creates:
+      - AWS.M2.CARDDEMO.DALYREJS(+1)
+
+  INTCALC:
+    requires:
+      - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+      - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+      - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+      - AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS
+    creates:
+      - AWS.M2.CARDDEMO.SYSTRAN(+1)
+
+  COMBTRAN:
+    requires:
+      - AWS.M2.CARDDEMO.TRANSACT.BKUP(0)
+      - AWS.M2.CARDDEMO.SYSTRAN(0)
+    creates:
+      - AWS.M2.CARDDEMO.TRANSACT.COMBINED(+1)
+
+  TRANBKP:
+    requires:
+      - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+    creates:
+      - AWS.M2.CARDDEMO.TRANSACT.BKUP(+1)
+    deletes:
+      - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS (recreated)
+
+  TRANREPT:
+    requires:
+      - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+      - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+      - AWS.M2.CARDDEMO.TRANTYPE.VSAM.KSDS
+      - AWS.M2.CARDDEMO.TRANCATG.VSAM.KSDS
+      - AWS.M2.CARDDEMO.DATEPARM
+    creates:
+      - AWS.M2.CARDDEMO.TRANREPT(+1)
+
+# ==========================================================================
+# CRITICAL PATHS
+# ==========================================================================
+critical_paths:
+  daily_transaction_processing:
+    path: [CLOSEFIL, POSTTRAN, TRANBKP, COMBTRAN, TRANIDX, OPENFIL]
+    duration_estimate: "10-30 minutes"
+    bottleneck: POSTTRAN
+
+  interest_calculation:
+    path: [CLOSEFIL, INTCALC, TRANBKP, COMBTRAN, TRANIDX, OPENFIL]
+    duration_estimate: "15-45 minutes"
+    bottleneck: INTCALC
+
+  full_refresh:
+    path: [CLOSEFIL, ACCTFILE, CARDFILE, XREFFILE, CUSTFILE, TRANFILE, DISCGRP, TCATBALF, TRANTYPE, DUSRSECJ, OPENFIL]
+    duration_estimate: "20-60 minutes"
+    bottleneck: TRANFILE (largest dataset)
+
+# ==========================================================================
+# CONDITIONAL EXECUTION
+# ==========================================================================
+conditional_execution:
+  ACCTFILE:
+    STEP10:
+      cond: null  # Always executes
+  CARDFILE:
+    STEP10:
+      cond: null  # Always executes
+  TRANBKP:
+    STEP10:
+      cond: "(4,LT)"
+      meaning: "Skip if RC > 4 from previous step"
+  DEFGDGD:
+    STEP20:
+      cond: "(0,NE)"
+      meaning: "Skip if any prior step failed"
+    STEP40:
+      cond: "(0,NE)"
+    STEP60:
+      cond: "(0,NE)"
+
+# ==========================================================================
+# FILE CONTENTION MATRIX
+# ==========================================================================
+file_contention:
+  # Files that can cause job conflicts if accessed simultaneously
+  high_contention:
+    - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS  # Transaction master
+    - AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS  # Category balance
+    - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS  # Account master
+
+  requires_cics_close:
+    - AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+    - AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+    - AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+    - AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS
+
+  cics_file_mapping:
+    TRANSACT: AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+    CCXREF: AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+    ACCTDAT: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+    CXACAIX: AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX.PATH
+    USRSEC: AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS
+    CARDDAT: AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS
+    CARDAIX: AWS.M2.CARDDEMO.CARDDATA.VSAM.AIX.PATH
+    CUSTDAT: AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS

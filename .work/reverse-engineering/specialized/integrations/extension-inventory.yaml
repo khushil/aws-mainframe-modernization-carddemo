@@ -1,0 +1,125 @@
+# CardDemo Extension Directory Inventory
+# Generated: 2026-02-05
+
+extensions:
+  - name: app-authorization-ims-db2-mq
+    path: app/app-authorization-ims-db2-mq/
+    purpose: Real-time authorization processing with fraud detection
+    technologies:
+      - IMS DB (DBPAUTP0)
+      - DB2 (AUTHFRDS)
+      - IBM MQ
+      - CICS
+      - VSAM
+    programs:
+      online:
+        - name: COPAUA0C
+          type: CICS COBOL IMS MQ
+          function: Card Authorization Decision
+          integrations: [IMS, MQ, VSAM]
+        - name: COPAUS2C
+          type: CICS COBOL IMS DB2
+          function: Mark Authorization Fraud
+          integrations: [DB2]
+      batch:
+        - name: CBPAUP0C
+          type: Batch COBOL IMS
+          function: Delete Expired Pending Authorizations
+          integrations: [IMS]
+    copybooks:
+      - CIPAUSMY.cpy  # IMS Summary Segment
+      - CIPAUDTY.cpy  # IMS Detail Segment
+      - IMSFUNCS.cpy  # DL/I Function Codes
+      - CCPAURQY.cpy  # MQ Request Format
+      - CCPAURLY.cpy  # MQ Response Format
+      - CCPAUERY.cpy  # Error Log Layout
+    dclgen:
+      - AUTHFRDS.dcl  # Fraud tracking table
+
+  - name: app-transaction-type-db2
+    path: app/app-transaction-type-db2/
+    purpose: Transaction type reference data management
+    technologies:
+      - DB2
+      - CICS
+    programs:
+      online:
+        - name: COTRTLIC
+          type: CICS COBOL DB2
+          function: List Transaction Types with Paging
+          integrations: [DB2]
+          features:
+            - Forward cursor
+            - Backward cursor
+            - Dynamic filtering
+        - name: COTRTUPC
+          type: CICS COBOL DB2
+          function: Add/Update/Delete Transaction Type
+          integrations: [DB2]
+          features:
+            - Single row SELECT
+            - INSERT
+            - UPDATE
+            - DELETE
+      batch:
+        - name: COBTUPDT
+          type: Batch COBOL DB2
+          function: Bulk Transaction Type Updates
+          integrations: [DB2]
+          features:
+            - File-driven CRUD
+            - Add (A)
+            - Update (U)
+            - Delete (D)
+    copybooks:
+      - CSDB2RWY.cpy  # DB2 Row Workarea
+    dclgen:
+      - DCLTRTYP.dcl  # Transaction Type table
+      - DCLTRCAT.dcl  # Transaction Type Category table
+
+  - name: app-vsam-mq
+    path: app/app-vsam-mq/
+    purpose: Account data extraction via messaging
+    technologies:
+      - VSAM
+      - IBM MQ
+      - CICS
+    programs:
+      online:
+        - name: COACCT01
+          type: CICS COBOL MQ
+          function: Account Inquiry via MQ
+          integrations: [MQ, VSAM]
+          features:
+            - Triggered by MQ message
+            - Request/Reply pattern
+            - Error queue handling
+        - name: CODATE01
+          type: CICS COBOL MQ
+          function: System Date Service via MQ
+          integrations: [MQ]
+          features:
+            - Triggered by MQ message
+            - Returns formatted date/time
+    copybooks:
+      - CVACT01Y.cpy  # Account Record Layout
+    queues:
+      - CARD.DEMO.REPLY.ACCT
+      - CARD.DEMO.REPLY.DATE
+      - CARD.DEMO.ERROR
+
+integration_complexity:
+  app-authorization-ims-db2-mq:
+    complexity: HIGH
+    rationale: Multiple technologies (IMS + DB2 + MQ), real-time processing
+    modernization_effort: HIGH
+
+  app-transaction-type-db2:
+    complexity: MEDIUM
+    rationale: Standard DB2 CRUD with cursor paging
+    modernization_effort: LOW
+
+  app-vsam-mq:
+    complexity: MEDIUM
+    rationale: Simple request/reply MQ pattern with VSAM lookup
+    modernization_effort: MEDIUM

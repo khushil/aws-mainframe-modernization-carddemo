@@ -1,0 +1,135 @@
+# RE-008 Integration Patterns Analysis Progress
+# Generated: 2026-02-05
+
+status: completed
+
+phases:
+  work_tracking_setup:
+    status: completed
+    artifacts:
+      - progress.yaml
+      - extension-inventory.yaml
+      - db2-inventory.yaml
+      - ims-inventory.yaml
+      - mq-inventory.yaml
+
+  db2_analysis:
+    status: completed
+    tables_documented:
+      - name: CARDDEMO.TRANSACTION_TYPE
+        columns: 2
+        dclgen: DCLTRTYP.dcl
+      - name: CARDDEMO.TRANSACTION_TYPE_CATEGORY
+        columns: 3
+        dclgen: DCLTRCAT.dcl
+      - name: CARDDEMO.AUTHFRDS
+        columns: 26
+        dclgen: AUTHFRDS.dcl
+    sql_patterns:
+      - single_row_select
+      - cursor_forward
+      - cursor_backward
+      - insert_with_timestamp
+      - update_with_current_date
+      - simple_insert
+      - simple_update
+      - simple_delete
+    sqlcode_handling:
+      - 0: success
+      - +100: not_found
+      - -803: duplicate_key
+      - -532: fk_violation
+      - -911: deadlock
+
+  ims_analysis:
+    status: completed
+    database: DBPAUTP0
+    access_method: HIDAM
+    segments:
+      root:
+        name: PAUTSUM0
+        copybook: CIPAUSMY.cpy
+        key_field: PA-ACCT-ID
+      child:
+        name: PAUTDTL1
+        copybook: CIPAUDTY.cpy
+        key_fields: [PA-AUTH-DATE-9C, PA-AUTH-TIME-9C]
+    dli_patterns:
+      - GU (Get Unique)
+      - GN (Get Next)
+      - GNP (Get Next in Parent)
+      - REPL (Replace)
+      - ISRT (Insert root)
+      - ISRT (Insert child with path)
+      - DLET (Delete child)
+      - DLET (Delete root)
+      - CHKP (Checkpoint)
+      - SCHD/TERM (PSB scheduling)
+
+  mq_analysis:
+    status: completed
+    queues:
+      authorization:
+        - AWS.M2.CARDDEMO.PAUTH.REQUEST
+        - AWS.M2.CARDDEMO.PAUTH.REPLY
+      account_service:
+        - CARD.DEMO.REPLY.ACCT
+        - CARD.DEMO.ERROR
+      date_service:
+        - CARD.DEMO.REPLY.DATE
+    message_formats:
+      - CCPAURQY.cpy (18 fields)
+      - CCPAURLY.cpy (6 fields)
+    api_patterns:
+      - MQOPEN
+      - MQGET (with wait)
+      - MQPUT1 (with correlation)
+      - MQCLOSE
+
+  documentation:
+    status: completed
+    output_file: docs/reverse-engineering/05-specialized/INTEGRATION-PATTERNS.md
+    sections:
+      - Executive Summary
+      - Integration Architecture Diagram
+      - DB2 Integration Patterns
+      - IMS DB Patterns
+      - MQ Messaging Patterns
+      - COBOL-to-Modern Type Mappings
+      - Modernization Recommendations
+      - Cross-References
+      - Appendix
+
+verification:
+  completeness:
+    all_extensions_documented: true
+    all_db2_tables_with_sql: true
+    all_ims_segments_with_dli: true
+    all_mq_queues_with_formats: true
+  code_validation:
+    snippets_from_source: true
+    cobol_syntax_accurate: true
+  diagram_verification:
+    mermaid_syntax_valid: true
+    all_components_represented: true
+
+files_analyzed:
+  programs:
+    - app/app-authorization-ims-db2-mq/cbl/COPAUA0C.cbl
+    - app/app-authorization-ims-db2-mq/cbl/COPAUS2C.cbl
+    - app/app-authorization-ims-db2-mq/cbl/CBPAUP0C.cbl
+    - app/app-transaction-type-db2/cbl/COTRTLIC.cbl
+    - app/app-transaction-type-db2/cbl/COTRTUPC.cbl
+    - app/app-transaction-type-db2/cbl/COBTUPDT.cbl
+    - app/app-vsam-mq/cbl/COACCT01.cbl
+    - app/app-vsam-mq/cbl/CODATE01.cbl
+  copybooks:
+    - app/app-authorization-ims-db2-mq/cpy/CIPAUSMY.cpy
+    - app/app-authorization-ims-db2-mq/cpy/CIPAUDTY.cpy
+    - app/app-authorization-ims-db2-mq/cpy/IMSFUNCS.cpy
+    - app/app-authorization-ims-db2-mq/cpy/CCPAURQY.cpy
+    - app/app-authorization-ims-db2-mq/cpy/CCPAURLY.cpy
+  dclgen:
+    - app/app-transaction-type-db2/dcl/DCLTRTYP.dcl
+    - app/app-transaction-type-db2/dcl/DCLTRCAT.dcl
+    - app/app-authorization-ims-db2-mq/dcl/AUTHFRDS.dcl
