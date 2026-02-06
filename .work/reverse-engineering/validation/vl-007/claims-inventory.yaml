@@ -1,0 +1,323 @@
+# VL-007 Claims Inventory
+# Verifiable claims extracted from SECURITY-MODEL.md
+# Each claim is tagged with verification status and evidence
+
+claims:
+
+  # Section 2: Authentication Architecture
+  - id: C-001
+    section: "2.1"
+    claim: "Authentication entry point is COSGN00C.cbl"
+    status: VERIFIED
+    evidence: "app/cbl/COSGN00C.cbl exists, PROGRAM-ID is COSGN00C"
+
+  - id: C-002
+    section: "2.1"
+    claim: "User input is upper-cased at lines 132-136"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:132-136 shows FUNCTION UPPER-CASE for both USERIDI and PASSWDI"
+
+  - id: C-003
+    section: "2.1"
+    claim: "VSAM READ occurs at lines 211-219 with RIDFLD(WS-USER-ID)"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:211-219 shows EXEC CICS READ with RIDFLD(WS-USER-ID)"
+
+  - id: C-004
+    section: "2.1"
+    claim: "NOTFND response code is 13"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:247 WHEN 13 handles user not found"
+
+  - id: C-005
+    section: "2.1"
+    claim: "User not found message at line 249"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:249 MOVE 'User not found. Try again ...' TO WS-MESSAGE"
+
+  - id: C-006
+    section: "2.1"
+    claim: "Password comparison at line 223"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:223 IF SEC-USR-PWD = WS-USER-PWD"
+
+  - id: C-007
+    section: "2.1"
+    claim: "Wrong password message at line 242"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:242 MOVE 'Wrong Password. Try again ...' TO WS-MESSAGE"
+
+  - id: C-008
+    section: "2.1"
+    claim: "Session established at lines 226-227 via MOVE to COMMAREA"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:224-228 moves TRANID, PGMNAME, USER-ID, USER-TYPE, PGM-CONTEXT"
+
+  - id: C-009
+    section: "2.1"
+    claim: "Admin role routes to COADM01C at lines 230-234"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:230-234 IF CDEMO-USRTYP-ADMIN XCTL to COADM01C"
+
+  - id: C-010
+    section: "2.1"
+    claim: "User role routes to COMEN01C at lines 236-239"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:236-239 ELSE XCTL to COMEN01C"
+
+  - id: C-011
+    section: "2.2"
+    claim: "Source file COSGN00C.cbl critical lines 209-257 for READ-USER-SEC-FILE"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:209 READ-USER-SEC-FILE paragraph starts, :257 END-EVALUATE"
+
+  - id: C-012
+    section: "2.2"
+    claim: "Source file CSUSR01Y.cpy lines 17-23 for user security record"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:17-23 contains SEC-USER-DATA definition"
+
+  # Section 2.3: User Security Record Layout
+  - id: C-013
+    section: "2.3"
+    claim: "SEC-USR-ID PIC X(08) as primary key"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:18 05 SEC-USR-ID PIC X(08)"
+
+  - id: C-014
+    section: "2.3"
+    claim: "SEC-USR-FNAME PIC X(20)"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:19 05 SEC-USR-FNAME PIC X(20)"
+
+  - id: C-015
+    section: "2.3"
+    claim: "SEC-USR-LNAME PIC X(20)"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:20 05 SEC-USR-LNAME PIC X(20)"
+
+  - id: C-016
+    section: "2.3"
+    claim: "SEC-USR-PWD PIC X(08)"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:21 05 SEC-USR-PWD PIC X(08)"
+
+  - id: C-017
+    section: "2.3"
+    claim: "SEC-USR-TYPE PIC X(01)"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:22 05 SEC-USR-TYPE PIC X(01)"
+
+  - id: C-018
+    section: "2.3"
+    claim: "SEC-USR-FILLER PIC X(23)"
+    status: VERIFIED
+    evidence: "CSUSR01Y.cpy:23 05 SEC-USR-FILLER PIC X(23)"
+
+  - id: C-019
+    section: "2.3"
+    claim: "Record length is 80 bytes"
+    status: VERIFIED
+    evidence: "8+20+20+8+1+23 = 80 bytes"
+
+  # Section 3: RBAC
+  - id: C-020
+    section: "3.1"
+    claim: "CDEMO-USER-TYPE at COCOM01Y.cpy:26-28 with 88-level values"
+    status: VERIFIED
+    evidence: "COCOM01Y.cpy:26-28 shows PIC X(01) with 88 ADMIN='A', USER='U'"
+
+  - id: C-021
+    section: "3.2"
+    claim: "Access control matrix lists 16 programs (COSGN00C through COUSR03C)"
+    status: VERIFIED
+    evidence: "Matrix covers 16 unique programs; verified against codebase"
+
+  - id: C-022
+    section: "3.2"
+    claim: "COBSWAIT is not listed in access control matrix"
+    status: ERROR
+    evidence: "COBSWAIT.cbl exists in app/cbl/ as a CO*-prefixed program but is missing from the matrix"
+    finding: M-002
+
+  - id: C-023
+    section: "3.3"
+    claim: "Menu auth check at COMEN01C.cbl:136-143"
+    status: VERIFIED
+    evidence: "COMEN01C.cbl:136-143 shows IF CDEMO-USRTYP-USER AND CDEMO-MENU-OPT-USRTYPE = 'A'"
+
+  - id: C-024
+    section: "3.4"
+    claim: "User menu (COMEN02Y.cpy) has 11 options"
+    status: VERIFIED
+    evidence: "COMEN02Y.cpy:21 CDEMO-MENU-OPT-COUNT PIC 9(02) VALUE 11"
+
+  - id: C-025
+    section: "3.4"
+    claim: "User menu option 11 is COPAUS0C (Pending Authorization View)"
+    status: VERIFIED
+    evidence: "COMEN02Y.cpy:86-90 shows option 11 = COPAUS0C"
+
+  - id: C-026
+    section: "3.4"
+    claim: "Admin menu (COADM02Y.cpy) has 6 options"
+    status: VERIFIED
+    evidence: "COADM02Y.cpy:22 CDEMO-ADMIN-OPT-COUNT PIC 9(02) VALUE 6"
+
+  - id: C-027
+    section: "3.4"
+    claim: "Admin menu option 5 is COTRTLIC"
+    status: VERIFIED
+    evidence: "COADM02Y.cpy:49 FILLER VALUE 'COTRTLIC'"
+
+  - id: C-028
+    section: "3.4"
+    claim: "Admin menu option 6 is COTRTUPC"
+    status: VERIFIED
+    evidence: "COADM02Y.cpy:53 FILLER VALUE 'COTRTUPC'"
+
+  # Section 4: Session Management
+  - id: C-029
+    section: "4.1"
+    claim: "COMMAREA structure at COCOM01Y.cpy:19-44"
+    status: VERIFIED
+    evidence: "COCOM01Y.cpy:19-44 contains CARDDEMO-COMMAREA definition"
+
+  - id: C-030
+    section: "4.1"
+    claim: "COMMAREA total size is ~130 bytes"
+    status: ERROR
+    evidence: "Actual calculation: 34+84+12+16+14 = 160 bytes"
+    finding: M-001
+
+  - id: C-031
+    section: "4.1"
+    claim: "CDEMO-CARD-NUM PIC 9(16) stores full card number"
+    status: VERIFIED
+    evidence: "COCOM01Y.cpy:41 10 CDEMO-CARD-NUM PIC 9(16)"
+
+  - id: C-032
+    section: "4.1"
+    claim: "CDEMO-LAST-MAP PIC X(7) and CDEMO-LAST-MAPSET PIC X(7)"
+    status: VERIFIED
+    evidence: "COCOM01Y.cpy:43-44"
+
+  - id: C-033
+    section: "4.4"
+    claim: "Session establishment at COSGN00C.cbl:224-228"
+    status: VERIFIED
+    evidence: "COSGN00C.cbl:224-228 moves TRANID, PGMNAME, USER-ID, USER-TYPE, PGM-CONTEXT"
+
+  # Section 5: Security Findings
+  - id: C-034
+    section: "5/SEC-001"
+    claim: "Plain-text password at CSUSR01Y.cpy:21 and comparison at COSGN00C.cbl:223"
+    status: VERIFIED
+    evidence: "Both line references confirmed"
+
+  - id: C-035
+    section: "5/SEC-002"
+    claim: "No account lockout at COSGN00C.cbl:241-257"
+    status: VERIFIED
+    evidence: "No failure counter or lockout logic in the evaluate block"
+
+  - id: C-036
+    section: "5/SEC-003"
+    claim: "User enumeration via different error messages at lines 242 and 249"
+    status: VERIFIED
+    evidence: "Line 242: 'Wrong Password...' vs Line 249: 'User not found...'"
+
+  - id: C-037
+    section: "5/SEC-004"
+    claim: "No session timeout mechanism exists"
+    status: VERIFIED
+    evidence: "No timestamp in COMMAREA, no idle tracking in any program"
+
+  - id: C-038
+    section: "5/SEC-005"
+    claim: "No per-program authorization checks in transaction programs"
+    status: VERIFIED
+    evidence: "Checked COACTVWC, COACTUPC, COCRDLIC, COTRN00C - no CDEMO-USER-TYPE validation at entry"
+
+  - id: C-039
+    section: "5/SEC-006"
+    claim: "CARD-NUM PIC X(16) unencrypted in CVACT02Y.cpy:5"
+    status: VERIFIED
+    evidence: "CVACT02Y.cpy:5 05 CARD-NUM PIC X(16)"
+
+  - id: C-040
+    section: "5/SEC-006"
+    claim: "CARD-CVV-CD PIC 9(03) stored in CVACT02Y.cpy:7"
+    status: VERIFIED
+    evidence: "CVACT02Y.cpy:7 05 CARD-CVV-CD PIC 9(03)"
+
+  - id: C-041
+    section: "5/SEC-006"
+    claim: "TRAN-CARD-NUM PIC X(16) in CVTRA05Y.cpy:15"
+    status: VERIFIED
+    evidence: "CVTRA05Y.cpy:15 05 TRAN-CARD-NUM PIC X(16)"
+
+  - id: C-042
+    section: "5/SEC-009"
+    claim: "SSN displayed with formatting at COACTVWC.cbl:496-504"
+    status: VERIFIED
+    evidence: "STRING CUST-SSN(1:3) '-' CUST-SSN(4:2) '-' CUST-SSN(6:4) at lines 496-504"
+
+  - id: C-043
+    section: "5/SEC-010"
+    claim: "Batch programs have no user context or authorization"
+    status: VERIFIED
+    evidence: "CB*.cbl programs contain no SEC-USER-DATA references or COMMAREA checks"
+
+  # Completeness Claims
+  - id: C-044
+    section: "3.2"
+    claim: "SET CDEMO-USRTYP-USER TO TRUE pattern not documented"
+    status: MISSING
+    evidence: "Pattern found in 5 programs at 9 locations - security-relevant privilege reset"
+    finding: M-003
+
+  - id: C-045
+    section: "3.4"
+    claim: "COPAUS0C program file exists in codebase"
+    status: ERROR
+    evidence: "No file app/cbl/COPAUS0C.cbl found; only referenced in COMEN02Y.cpy"
+    finding: m-001
+
+  # Hallucination Checks
+  - id: C-046
+    section: "N/A"
+    claim: "Document does NOT reference COUSR00Y.cpy"
+    status: PASS
+    evidence: "Searched document; no reference to COUSR00Y.cpy"
+
+  - id: C-047
+    section: "N/A"
+    claim: "Document does NOT claim CDEMO-USER-FNAME or CDEMO-USER-LNAME fields"
+    status: PASS
+    evidence: "Only actual COMMAREA fields referenced"
+
+  - id: C-048
+    section: "N/A"
+    claim: "Document does NOT reference CVCAR00Y.cpy"
+    status: PASS
+    evidence: "No such reference found in document"
+
+  - id: C-049
+    section: "N/A"
+    claim: "Document does NOT reference S9(7)V99 PIC clause"
+    status: PASS
+    evidence: "No such reference found in document"
+
+  - id: C-050
+    section: "2.5"
+    claim: "Error message strings match actual code literals exactly"
+    status: VERIFIED
+    evidence: "Line 242: 'Wrong Password. Try again ...' and Line 249: 'User not found. Try again ...' match exactly"
+
+summary:
+  total_claims: 50
+  verified: 42
+  errors: 3
+  missing: 1
+  hallucination_checks_passed: 4

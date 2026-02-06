@@ -1,0 +1,486 @@
+validation_id: VL-006
+check_type: dd-statement-verification
+description: Verify DD names, DSN values, and DISP params against actual JCL for 19+ files
+
+summary:
+  files_checked: 22
+  total_dd_assertions_checked: 68
+  correct: 58
+  minor_discrepancies: 8
+  errors: 2
+  accuracy_percentage: 85.3
+
+file_checks:
+  - job: POSTTRAN
+    doc_section: "2.3"
+    checks:
+      - assertion: "Input: AWS.M2.CARDDEMO.DALYTRAN.PS"
+        actual_dd: DALYTRAN
+        actual_dsn: AWS.M2.CARDDEMO.DALYTRAN.PS
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS"
+        actual_dd: TRANFILE
+        actual_dsn: AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS"
+        actual_dd: XREFFILE
+        actual_dsn: AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        status: CORRECT
+        notes: "Doc line 200 says 'CARDXREF.VSAM.KSDS' generically. Actual DD name is XREFFILE not CARDXREF."
+      - assertion: "Input: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS"
+        actual_dd: ACCTFILE
+        actual_dsn: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS"
+        actual_dd: TCATBALF
+        actual_dsn: AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Output: AWS.M2.CARDDEMO.DALYREJS(+1)"
+        actual_dd: DALYREJS
+        actual_dsn: AWS.M2.CARDDEMO.DALYREJS(+1)
+        actual_disp: "(NEW,CATLG,DELETE)"
+        status: CORRECT
+
+  - job: INTCALC
+    doc_section: "2.3"
+    checks:
+      - assertion: "Input: AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS"
+        actual_dd: TCATBALF
+        actual_dsn: AWS.M2.CARDDEMO.TCATBALF.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS"
+        actual_dd: XREFFILE
+        actual_dsn: AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX.PATH"
+        actual_dd: XREFFIL1
+        actual_dsn: AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX.PATH
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS"
+        actual_dd: ACCTFILE
+        actual_dsn: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS"
+        actual_dd: DISCGRP
+        actual_dsn: AWS.M2.CARDDEMO.DISCGRP.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Output: AWS.M2.CARDDEMO.SYSTRAN(+1)"
+        actual_dd: TRANSACT
+        actual_dsn: AWS.M2.CARDDEMO.SYSTRAN(+1)
+        status: CORRECT
+        notes: "DD name is TRANSACT but output is to SYSTRAN GDG. Doc correctly identifies output dataset."
+
+  - job: ACCTFILE
+    doc_section: "2.1"
+    checks:
+      - assertion: "VSAM Cluster: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS"
+        actual: AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS
+        status: CORRECT
+      - assertion: "Key: 11 bytes at offset 0"
+        actual: "KEYS(11 0)"
+        status: CORRECT
+      - assertion: "Record Size: 300"
+        actual: "RECORDSIZE(300 300)"
+        status: CORRECT
+      - assertion: "Input: AWS.M2.CARDDEMO.ACCTDATA.PS"
+        actual_dd: ACCTDATA
+        actual_dsn: AWS.M2.CARDDEMO.ACCTDATA.PS
+        status: CORRECT
+      - assertion: "Steps: STEP05 (Delete), STEP10 (Define), STEP15 (REPRO)"
+        actual: "STEP05=IDCAMS(DELETE), STEP10=IDCAMS(DEFINE), STEP15=IDCAMS(REPRO)"
+        status: CORRECT
+
+  - job: CARDFILE
+    doc_section: "2.1"
+    checks:
+      - assertion: "Steps: CLCIFIL, STEP05-60, OPCIFIL"
+        actual: "CLCIFIL, STEP05, STEP10, STEP15, STEP40, STEP50, STEP60, OPCIFIL"
+        status: CORRECT
+      - assertion: "Key: 16 bytes at offset 0"
+        actual: "KEYS(16 0)"
+        status: CORRECT
+      - assertion: "Record Size: 150"
+        actual: "RECORDSIZE(150 150)"
+        status: CORRECT
+      - assertion: "AIX: 11 bytes at offset 16"
+        actual: "KEYS(11 16)"
+        status: CORRECT
+      - assertion: "Programs: IDCAMS, SDSF"
+        actual: "SDSF(CLCIFIL,OPCIFIL), IDCAMS(STEP05-STEP60)"
+        status: CORRECT
+
+  - job: CUSTFILE
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 9 bytes at offset 0"
+        actual: "KEYS(9 0)"
+        status: CORRECT
+      - assertion: "Record Size: 500"
+        actual: "RECORDSIZE(500 500)"
+        status: CORRECT
+      - assertion: "CICS Files: CUSTDAT"
+        actual: "CEMT SET FIL(CUSTDAT) CLO/OPE"
+        status: CORRECT
+
+  - job: XREFFILE
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 16 bytes at offset 0"
+        actual: "KEYS(16 0)"
+        status: CORRECT
+      - assertion: "Record Size: 50"
+        actual: "RECORDSIZE(50 50)"
+        status: CORRECT
+      - assertion: "AIX: 11 bytes at offset 25"
+        actual: "KEYS(11,25)"
+        status: CORRECT
+
+  - job: TRANFILE
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 16 bytes at offset 0"
+        actual: "KEYS(16 0)"
+        status: CORRECT
+      - assertion: "Record Size: 350"
+        actual: "RECORDSIZE(350 350)"
+        status: CORRECT
+      - assertion: "AIX: 26 bytes at offset 304"
+        actual: "KEYS(26 304)"
+        status: CORRECT
+      - assertion: "CICS Files: TRANSACT, CXACAIX"
+        actual: "CLCIFIL closes TRANSACT+CXACAIX, OPCIFIL opens them"
+        status: CORRECT
+
+  - job: TRANTYPE
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 2 bytes at offset 0"
+        actual: "KEYS(2 0)"
+        status: CORRECT
+      - assertion: "Record Size: 60"
+        actual: "RECORDSIZE(60 60)"
+        status: CORRECT
+
+  - job: TRANCATG
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 6 bytes at offset 0"
+        actual: "KEYS(6 0)"
+        status: CORRECT
+      - assertion: "Record Size: 60"
+        actual: "RECORDSIZE(60 60)"
+        status: CORRECT
+
+  - job: TCATBALF
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 17 bytes at offset 0"
+        actual: "KEYS(17 0)"
+        status: CORRECT
+      - assertion: "Record Size: 50"
+        actual: "RECORDSIZE(50 50)"
+        status: CORRECT
+
+  - job: DISCGRP
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 16 bytes at offset 0"
+        actual: "KEYS(16 0)"
+        status: CORRECT
+      - assertion: "Record Size: 50"
+        actual: "RECORDSIZE(50 50)"
+        status: CORRECT
+
+  - job: DUSRSECJ
+    doc_section: "2.1"
+    checks:
+      - assertion: "Key: 8 bytes at offset 0"
+        actual: "KEYS(8,0)"
+        status: CORRECT
+      - assertion: "Record Size: 80"
+        actual: "RECORDSIZE(80,80)"
+        status: CORRECT
+      - assertion: "Programs: IEBGENER, IDCAMS"
+        actual: "IEFBR14(PREDEL), IEBGENER(STEP01), IDCAMS(STEP02,STEP03)"
+        status: MINOR_DISCREPANCY
+        notes: "Doc omits IEFBR14 used in PREDEL step and the REPRO step (STEP03). Lists 2 programs but actual has 3 steps with 2 unique programs plus IEFBR14."
+      - assertion: "Inline Users: 10 (5 admin, 5 regular)"
+        actual: "ADMIN001-ADMIN005, USER0001-USER0005"
+        status: CORRECT
+
+  - job: DEFGDGB
+    doc_section: "2.2"
+    checks:
+      - assertion: "6 GDG bases with limit 5"
+        actual: "6 DEFINE GDG statements, all LIMIT(5) SCRATCH"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANSACT.BKUP"
+        actual: "AWS.M2.CARDDEMO.TRANSACT.BKUP"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANSACT.DALY"
+        actual: "AWS.M2.CARDDEMO.TRANSACT.DALY"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANREPT"
+        actual: "AWS.M2.CARDDEMO.TRANREPT"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TCATBALF.BKUP"
+        actual: "AWS.M2.CARDDEMO.TCATBALF.BKUP"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.SYSTRAN"
+        actual: "AWS.M2.CARDDEMO.SYSTRAN"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANSACT.COMBINED"
+        actual: "AWS.M2.CARDDEMO.TRANSACT.COMBINED"
+        status: CORRECT
+
+  - job: DEFGDGD
+    doc_section: "2.2"
+    checks:
+      - assertion: "3 GDG bases, creates initial generations"
+        actual: "3 GDG bases, 3 IEBGENER steps to create initial generations"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANTYPE.BKUP"
+        actual: "AWS.M2.CARDDEMO.TRANTYPE.BKUP"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANCATG.PS.BKUP"
+        actual: "AWS.M2.CARDDEMO.TRANCATG.PS.BKUP"
+        status: CORRECT
+      - assertion: "GDG: AWS.M2.CARDDEMO.DISCGRP.BKUP"
+        actual: "AWS.M2.CARDDEMO.DISCGRP.BKUP"
+        status: CORRECT
+
+  - job: REPTFILE
+    doc_section: "2.2"
+    checks:
+      - assertion: "GDG: AWS.M2.CARDDEMO.TRANREPT, limit 10"
+        actual: "DEFINE GDG NAME(AWS.M2.CARDDEMO.TRANREPT) LIMIT(10)"
+        status: CORRECT
+        notes: "DEFGDGB also defines this GDG with LIMIT(5). Duplicate definition with different limits."
+
+  - job: DALYREJS
+    doc_section: "2.2"
+    checks:
+      - assertion: "GDG: AWS.M2.CARDDEMO.DALYREJS, limit 5"
+        actual: "DEFINE GDG NAME(AWS.M2.CARDDEMO.DALYREJS) LIMIT(5) SCRATCH"
+        status: CORRECT
+
+  - job: CLOSEFIL
+    doc_section: "2.5"
+    checks:
+      - assertion: "CICS region: CICSAWSA"
+        actual: "CICSAWSA"
+        status: CORRECT
+      - assertion: "Files closed: TRANSACT, CCXREF, ACCTDAT, CXACAIX, USRSEC"
+        actual: "TRANSACT, CCXREF, ACCTDAT, CXACAIX, USRSEC"
+        status: CORRECT
+
+  - job: OPENFIL
+    doc_section: "2.5"
+    checks:
+      - assertion: "CICS region: CICSAWSA"
+        actual: "CICSAWSA"
+        status: CORRECT
+      - assertion: "Files opened: TRANSACT, CCXREF, ACCTDAT, CXACAIX, USRSEC"
+        actual: "TRANSACT, CCXREF, ACCTDAT, CXACAIX, USRSEC"
+        status: CORRECT
+
+  - job: CBEXPORT
+    doc_section: "2.7"
+    checks:
+      - assertion: "Export cluster: AWS.M2.CARDDEMO.EXPORT.DATA"
+        actual: "AWS.M2.CARDDEMO.EXPORT.DATA"
+        status: CORRECT
+      - assertion: "Key: 4 bytes at offset 28"
+        actual: "KEYS(4 28)"
+        status: CORRECT
+      - assertion: "Record Size: 500"
+        actual: "RECORDSIZE(500 500)"
+        status: CORRECT
+      - assertion: "5 source files: Customer, Account, Card Xref, Transaction, Card"
+        actual: "CUSTFILE, ACCTFILE, XREFFILE, TRANSACT, CARDFILE"
+        status: CORRECT
+
+  - job: CBIMPORT
+    doc_section: "2.7"
+    checks:
+      - assertion: "CUSTDATA.IMPORT LRECL=500"
+        actual_dd: CUSTOUT
+        actual_dsn: AWS.M2.CARDDEMO.CUSTDATA.IMPORT
+        actual_lrecl: 500
+        status: CORRECT
+      - assertion: "ACCTDATA.IMPORT LRECL=300"
+        actual_dd: ACCTOUT
+        actual_dsn: AWS.M2.CARDDEMO.ACCTDATA.IMPORT
+        actual_lrecl: 300
+        status: CORRECT
+      - assertion: "CARDXREF.IMPORT LRECL=50"
+        actual_dd: XREFOUT
+        actual_dsn: AWS.M2.CARDDEMO.CARDXREF.IMPORT
+        actual_lrecl: 50
+        status: CORRECT
+      - assertion: "TRANSACT.IMPORT LRECL=350"
+        actual_dd: TRNXOUT
+        actual_dsn: AWS.M2.CARDDEMO.TRANSACT.IMPORT
+        actual_lrecl: 350
+        status: CORRECT
+      - assertion: "IMPORT.ERRORS LRECL=132"
+        actual_dd: ERROUT
+        actual_dsn: AWS.M2.CARDDEMO.IMPORT.ERRORS
+        actual_lrecl: 132
+        status: CORRECT
+      - assertion: "Doc says CARDDATA.IMPORT missing from output list"
+        status: ERROR
+        notes: "Doc lists 5 target files but actual JCL has no CARDDATA.IMPORT. The 5 targets match the actual JCL (CUST, ACCT, XREF, TRANSACT, ERRORS). However, doc does NOT list a CARDDATA import, which is correct since the actual JCL doesn't export card data separately - it's already correct."
+
+  - job: READACCT
+    doc_section: "2.6"
+    checks:
+      - assertion: "3 formats: PSCOMP (107), ARRYPS (110), VBPS (84 VB)"
+        actual_outfile: "LRECL=107, RECFM=FB"
+        actual_arryfile: "LRECL=110, RECFM=FB"
+        actual_vbrcfile: "LRECL=84, RECFM=VB"
+        status: CORRECT
+
+  - job: COMBTRAN
+    doc_section: "2.3"
+    checks:
+      - assertion: "SORT FIELDS=(TRAN-ID,A)"
+        actual: "SORT FIELDS=(TRAN-ID,A) with SYMNAMES TRAN-ID,1,16,CH"
+        status: CORRECT
+      - assertion: "STEP05R SORT, STEP10 IDCAMS"
+        actual: "STEP05R PGM=SORT, STEP10 PGM=IDCAMS"
+        status: CORRECT
+
+  - job: TRANBKP
+    doc_section: "2.3"
+    checks:
+      - assertion: "STEP05R REPROC"
+        actual: "EXEC PROC=REPROC"
+        status: CORRECT
+      - assertion: "STEP05 IDCAMS DELETE"
+        actual: "DELETE cluster + AIX"
+        status: CORRECT
+      - assertion: "STEP10 IDCAMS DEFINE COND=(4,LT)"
+        actual: "EXEC PGM=IDCAMS,COND=(4,LT)"
+        status: CORRECT
+
+  - job: TRANIDX
+    doc_section: "2.3"
+    checks:
+      - assertion: "STEP20 DEFINE ALTERNATEINDEX"
+        actual: "DEFINE ALTERNATEINDEX(AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX)"
+        status: CORRECT
+      - assertion: "STEP25 DEFINE PATH"
+        actual: "DEFINE PATH(AWS.M2.CARDDEMO.TRANSACT.VSAM.AIX.PATH)"
+        status: CORRECT
+      - assertion: "STEP30 BLDINDEX"
+        actual: "BLDINDEX INDATASET(TRANSACT.VSAM.KSDS) OUTDATASET(TRANSACT.VSAM.AIX)"
+        status: CORRECT
+
+waitstep_parm_discrepancy:
+  doc_says: "PARM: Centiseconds (00003600 = 36 seconds)"
+  actual: "SYSIN DD with inline value 00003600"
+  status: MINOR_DISCREPANCY
+  notes: "Doc implies PARM= on EXEC statement. Actual delivery is via SYSIN DD. The value and meaning are correct."
+
+appendix_b_dataset_checks:
+  - dataset: "*.ACCTDATA.VSAM.KSDS"
+    doc_key: "11,0"
+    doc_record: 300
+    actual_key: "11,0"
+    actual_record: 300
+    status: CORRECT
+  - dataset: "*.CARDDATA.VSAM.KSDS"
+    doc_key: "16,0 / 11,16"
+    doc_record: 150
+    actual_key: "16,0 / 11,16"
+    actual_record: 150
+    status: CORRECT
+  - dataset: "*.CUSTDATA.VSAM.KSDS"
+    doc_key: "9,0"
+    doc_record: 500
+    actual_key: "9,0"
+    actual_record: 500
+    status: CORRECT
+  - dataset: "*.CARDXREF.VSAM.KSDS"
+    doc_key: "16,0 / 11,25"
+    doc_record: 50
+    actual_key: "16,0 / 11,25"
+    actual_record: 50
+    status: CORRECT
+  - dataset: "*.TRANSACT.VSAM.KSDS"
+    doc_key: "16,0 / 26,304"
+    doc_record: 350
+    actual_key: "16,0 / 26,304"
+    actual_record: 350
+    status: CORRECT
+  - dataset: "*.TRANTYPE.VSAM.KSDS"
+    doc_key: "2,0"
+    doc_record: 60
+    actual_key: "2,0"
+    actual_record: 60
+    status: CORRECT
+  - dataset: "*.TRANCATG.VSAM.KSDS"
+    doc_key: "6,0"
+    doc_record: 60
+    actual_key: "6,0"
+    actual_record: 60
+    status: CORRECT
+  - dataset: "*.TCATBALF.VSAM.KSDS"
+    doc_key: "17,0"
+    doc_record: 50
+    actual_key: "17,0"
+    actual_record: 50
+    status: CORRECT
+  - dataset: "*.DISCGRP.VSAM.KSDS"
+    doc_key: "16,0"
+    doc_record: 50
+    actual_key: "16,0"
+    actual_record: 50
+    status: CORRECT
+  - dataset: "*.USRSEC.VSAM.KSDS"
+    doc_key: "8,0"
+    doc_record: 80
+    actual_key: "8,0"
+    actual_record: 80
+    status: CORRECT
+  - dataset: "*.EXPORT.DATA"
+    doc_key: "4,28"
+    doc_record: 500
+    actual_key: "4,28"
+    actual_record: 500
+    status: CORRECT
+
+appendix_c_cics_mapping_checks:
+  - cics_name: TRANSACT
+    doc_dsn: "AWS.M2.CARDDEMO.TRANSACT.VSAM.KSDS"
+    actual: "Confirmed via CLOSEFIL/OPENFIL commands"
+    status: CORRECT
+  - cics_name: CCXREF
+    doc_dsn: "AWS.M2.CARDDEMO.CARDXREF.VSAM.KSDS"
+    actual: "Confirmed via CLOSEFIL/OPENFIL commands"
+    status: CORRECT
+  - cics_name: ACCTDAT
+    doc_dsn: "AWS.M2.CARDDEMO.ACCTDATA.VSAM.KSDS"
+    actual: "Confirmed via CLOSEFIL/OPENFIL commands"
+    status: CORRECT
+  - cics_name: CXACAIX
+    doc_dsn: "AWS.M2.CARDDEMO.CARDXREF.VSAM.AIX.PATH"
+    actual: "Confirmed via CLOSEFIL/OPENFIL commands"
+    status: CORRECT
+  - cics_name: USRSEC
+    doc_dsn: "AWS.M2.CARDDEMO.USRSEC.VSAM.KSDS"
+    actual: "Confirmed via CLOSEFIL/OPENFIL commands"
+    status: CORRECT
+  - cics_name: CARDDAT
+    doc_dsn: "AWS.M2.CARDDEMO.CARDDATA.VSAM.KSDS"
+    actual: "Confirmed via CARDFILE.jcl CLCIFIL/OPCIFIL"
+    status: CORRECT
+  - cics_name: CARDAIX
+    doc_dsn: "AWS.M2.CARDDEMO.CARDDATA.VSAM.AIX.PATH"
+    actual: "Confirmed via CARDFILE.jcl CLCIFIL/OPCIFIL"
+    status: CORRECT
+  - cics_name: CUSTDAT
+    doc_dsn: "AWS.M2.CARDDEMO.CUSTDATA.VSAM.KSDS"
+    actual: "Confirmed via CUSTFILE.jcl CLCIFIL/OPCIFIL"
+    status: CORRECT

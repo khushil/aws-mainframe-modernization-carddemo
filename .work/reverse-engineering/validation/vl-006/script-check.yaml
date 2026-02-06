@@ -1,0 +1,188 @@
+validation_id: VL-006
+check_type: script-verification
+description: Verify run_full_batch.sh, run_interest_calc.sh, run_posting.sh against documentation
+
+summary:
+  total_scripts: 3
+  documented_in_detail: 1
+  undocumented: 2
+
+scripts:
+  - name: run_full_batch.sh
+    path: scripts/run_full_batch.sh
+    doc_section: "3.3"
+    doc_line: 516-527
+    documented: true
+    documentation_quality: GOOD
+
+    actual_job_sequence:
+      - order: 1
+        job: CLOSEFIL
+        wait_after: "5s"
+      - order: 2
+        job: ACCTFILE
+        wait_after: none
+      - order: 3
+        job: CARDFILE
+        wait_after: none
+      - order: 4
+        job: XREFFILE
+        wait_after: none
+      - order: 5
+        job: CUSTFILE
+        wait_after: none
+      - order: 6
+        job: TRANBKP
+        wait_after: none
+      - order: 7
+        job: DISCGRP
+        wait_after: none
+      - order: 8
+        job: TCATBALF
+        wait_after: none
+      - order: 9
+        job: TRANTYPE
+        wait_after: none
+      - order: 10
+        job: DUSRSECJ
+        wait_after: "5s"
+      - order: 11
+        job: POSTTRAN
+        wait_after: "10s"
+      - order: 12
+        job: INTCALC
+        wait_after: "5s"
+      - order: 13
+        job: TRANBKP
+        wait_after: none
+      - order: 14
+        job: COMBTRAN
+        wait_after: "5s"
+      - order: 15
+        job: TRANIDX
+        wait_after: "5s"
+      - order: 16
+        job: OPENFIL
+        wait_after: none
+
+    doc_vs_actual:
+      phase_1:
+        doc: "CLOSEFIL, wait 5s"
+        actual: "CLOSEFIL, sleep 5"
+        match: true
+      phase_2:
+        doc: "ACCTFILE, CARDFILE, XREFFILE, CUSTFILE, TRANBKP, DISCGRP, TCATBALF, TRANTYPE, DUSRSECJ, wait 5s"
+        actual: "ACCTFILE, CARDFILE, XREFFILE, CUSTFILE, TRANBKP, DISCGRP, TCATBALF, TRANTYPE, DUSRSECJ, sleep 5"
+        match: true
+      phase_3:
+        doc: "POSTTRAN, wait 10s"
+        actual: "POSTTRAN, sleep 10"
+        match: true
+      phase_4:
+        doc: "INTCALC, wait 5s"
+        actual: "INTCALC, sleep 5"
+        match: true
+      phase_5:
+        doc: "TRANBKP, COMBTRAN, wait 5s"
+        actual: "TRANBKP, COMBTRAN, sleep 5"
+        match: true
+      phase_6:
+        doc: "TRANIDX, wait 5s"
+        actual: "TRANIDX, sleep 5"
+        match: true
+      phase_7:
+        doc: "OPENFIL"
+        actual: "OPENFIL"
+        match: true
+
+    overall_match: EXACT
+    notes: |
+      Documentation section 3.3 matches run_full_batch.sh exactly.
+      All job names, ordering, and wait times are accurately documented.
+      Script uses FTP tunnel (tnftp localhost 2121) to submit JCL to mainframe.
+
+  - name: run_interest_calc.sh
+    path: scripts/run_interest_calc.sh
+    documented: false
+    doc_section: null
+    severity: MAJOR
+
+    actual_job_sequence:
+      - order: 1
+        job: CLOSEFIL
+        wait_after: "5s"
+      - order: 2
+        job: INTCALC
+        wait_after: "5s"
+      - order: 3
+        job: TRANBKP
+        wait_after: none
+      - order: 4
+        job: COMBTRAN
+        wait_after: "5s"
+      - order: 5
+        job: TRANIDX
+        wait_after: "5s"
+      - order: 6
+        job: OPENFIL
+        wait_after: none
+
+    notes: |
+      This script is referenced in CLAUDE.md (scripts/run_interest_calc.sh - "Daily interest calculations only")
+      but has NO dedicated documentation section in BATCH-WORKFLOWS.md.
+      The section 3.1 "MONTHLY-InterestCalculation" Control-M workflow OMITS TRANBKP and TRANIDX
+      which are present in this script. This is a significant discrepancy.
+
+      Script sequence: CLOSEFIL -> INTCALC -> TRANBKP -> COMBTRAN -> TRANIDX -> OPENFIL
+      Doc Control-M: CLOSEFIL -> INTCALC -> COMBTRAN -> WAITSTEP -> OPENFIL
+
+      Differences:
+      1. Script has TRANBKP between INTCALC and COMBTRAN (doc omits it)
+      2. Script has TRANIDX between COMBTRAN and OPENFIL (doc omits it)
+      3. Doc has WAITSTEP before OPENFIL (script does not)
+
+  - name: run_posting.sh
+    path: scripts/run_posting.sh
+    documented: false
+    doc_section: null
+    severity: MAJOR
+
+    actual_job_sequence:
+      - order: 1
+        job: CLOSEFIL
+        wait_after: "5s"
+      - order: 2
+        job: ACCTFILE
+        wait_after: none
+      - order: 3
+        job: TCATBALF
+        wait_after: none
+      - order: 4
+        job: TRANBKP
+        wait_after: none
+      - order: 5
+        job: POSTTRAN
+        wait_after: "10s"
+      - order: 6
+        job: TRANIDX
+        wait_after: "5s"
+      - order: 7
+        job: OPENFIL
+        wait_after: none
+
+    notes: |
+      This script is referenced in CLAUDE.md (scripts/run_posting.sh - "Transaction posting only")
+      but has NO dedicated documentation section in BATCH-WORKFLOWS.md.
+      It runs a subset of run_full_batch.sh focused on posting only.
+
+      Sequence: CLOSEFIL -> ACCTFILE -> TCATBALF -> TRANBKP -> POSTTRAN -> TRANIDX -> OPENFIL
+
+      This is a posting-only workflow that refreshes account and balance data,
+      backs up transactions, posts new transactions, rebuilds indexes, and reopens CICS.
+
+doc_metadata_section_verification:
+  doc_line: 893
+  doc_says: "3 shell scripts"
+  actual: 3
+  status: CORRECT
+  notes: "Count is correct but only 1 of 3 is documented in detail"

@@ -1,0 +1,243 @@
+validation_id: VL-006
+check_type: dependency-dag-verification
+description: Verify all DAG nodes and edges against real jobs and data dependencies
+
+section_3_1_control_m_workflows:
+  - workflow: "DAILY-TransactionBackup"
+    doc_line: 446-452
+    dag: "CLOSEFIL -> TRANBKP -> WAITSTEP -> OPENFIL"
+    verification:
+      closefil_exists: true
+      tranbkp_exists: true
+      waitstep_exists: true
+      openfil_exists: true
+      data_flow_valid: true
+      notes: "TRANBKP depends on CLOSEFIL because it accesses TRANSACT.VSAM (which is a CICS file). WAITSTEP provides delay before OPENFIL. Logically sound."
+    status: VALID
+
+  - workflow: "WEEKLY-DisclosureGroupsRefresh"
+    doc_line: 454-462
+    dag: "MNTTRDB2 -> CLOSEFIL -> DISCGRP -> WAITSTEP -> OPENFIL"
+    verification:
+      mnttrdb2_exists: false
+      closefil_exists: true
+      discgrp_exists: true
+      waitstep_exists: true
+      openfil_exists: true
+    status: PHANTOM_NODE
+    severity: MAJOR
+    notes: |
+      MNTTRDB2 is NOT a JCL file in the repository. There is no MNTTRDB2.jcl file in app/jcl/.
+      This is a phantom/hallucinated node in the DAG. The workflow should start from CLOSEFIL.
+      The remaining chain (CLOSEFIL -> DISCGRP -> WAITSTEP -> OPENFIL) is valid.
+
+  - workflow: "MONTHLY-InterestCalculation"
+    doc_line: 464-472
+    dag: "CLOSEFIL -> INTCALC -> COMBTRAN -> WAITSTEP -> OPENFIL"
+    verification:
+      closefil_exists: true
+      intcalc_exists: true
+      combtran_exists: true
+      waitstep_exists: true
+      openfil_exists: true
+      data_flow_valid: true
+      notes: |
+        INTCALC produces SYSTRAN GDG. COMBTRAN reads SYSTRAN(0) and TRANSACT.BKUP(0).
+        But this workflow omits TRANBKP which should run between INTCALC and COMBTRAN
+        (to create the TRANSACT.BKUP(0) that COMBTRAN needs). This is a dependency gap.
+        Comparing with run_interest_calc.sh which runs: CLOSEFIL -> INTCALC -> TRANBKP -> COMBTRAN -> TRANIDX -> OPENFIL.
+        The doc's Control-M workflow omits TRANBKP and TRANIDX.
+    status: INCOMPLETE
+    severity: MAJOR
+
+section_3_2_complete_dag:
+  doc_line: 476-514
+  total_nodes: 16
+  real_nodes: 16
+  phantom_nodes: 0
+  notes: "This DAG does NOT contain MNTTRDB2 (only the section 3.1 weekly workflow does)"
+
+  node_verification:
+    - node: DEFGDGB/DEFGDGD
+      exists: true
+      notes: "Grouped as single node. Both exist."
+    - node: "VSAM Definitions"
+      exists: true
+      notes: "Meta-node representing all VSAM definition jobs. Acceptable abstraction."
+    - node: CLOSEFIL
+      exists: true
+    - node: ACCTFILE
+      exists: true
+    - node: CARDFILE
+      exists: true
+    - node: CUSTFILE
+      exists: true
+    - node: XREFFILE
+      exists: true
+    - node: TRANFILE
+      exists: true
+    - node: DISCGRP
+      exists: true
+    - node: TCATBALF
+      exists: true
+    - node: TRANTYPE
+      exists: true
+    - node: DUSRSECJ
+      exists: true
+    - node: POSTTRAN
+      exists: true
+    - node: INTCALC
+      exists: true
+    - node: TRANBKP
+      exists: true
+    - node: COMBTRAN
+      exists: true
+    - node: TRANIDX
+      exists: true
+    - node: OPENFIL
+      exists: true
+    - node: TRANREPT
+      exists: true
+    - node: PRTCATBL
+      exists: true
+
+  edge_verification:
+    setup_phase:
+      - edge: "GDG -> VSAM"
+        valid: true
+        notes: "GDGs must be defined before VSAM clusters that reference them"
+      - edge: "VSAM -> CLOSEFIL"
+        valid: true
+        notes: "VSAM clusters must exist before CICS files can be closed"
+
+    data_refresh:
+      - edge: "CLOSEFIL -> ACCTFILE"
+        valid: true
+        reason: "ACCTFILE doesn't have CICS close/open, but CLOSEFIL closes ACCTDAT"
+      - edge: "CLOSEFIL -> CARDFILE"
+        valid: true
+        reason: "CARDFILE has own CLCIFIL/OPCIFIL but CLOSEFIL doesn't close CARDDAT"
+        notes: "MINOR: CARDFILE has embedded CICS close/open. CLOSEFIL doesn't close CARDDAT. This edge is unnecessary but not harmful."
+      - edge: "CLOSEFIL -> CUSTFILE"
+        valid: true
+        reason: "CUSTFILE has own CLCIFIL/OPCIFIL. CLOSEFIL doesn't close CUSTDAT."
+        notes: "MINOR: Same as CARDFILE - CUSTFILE has embedded CICS management."
+      - edge: "CLOSEFIL -> XREFFILE"
+        valid: true
+        reason: "CLOSEFIL closes CCXREF. XREFFILE redefines the cluster."
+      - edge: "CLOSEFIL -> TRANFILE"
+        valid: true
+        reason: "CLOSEFIL closes TRANSACT. TRANFILE has embedded CLCIFIL/OPCIFIL too."
+      - edge: "CLOSEFIL -> DISCGRP"
+        valid: true
+        reason: "DISCGRP redefines cluster, needs CICS files closed"
+      - edge: "CLOSEFIL -> TCATBALF"
+        valid: true
+        reason: "TCATBALF redefines cluster"
+      - edge: "CLOSEFIL -> TRANTYPE"
+        valid: true
+        reason: "TRANTYPE redefines cluster"
+      - edge: "CLOSEFIL -> DUSRSECJ"
+        valid: true
+        reason: "CLOSEFIL closes USRSEC. DUSRSECJ redefines it."
+
+    core_processing:
+      - edge: "ACCTFILE -> POSTTRAN"
+        valid: true
+        reason: "POSTTRAN reads ACCTDATA.VSAM.KSDS"
+      - edge: "TCATBALF -> POSTTRAN"
+        valid: true
+        reason: "POSTTRAN reads TCATBALF.VSAM.KSDS"
+      - edge: "XREFFILE -> POSTTRAN"
+        valid: true
+        reason: "POSTTRAN reads CARDXREF.VSAM.KSDS"
+      - edge: "POSTTRAN -> INTCALC"
+        valid: true
+        reason: "INTCALC depends on transaction data updated by POSTTRAN"
+      - edge: "INTCALC -> TRANBKP"
+        valid: true
+        reason: "TRANBKP backs up TRANSACT.VSAM after INTCALC runs"
+      - edge: "TRANBKP -> COMBTRAN"
+        valid: true
+        reason: "COMBTRAN reads TRANSACT.BKUP(0) produced by TRANBKP"
+      - edge: "COMBTRAN -> TRANIDX"
+        valid: true
+        reason: "TRANIDX rebuilds AIX on reloaded TRANSACT.VSAM"
+
+    finalization:
+      - edge: "TRANIDX -> OPENFIL"
+        valid: true
+        reason: "OPENFIL opens CICS files after batch is done"
+      - edge: "DISCGRP -> OPENFIL"
+        valid: true
+        reason: "DISCGRP redefines cluster, OPENFIL reopens CICS"
+        notes: "MINOR: OPENFIL doesn't open DISCGRP's CICS file. DISCGRP has no CICS file association in CLOSEFIL/OPENFIL."
+
+    reporting:
+      - edge: "TRANIDX -> TRANREPT"
+        valid: true
+        reason: "TRANREPT reads TRANSACT.VSAM.KSDS which TRANIDX rebuilds"
+      - edge: "TCATBALF -> PRTCATBL"
+        valid: true
+        reason: "PRTCATBL reads TCATBALF.VSAM.KSDS"
+
+  missing_nodes_from_dag:
+    - node: TRANCATG
+      severity: MINOR
+      notes: "TRANCATG.jcl exists as VSAM definition but is not in the DAG's Data Refresh subgraph despite being in doc's mention. It IS listed in the DAG but only as a label reference. Actually present."
+    - node: CREASTMT
+      severity: CRITICAL
+      notes: "Statement generation workflow not in DAG"
+    - node: FTPJCL
+      severity: MAJOR
+      notes: "FTP workflow not in DAG"
+    - node: INTRDRJ1/INTRDRJ2
+      severity: MAJOR
+      notes: "Internal reader chain not in DAG"
+    - node: TXT2PDF1
+      severity: MAJOR
+      notes: "PDF conversion not in DAG"
+    - node: DEFCUST
+      severity: MAJOR
+      notes: "Customer VSAM alternate definition not in DAG"
+
+section_3_3_run_full_batch_verification:
+  doc_line: 516-527
+  doc_phases:
+    - phase: 1
+      doc_jobs: [CLOSEFIL]
+      actual_jobs: [CLOSEFIL]
+      status: CORRECT
+    - phase: 2
+      doc_jobs: [ACCTFILE, CARDFILE, XREFFILE, CUSTFILE, TRANBKP, DISCGRP, TCATBALF, TRANTYPE, DUSRSECJ]
+      actual_jobs: [ACCTFILE, CARDFILE, XREFFILE, CUSTFILE, TRANBKP, DISCGRP, TCATBALF, TRANTYPE, DUSRSECJ]
+      status: CORRECT
+    - phase: 3
+      doc_jobs: [POSTTRAN]
+      actual_jobs: [POSTTRAN]
+      status: CORRECT
+    - phase: 4
+      doc_jobs: [INTCALC]
+      actual_jobs: [INTCALC]
+      status: CORRECT
+    - phase: 5
+      doc_jobs: [TRANBKP, COMBTRAN]
+      actual_jobs: [TRANBKP, COMBTRAN]
+      status: CORRECT
+    - phase: 6
+      doc_jobs: [TRANIDX]
+      actual_jobs: [TRANIDX]
+      status: CORRECT
+    - phase: 7
+      doc_jobs: [OPENFIL]
+      actual_jobs: [OPENFIL]
+      status: CORRECT
+  overall_status: CORRECT
+  notes: "run_full_batch.sh phases match documentation perfectly"
+
+phantom_node_inventory:
+  - node: MNTTRDB2
+    location: "Section 3.1 WEEKLY-DisclosureGroupsRefresh"
+    exists_in_repo: false
+    severity: MAJOR
+    notes: "No MNTTRDB2.jcl in repository. Hallucinated node."

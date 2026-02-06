@@ -1,0 +1,166 @@
+# VL-007 Field and Data Structure Verification
+# Validates field definitions, data layouts, and quantitative claims
+
+# ============================================================
+# CSUSR01Y.cpy - User Security Record
+# ============================================================
+user_security_record:
+  source: app/cpy/CSUSR01Y.cpy
+  doc_section: "2.3"
+  doc_claim_lines: "17-23"
+  actual_lines: "17-23"
+  record_name: SEC-USER-DATA
+  doc_record_length: 80
+  actual_record_length: 80  # 8+20+20+8+1+23 = 80
+  status: VERIFIED
+
+  fields:
+    - name: SEC-USR-ID
+      doc_pic: "PIC X(08)"
+      actual_pic: "PIC X(08)"
+      doc_line: 17
+      actual_line: 18
+      status: VERIFIED
+      notes: "Primary key"
+
+    - name: SEC-USR-FNAME
+      doc_pic: "PIC X(20)"
+      actual_pic: "PIC X(20)"
+      doc_line: 18
+      actual_line: 19
+      status: VERIFIED
+
+    - name: SEC-USR-LNAME
+      doc_pic: "PIC X(20)"
+      actual_pic: "PIC X(20)"
+      doc_line: 19
+      actual_line: 20
+      status: VERIFIED
+
+    - name: SEC-USR-PWD
+      doc_pic: "PIC X(08)"
+      actual_pic: "PIC X(08)"
+      doc_line: 20
+      actual_line: 21
+      status: VERIFIED
+      notes: "Plain text password storage"
+
+    - name: SEC-USR-TYPE
+      doc_pic: "PIC X(01)"
+      actual_pic: "PIC X(01)"
+      doc_line: 21
+      actual_line: 22
+      status: VERIFIED
+      notes: "'A'=Admin, 'U'=User"
+
+    - name: SEC-USR-FILLER
+      doc_pic: "PIC X(23)"
+      actual_pic: "PIC X(23)"
+      doc_line: 22
+      actual_line: 23
+      status: VERIFIED
+
+  field_summary:
+    total_fields: 6
+    verified: 6
+    errors: 0
+    notes: >
+      Document references lines 17-23 for the 01-level through fields.
+      Actual file has the 01-level at line 17 and fields at 18-23.
+      The code listing in the document shows the structure correctly.
+
+# ============================================================
+# COCOM01Y.cpy - COMMAREA Session Structure
+# ============================================================
+commarea_structure:
+  source: app/cpy/COCOM01Y.cpy
+  doc_section: "4.1"
+  doc_claim_lines: "19-44"
+  actual_lines: "19-44"
+  record_name: CARDDEMO-COMMAREA
+  status: ERROR
+  finding: M-001
+
+  groups:
+    - name: CDEMO-GENERAL-INFO
+      fields:
+        - { name: CDEMO-FROM-TRANID, pic: "PIC X(04)", bytes: 4, verified: true }
+        - { name: CDEMO-FROM-PROGRAM, pic: "PIC X(08)", bytes: 8, verified: true }
+        - { name: CDEMO-TO-TRANID, pic: "PIC X(04)", bytes: 4, verified: true }
+        - { name: CDEMO-TO-PROGRAM, pic: "PIC X(08)", bytes: 8, verified: true }
+        - { name: CDEMO-USER-ID, pic: "PIC X(08)", bytes: 8, verified: true }
+        - { name: CDEMO-USER-TYPE, pic: "PIC X(01)", bytes: 1, verified: true }
+        - { name: CDEMO-PGM-CONTEXT, pic: "PIC 9(01)", bytes: 1, verified: true }
+      subtotal: 34
+
+    - name: CDEMO-CUSTOMER-INFO
+      fields:
+        - { name: CDEMO-CUST-ID, pic: "PIC 9(09)", bytes: 9, verified: true }
+        - { name: CDEMO-CUST-FNAME, pic: "PIC X(25)", bytes: 25, verified: true }
+        - { name: CDEMO-CUST-MNAME, pic: "PIC X(25)", bytes: 25, verified: true }
+        - { name: CDEMO-CUST-LNAME, pic: "PIC X(25)", bytes: 25, verified: true }
+      subtotal: 84
+
+    - name: CDEMO-ACCOUNT-INFO
+      fields:
+        - { name: CDEMO-ACCT-ID, pic: "PIC 9(11)", bytes: 11, verified: true }
+        - { name: CDEMO-ACCT-STATUS, pic: "PIC X(01)", bytes: 1, verified: true }
+      subtotal: 12
+
+    - name: CDEMO-CARD-INFO
+      fields:
+        - { name: CDEMO-CARD-NUM, pic: "PIC 9(16)", bytes: 16, verified: true }
+      subtotal: 16
+
+    - name: CDEMO-MORE-INFO
+      fields:
+        - { name: CDEMO-LAST-MAP, pic: "PIC X(7)", bytes: 7, verified: true }
+        - { name: CDEMO-LAST-MAPSET, pic: "PIC X(7)", bytes: 7, verified: true }
+      subtotal: 14
+
+  size_calculation:
+    doc_claimed: "~130 bytes"
+    actual_total: 160
+    breakdown: "34 + 84 + 12 + 16 + 14 = 160"
+    discrepancy: 30
+    severity: MAJOR
+    notes: >
+      Document states "~130 bytes" but actual sum of all fields is exactly 160 bytes.
+      This is a 23% error. The field-level details in the document are all correct;
+      only the summary total is wrong.
+
+# ============================================================
+# CVACT02Y.cpy - Card Record
+# ============================================================
+card_record:
+  source: app/cpy/CVACT02Y.cpy
+  doc_section: "5/SEC-006"
+  status: VERIFIED
+
+  fields_checked:
+    - name: CARD-NUM
+      doc_pic: "PIC X(16)"
+      actual_pic: "PIC X(16)"
+      actual_line: 5
+      status: VERIFIED
+
+    - name: CARD-CVV-CD
+      doc_pic: "PIC 9(03)"
+      actual_pic: "PIC 9(03)"
+      actual_line: 7
+      status: VERIFIED
+
+# ============================================================
+# CVTRA05Y.cpy - Transaction Record
+# ============================================================
+transaction_record:
+  source: app/cpy/CVTRA05Y.cpy
+  doc_section: "5/SEC-006"
+  status: VERIFIED
+
+  fields_checked:
+    - name: TRAN-CARD-NUM
+      doc_pic: "PIC X(16)"
+      actual_pic: "PIC X(16)"
+      actual_line: 15
+      status: VERIFIED

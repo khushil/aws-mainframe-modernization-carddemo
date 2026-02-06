@@ -1,0 +1,162 @@
+# VL-007 Security Findings Verification
+# Validates each SEC-00x finding from SECURITY-MODEL.md Section 5
+
+findings:
+  - id: SEC-001
+    title: "Plain-Text Password Storage and Comparison"
+    severity: CRITICAL
+    doc_locations:
+      - "CSUSR01Y.cpy:21"
+      - "COSGN00C.cbl:223"
+    verification_status: VERIFIED
+    evidence: >
+      CSUSR01Y.cpy:21 shows SEC-USR-PWD PIC X(08) with no encryption indicator.
+      COSGN00C.cbl:223 shows IF SEC-USR-PWD = WS-USER-PWD (direct comparison).
+      No hashing, salting, or key derivation present anywhere in codebase.
+
+  - id: SEC-002
+    title: "No Account Lockout Mechanism"
+    severity: CRITICAL
+    doc_locations:
+      - "COSGN00C.cbl:241-257"
+    verification_status: VERIFIED
+    evidence: >
+      Lines 241-257 contain the EVALUATE block handling authentication outcomes.
+      No failure counter variable exists in WORKING-STORAGE. No lockout logic.
+      After wrong password, flow returns to login screen without any tracking.
+
+  - id: SEC-003
+    title: "User Enumeration via Error Messages"
+    severity: HIGH
+    doc_locations:
+      - "COSGN00C.cbl:242"
+      - "COSGN00C.cbl:249"
+    verification_status: VERIFIED
+    evidence: >
+      Line 242: 'Wrong Password. Try again ...' (user exists, wrong password)
+      Line 249: 'User not found. Try again ...' (user does not exist)
+      Exact string literals match document. Different messages enable enumeration.
+
+  - id: SEC-004
+    title: "No Session Timeout"
+    severity: CRITICAL
+    doc_locations:
+      - "Application-wide"
+    verification_status: VERIFIED
+    evidence: >
+      COCOM01Y.cpy COMMAREA contains no timestamp field.
+      No CICS ASKTIME or time comparison in any online program.
+      EXEC CICS RETURN with COMMAREA preserves session indefinitely.
+
+  - id: SEC-005
+    title: "Missing Per-Program Authorization Checks"
+    severity: CRITICAL
+    doc_locations:
+      - "All CO*.cbl transaction programs"
+    verification_status: VERIFIED
+    evidence: >
+      Checked COACTVWC.cbl, COACTUPC.cbl, COCRDLIC.cbl, COTRN00C.cbl,
+      COTRN01C.cbl, COTRN02C.cbl, CORPT00C.cbl, COBIL00C.cbl.
+      None validate CDEMO-USER-TYPE at program entry. Authorization
+      relies solely on menu selection check in COMEN01C:136-143.
+
+  - id: SEC-006
+    title: "Unencrypted Credit Card Data"
+    severity: CRITICAL
+    doc_locations:
+      - "CVACT02Y.cpy:5-7"
+      - "CVTRA05Y.cpy:15"
+      - "COCOM01Y.cpy:41"
+    verification_status: VERIFIED
+    evidence: >
+      CVACT02Y.cpy:5 CARD-NUM PIC X(16) - full PAN in card master
+      CVACT02Y.cpy:7 CARD-CVV-CD PIC 9(03) - CVV stored (prohibited by PCI)
+      CVTRA05Y.cpy:15 TRAN-CARD-NUM PIC X(16) - full PAN in transactions
+      COCOM01Y.cpy:41 CDEMO-CARD-NUM PIC 9(16) - full PAN in session
+
+  - id: SEC-007
+    title: "No Audit Logging"
+    severity: CRITICAL
+    doc_locations:
+      - "Application-wide"
+    verification_status: VERIFIED
+    evidence: >
+      Searched all CO*.cbl files for WRITE operations to audit/log files.
+      Only DISPLAY statements found in batch CB*.cbl programs (operational, not security).
+      No SMF record generation, no security event capture.
+
+  - id: SEC-008
+    title: "Unsigned COMMAREA Session Context"
+    severity: HIGH
+    doc_locations:
+      - "COCOM01Y.cpy"
+    verification_status: VERIFIED
+    evidence: >
+      COCOM01Y.cpy defines CARDDEMO-COMMAREA with no MAC, signature,
+      or checksum field. CDEMO-USER-TYPE PIC X(01) at offset 25 could
+      theoretically be modified between transactions.
+
+  - id: SEC-009
+    title: "SSN Displayed Without Masking"
+    severity: MEDIUM
+    doc_locations:
+      - "COACTVWC.cbl:496-504"
+    verification_status: VERIFIED
+    evidence: >
+      COACTVWC.cbl:496-504 STRING statement formats SSN as XXX-XX-XXXX
+      using CUST-SSN(1:3) '-' CUST-SSN(4:2) '-' CUST-SSN(6:4).
+      Full SSN displayed with formatting dashes only, no masking.
+
+  - id: SEC-010
+    title: "Batch Programs Without Security Context"
+    severity: CRITICAL
+    doc_locations:
+      - "All CB*.cbl programs"
+    verification_status: VERIFIED
+    evidence: >
+      Batch programs (CBTRN01C, CBACT01C, etc.) contain no COPY CSUSR01Y,
+      no COPY COCOM01Y, no user validation or authorization checks.
+      JCL submission is the only access control mechanism.
+
+findings_summary:
+  total: 10
+  verified: 10
+  failed: 0
+  accuracy: "100%"
+
+# ============================================================
+# Hallucination Check Results
+# ============================================================
+hallucination_checks:
+  - id: H-001
+    check: "Does document reference COUSR00Y.cpy?"
+    expected: false
+    actual: false
+    result: PASS
+    notes: "Document correctly uses CSUSR01Y.cpy throughout"
+
+  - id: H-002
+    check: "Does document claim CDEMO-USER-FNAME or CDEMO-USER-LNAME fields?"
+    expected: false
+    actual: false
+    result: PASS
+    notes: "Document only shows actual COMMAREA fields from COCOM01Y.cpy"
+
+  - id: H-003
+    check: "Does document reference CVCAR00Y.cpy?"
+    expected: false
+    actual: false
+    result: PASS
+    notes: "No such copybook referenced; uses correct CVACT02Y.cpy"
+
+  - id: H-004
+    check: "Does document reference S9(7)V99 PIC clause?"
+    expected: false
+    actual: false
+    result: PASS
+    notes: "No fabricated PIC clauses found in document"
+
+hallucination_summary:
+  checks_performed: 4
+  hallucinations_found: 0
+  verdict: "ALL CLEAR - Zero hallucinations detected"

@@ -1,0 +1,249 @@
+validation_id: VL-006
+check_type: inventory-completeness
+description: Compare all source JCL files and batch programs against documentation mentions
+
+jcl_inventory:
+  total_files_in_repo: 38
+  total_documented: 32
+  total_missing: 6
+  coverage_percentage: 84.2
+
+  documented_files:
+    - name: ACCTFILE.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: CARDFILE.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented with CLCIFIL/OPCIFIL steps"
+    - name: CUSTFILE.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Documented but steps not fully detailed"
+    - name: XREFFILE.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: TRANFILE.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: TRANTYPE.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: TRANCATG.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: TCATBALF.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: DISCGRP.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented"
+    - name: DUSRSECJ.jcl
+      documented: true
+      section: "2.1 VSAM File Definition Jobs"
+      notes: "Correctly documented with inline users"
+    - name: DEFGDGB.jcl
+      documented: true
+      section: "2.2 GDG Base Definition Jobs"
+      notes: "Correctly documented - 6 GDG bases"
+    - name: DEFGDGD.jcl
+      documented: true
+      section: "2.2 GDG Base Definition Jobs"
+      notes: "Correctly documented - 3 GDG bases"
+    - name: REPTFILE.jcl
+      documented: true
+      section: "2.2 GDG Base Definition Jobs"
+      notes: "Documented, dual role with section 2.4"
+    - name: DALYREJS.jcl
+      documented: true
+      section: "2.2 GDG Base Definition Jobs"
+      notes: "Correctly documented"
+    - name: POSTTRAN.jcl
+      documented: true
+      section: "2.3 Transaction Processing Jobs"
+      notes: "Correctly documented - PGM=CBTRN02C verified"
+    - name: INTCALC.jcl
+      documented: true
+      section: "2.3 Transaction Processing Jobs"
+      notes: "Correctly documented - PGM=CBACT04C verified"
+    - name: COMBTRAN.jcl
+      documented: true
+      section: "2.3 Transaction Processing Jobs"
+      notes: "Correctly documented - SORT + IDCAMS"
+    - name: TRANBKP.jcl
+      documented: true
+      section: "2.3 Transaction Processing Jobs"
+      notes: "Documented - uses REPROC proc"
+    - name: TRANIDX.jcl
+      documented: true
+      section: "2.3 Transaction Processing Jobs"
+      notes: "Correctly documented - STEP20/25/30"
+    - name: TRANREPT.jcl
+      documented: true
+      section: "2.4 Reporting Jobs"
+      notes: "Correctly documented - REPROC + SORT + CBTRN03C"
+    - name: PRTCATBL.jcl
+      documented: true
+      section: "2.4 Reporting Jobs"
+      notes: "Correctly documented - REPROC + SORT"
+    - name: CLOSEFIL.jcl
+      documented: true
+      section: "2.5 CICS File Management Jobs"
+      notes: "Correctly documented - 5 CICS files"
+    - name: OPENFIL.jcl
+      documented: true
+      section: "2.5 CICS File Management Jobs"
+      notes: "Correctly documented - 5 CICS files"
+    - name: READACCT.jcl
+      documented: true
+      section: "2.6 Data Read/Extract Jobs"
+      notes: "Correctly documented - PGM=CBACT01C, 3 output formats"
+    - name: READCARD.jcl
+      documented: true
+      section: "2.6 Data Read/Extract Jobs"
+      notes: "Briefly documented"
+    - name: READCUST.jcl
+      documented: true
+      section: "2.6 Data Read/Extract Jobs"
+      notes: "Briefly documented"
+    - name: READXREF.jcl
+      documented: true
+      section: "2.6 Data Read/Extract Jobs"
+      notes: "Briefly documented"
+    - name: CBEXPORT.jcl
+      documented: true
+      section: "2.7 Data Import/Export Jobs"
+      notes: "Correctly documented - 5 source files"
+    - name: CBIMPORT.jcl
+      documented: true
+      section: "2.7 Data Import/Export Jobs"
+      notes: "Correctly documented - 5 target files"
+    - name: CBADMCDJ.jcl
+      documented: true
+      section: "2.8 Other/Utility Jobs"
+      notes: "Correctly documented - DFHCSDUP"
+    - name: WAITSTEP.jcl
+      documented: true
+      section: "2.8 Other/Utility Jobs"
+      notes: "Correctly documented - COBSWAIT"
+    - name: ESDSRRDS.jcl
+      documented: true
+      section: "2.8 Other/Utility Jobs"
+      notes: "Correctly documented"
+
+  missing_files:
+    - name: CREASTMT.JCL
+      extension: ".JCL (uppercase)"
+      purpose: "Statement generation - creates card statements using CBSTM03A"
+      programs_used: [IDCAMS, SORT, IEFBR14, CBSTM03A]
+      severity: CRITICAL
+      notes: "Entire statement generation workflow undocumented. Uses CBSTM03A program that is also missing from program inventory."
+    - name: FTPJCL.JCL
+      extension: ".JCL (uppercase)"
+      purpose: "FTP file transfer to/from mainframe"
+      programs_used: [FTP]
+      severity: MAJOR
+      notes: "File transfer utility completely undocumented"
+    - name: INTRDRJ1.JCL
+      extension: ".JCL (uppercase)"
+      purpose: "Internal reader trigger - copies FTP file and triggers INTRDRJ2"
+      programs_used: [IDCAMS, IEBGENER]
+      severity: MAJOR
+      notes: "Internal reader chain (INTRDRJ1->INTRDRJ2) completely undocumented"
+    - name: INTRDRJ2.JCL
+      extension: ".JCL (uppercase)"
+      purpose: "Internal reader chained job - secondary copy of FTP backup"
+      programs_used: [IDCAMS]
+      severity: MAJOR
+      notes: "Second half of internal reader chain undocumented"
+    - name: TXT2PDF1.JCL
+      extension: ".JCL (uppercase)"
+      purpose: "Convert text statement to PDF using TXT2PDF REXX"
+      programs_used: [IKJEFT1B]
+      severity: MAJOR
+      notes: "PDF conversion utility undocumented; uses STATEMNT.PS from CREASTMT"
+    - name: DEFCUST.jcl
+      extension: ".jcl (lowercase)"
+      purpose: "Define customer VSAM cluster with alternate schema (AWS.CCDA.CUSTDATA)"
+      programs_used: [IDCAMS]
+      severity: MAJOR
+      notes: "Uses different DSN schema (AWS.CCDA vs AWS.M2.CARDDEMO). Different key spec (10,0 vs 9,0 in CUSTFILE)."
+
+batch_program_inventory:
+  total_programs_in_repo: 12
+  total_documented: 10
+  total_missing: 2
+  coverage_percentage: 83.3
+
+  documented_programs:
+    - name: CBACT01C.cbl
+      documented: true
+      job: READACCT
+      notes: "Correctly mapped"
+    - name: CBACT02C.cbl
+      documented: true
+      job: READCARD
+      notes: "Correctly mapped"
+    - name: CBACT03C.cbl
+      documented: true
+      job: READXREF
+      notes: "Correctly mapped"
+    - name: CBACT04C.cbl
+      documented: true
+      job: INTCALC
+      notes: "Correctly mapped"
+    - name: CBCUS01C.cbl
+      documented: true
+      job: READCUST
+      notes: "Correctly mapped"
+    - name: CBTRN02C.cbl
+      documented: true
+      job: POSTTRAN
+      notes: "Correctly mapped"
+    - name: CBTRN03C.cbl
+      documented: true
+      job: TRANREPT
+      notes: "Correctly mapped"
+    - name: CBEXPORT.cbl
+      documented: true
+      job: CBEXPORT
+      notes: "Correctly mapped"
+    - name: CBIMPORT.cbl
+      documented: true
+      job: CBIMPORT
+      notes: "Correctly mapped"
+    - name: CBTRN01C.cbl
+      documented: true
+      notes: "Program exists in repo but has NO JCL job reference. Appendix A omits it entirely. Completeness gap."
+
+  missing_programs:
+    - name: CBSTM03A.CBL
+      extension: ".CBL (uppercase)"
+      purpose: "Statement generation - main program called by CREASTMT.JCL"
+      severity: CRITICAL
+      notes: "Called from CREASTMT.JCL STEP040. Entirely undocumented."
+    - name: CBSTM03B.CBL
+      extension: ".CBL (uppercase)"
+      purpose: "Statement generation - subroutine called by CBSTM03A"
+      severity: CRITICAL
+      notes: "Subroutine for statement generation. Entirely undocumented."
+
+  underdocumented_programs:
+    - name: CBTRN01C.cbl
+      issue: "Exists in app/cbl/ but no JCL references it. Not in Appendix A program-to-job mapping table."
+      severity: MAJOR
+      notes: "This is a completeness gap. The program may be a library module or unreferenced."
+
+case_sensitivity_note: |
+  5 JCL files use uppercase .JCL extension: CREASTMT.JCL, FTPJCL.JCL, INTRDRJ1.JCL, INTRDRJ2.JCL, TXT2PDF1.JCL.
+  2 batch programs use uppercase .CBL extension: CBSTM03A.CBL, CBSTM03B.CBL.
+  All 5 uppercase-extension JCL files are missing from documentation.
+  Both uppercase-extension CBL programs are missing from documentation.
+  The documentation makes no mention of extension case variance.

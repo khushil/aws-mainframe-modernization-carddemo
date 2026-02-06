@@ -1,0 +1,48 @@
+validation_id: VL-006
+title: Batch Workflow Validation
+target_document: docs/reverse-engineering/05-specialized/BATCH-WORKFLOWS.md
+prompt_id: RE-006
+status: complete
+started: 2026-02-06T00:00:00Z
+completed: 2026-02-06T00:00:00Z
+
+phases:
+  - name: inventory-check
+    status: complete
+    artifacts:
+      - inventory-check.yaml
+  - name: exec-pgm-check
+    status: complete
+    artifacts:
+      - exec-pgm-check.yaml
+  - name: dd-statement-check
+    status: complete
+    artifacts:
+      - dd-statement-check.yaml
+  - name: dependency-dag-check
+    status: complete
+    artifacts:
+      - dependency-dag-check.yaml
+  - name: script-check
+    status: complete
+    artifacts:
+      - script-check.yaml
+  - name: report-generation
+    status: complete
+    artifacts:
+      - ../../docs/reverse-engineering/validation/VL-006-batch-workflow-report.md
+
+source_files_analyzed:
+  jcl_files: 38
+  batch_programs: 12
+  scripts: 3
+  documentation: 1
+
+scores:
+  source_reference_accuracy: 82
+  factual_accuracy: 85
+  completeness: 55
+  quantitative_accuracy: 40
+  documentation_quality: 88
+  weighted_total: 73.8
+  result: FAIL

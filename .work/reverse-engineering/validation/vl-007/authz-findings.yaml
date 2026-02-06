@@ -1,0 +1,193 @@
+# VL-007 Authorization Model Verification
+# Validates the access control matrix and role-check patterns
+
+# ============================================================
+# Online Program Inventory and Auth Check Status
+# ============================================================
+# Total online programs in codebase: 18 (CO*.cbl files)
+# Programs documented in access matrix: 17 (16 unique + COSGN00C as entry)
+# Programs missing from matrix: 1 (COBSWAIT)
+
+programs:
+  - program: COSGN00C
+    function: "Sign-On / Authentication"
+    in_matrix: true
+    auth_check: "Entry point - authentication performed here"
+    doc_accuracy: VERIFIED
+
+  - program: COADM01C
+    function: "Admin Menu"
+    in_matrix: true
+    auth_check: "Role routing at COSGN00C:230-234 (admin only)"
+    doc_accuracy: VERIFIED
+    notes: "No explicit role check in program itself; relies on login routing"
+
+  - program: COMEN01C
+    function: "User Menu"
+    in_matrix: true
+    auth_check: "COMEN01C:136-143 menu-level check"
+    doc_accuracy: VERIFIED
+    notes: "Checks CDEMO-USRTYP-USER AND CDEMO-MENU-OPT-USRTYPE(WS-OPTION) = 'A'"
+
+  - program: COACTVWC
+    function: "Account View"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+    set_pattern: "Line 344: SET CDEMO-USRTYP-USER TO TRUE"
+    set_pattern_documented: false
+
+  - program: COACTUPC
+    function: "Account Update"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+    set_pattern: "Line 947: SET CDEMO-USRTYP-USER TO TRUE"
+    set_pattern_documented: false
+
+  - program: COCRDLIC
+    function: "Credit Card List"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+    set_pattern: "Lines 320, 388, 466, 522, 550: SET CDEMO-USRTYP-USER TO TRUE"
+    set_pattern_documented: false
+    notes: "5 instances of the SET pattern - most occurrences of any program"
+
+  - program: COCRDSLC
+    function: "Credit Card View"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+    set_pattern: "Line 326: SET CDEMO-USRTYP-USER TO TRUE"
+    set_pattern_documented: false
+
+  - program: COCRDUPC
+    function: "Credit Card Update"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+    set_pattern: "Line 464: SET CDEMO-USRTYP-USER TO TRUE"
+    set_pattern_documented: false
+
+  - program: COTRN00C
+    function: "Transaction List"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+
+  - program: COTRN01C
+    function: "Transaction View"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+
+  - program: COTRN02C
+    function: "Transaction Add"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+
+  - program: CORPT00C
+    function: "Reports"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+
+  - program: COBIL00C
+    function: "Bill Payment"
+    in_matrix: true
+    auth_check: "NONE"
+    doc_accuracy: VERIFIED
+
+  - program: COUSR00C
+    function: "User List"
+    in_matrix: true
+    auth_check: "Menu only (COADM01C)"
+    doc_accuracy: VERIFIED
+
+  - program: COUSR01C
+    function: "User Add"
+    in_matrix: true
+    auth_check: "Menu only (COADM01C)"
+    doc_accuracy: VERIFIED
+
+  - program: COUSR02C
+    function: "User Update"
+    in_matrix: true
+    auth_check: "Menu only (COADM01C)"
+    doc_accuracy: VERIFIED
+
+  - program: COUSR03C
+    function: "User Delete"
+    in_matrix: true
+    auth_check: "Menu only (COADM01C)"
+    doc_accuracy: VERIFIED
+
+  - program: COBSWAIT
+    function: "Wait Utility (PARM in centiseconds)"
+    in_matrix: false
+    auth_check: "NONE (batch utility, no CICS/COMMAREA)"
+    doc_accuracy: MISSING
+    finding: M-002
+    notes: >
+      COBSWAIT.cbl is a batch utility program that accepts a PARM value
+      from SYSIN and calls MVSWAIT. It has no CICS commands and no COMMAREA.
+      While it's a batch utility rather than an interactive program, it is
+      a CO*-prefixed program and should be accounted for in the access matrix.
+
+# ============================================================
+# SET CDEMO-USRTYP-USER TO TRUE Pattern (Undocumented)
+# ============================================================
+set_pattern_analysis:
+  finding: M-003
+  description: >
+    Multiple programs contain SET CDEMO-USRTYP-USER TO TRUE statements that
+    force the user type to 'U' (regular user). This is security-relevant
+    as it represents a privilege reset/downgrade that could affect session
+    state. The pattern appears in 5 programs at 9 code locations.
+
+  occurrences:
+    - file: COACTVWC.cbl
+      line: 344
+      context: "Account view - resets user type to User"
+
+    - file: COACTUPC.cbl
+      line: 947
+      context: "Account update - resets user type to User"
+
+    - file: COCRDLIC.cbl
+      lines: [320, 388, 466, 522, 550]
+      context: "Card list - 5 occurrences resetting user type"
+
+    - file: COCRDSLC.cbl
+      line: 326
+      context: "Card view - resets user type to User"
+
+    - file: COCRDUPC.cbl
+      line: 464
+      context: "Card update - resets user type to User"
+
+  total_programs: 5
+  total_occurrences: 9
+  documented_in_security_model: false
+  security_relevance: >
+    These SET statements modify the COMMAREA session state, changing the
+    user's role designation. This could cause an admin user to lose admin
+    privileges mid-session when navigating through these programs. This is
+    a security-relevant behavior that should be documented in the security
+    model as it affects the authorization model.
+
+# ============================================================
+# COPAUS0C Reference
+# ============================================================
+copaus0c_check:
+  finding: m-001
+  description: >
+    COMEN02Y.cpy option 11 references program COPAUS0C (Pending Authorization View).
+    The document correctly lists this in the user menu options table. However,
+    no file app/cbl/COPAUS0C.cbl exists in the codebase. This appears to be a
+    planned but unimplemented feature. The document should note this.
+  menu_reference: "COMEN02Y.cpy:86-90"
+  file_exists: false
+  severity: MINOR
