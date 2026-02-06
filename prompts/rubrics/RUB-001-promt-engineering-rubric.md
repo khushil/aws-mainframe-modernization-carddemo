@@ -37,7 +37,17 @@ Use this document as a reference when creating new prompts or enhancing existing
     - [Methodology Templates (COBOL)](#methodology-templates-cobol)
     - [DB2/IMS/MQ Extension Patterns](#db2imsmq-extension-patterns)
     - [CardDemo Quick Reference](#carddemo-quick-reference)
-12. [Customisation Guide](#customisation-guide)
+12. [Validation-Focused Patterns for Multi-Document Generation](#validation-focused-patterns)
+    - [Codebase Manifest Pattern](#codebase-manifest-pattern)
+    - [Source Tree Exhaustive Discovery Pattern](#source-tree-exhaustive-discovery-pattern)
+    - [Extension Directory Coverage Pattern](#extension-directory-coverage-pattern)
+13. [Post-Generation Quality Assurance Patterns](#post-generation-quality-assurance-patterns)
+    - [Post-Generation Self-Validation Pattern](#post-generation-self-validation-pattern)
+    - [Cross-Document Consistency Pattern](#cross-document-consistency-pattern)
+    - [Numeric Claim Verification Pattern](#numeric-claim-verification-pattern)
+    - [Hallucination Prevention Pattern](#hallucination-prevention-pattern)
+    - [Inline Confidence Annotation Pattern](#inline-confidence-annotation-pattern)
+14. [Customisation Guide](#customisation-guide)
 
 ---
 
@@ -77,6 +87,7 @@ Use this document as a reference when creating new prompts or enhancing existing
 | **Check Before Starting** | First action is always checking for existing progress; never restart completed work |
 | **Complete Then Move** | Finish one unit of work completely before starting another |
 | **No Arbitrary Limits** | NEVER use `head -N` or `tail -N` to limit file discovery; process ALL files or show count + warn |
+| **Verify Before Writing** | NEVER write a file reference, count, or byte size without verifying against source. Vague numbers ("~130 bytes") are bugs. |
 | **Separate Work from Deliverables** | `.work/` is for internal tracking; `docs/` is for final artifacts humans review |
 
 ---
@@ -628,6 +639,29 @@ Before finalising any prompt, verify:
 | `find \| head -50` | 509 | 50 | **90%** |
 | `find \| head -100` | 509 | 100 | **80%** |
 | `find` (no limit) | 509 | 509 | **0%** |
+
+### Extension Directories and Completeness
+
+Extension directory blind spots are **as dangerous** as arbitrary `head -N` limits. In CardDemo, extension directories (`app/app-*/`) contain **29% of the codebase** (13 additional COBOL programs, 5 JCL files, and integration-specific copybooks). Searching only the core `app/cbl/` directory silently drops nearly a third of all programs.
+
+**The problem is structural, not accidental:**
+- Extension directories use a different path prefix (`app/app-*/cbl/` vs `app/cbl/`)
+- Standard `find app/cbl -name "*.cbl"` will NEVER find them
+- Programs in extensions may have unique integrations (DB2, IMS, MQ) not present in core
+- Classifying an extension program as "hallucinated" is a false positive caused by incomplete search
+
+```bash
+# ❌ DANGEROUS - Extension directories invisible
+find app/cbl -name "*.cbl" | wc -l              # Returns 31, actual total is 44
+
+# ✅ SAFE - Includes extension directories
+find app/cbl app/app-*/cbl -type f \( -iname "*.cbl" \) 2>/dev/null | wc -l   # Returns 44
+```
+
+**Checklist addition for prompt authors:**
+- [ ] All `find` commands search extension directories (`app/app-*/`) in addition to core
+- [ ] Extension directory scope (include/exclude) is explicitly documented with rationale
+- [ ] Programs found in extensions are not falsely classified as hallucinations
 
 ---
 
@@ -1537,29 +1571,44 @@ Finding relevant source files in a mainframe codebase requires different search 
 ```xml
 <source_discovery_cobol>
   <discovery_commands>
-  **File Counts:**
+  **File Counts (CRITICAL: use -iname for case-insensitive matching):**
   ```bash
-  # Total COBOL programs
-  find app/cbl -name "*.cbl" | wc -l
+  # Core COBOL programs only (case-insensitive — catches .cbl AND .CBL)
+  find app/cbl -type f \( -iname "*.cbl" \) | wc -l                              # Core: 31
 
-  # Total copybooks
-  find app/cpy -name "*.cpy" | wc -l
+  # Total COBOL programs including extension directories
+  find app/cbl app/app-*/cbl -type f \( -iname "*.cbl" \) 2>/dev/null | wc -l   # Total: 44
 
-  # BMS mapsets
-  find app/bms -name "*.bms" | wc -l
+  # Core copybooks only (case-insensitive)
+  find app/cpy -type f \( -iname "*.cpy" \) | wc -l                              # Core: 29
 
-  # JCL jobs
-  find app/jcl -name "*.jcl" | wc -l
+  # Total copybooks including extensions and BMS-generated
+  find app/cpy app/cpy-bms app/app-*/cpy -type f \( -iname "*.cpy" \) 2>/dev/null | wc -l
+
+  # BMS mapsets (case-insensitive)
+  find app/bms -type f \( -iname "*.bms" \) | wc -l
+
+  # JCL jobs (case-insensitive — catches .jcl AND .JCL)
+  find app/jcl -type f \( -iname "*.jcl" \) | wc -l                              # Total: 38
+
+  # Total JCL including extensions
+  find app/jcl app/app-*/jcl -type f \( -iname "*.jcl" \) 2>/dev/null | wc -l
   ```
 
-  **Glob Patterns:**
+  **IMPORTANT:** Always use `-iname` instead of `-name`. CardDemo has 2 uppercase `.CBL` files and
+  5 uppercase `.JCL` files that `-name "*.cbl"` and `-name "*.jcl"` will silently miss.
+
+  **Glob Patterns (include case-insensitive and extension variants):**
   | Pattern | Matches |
   |---------|---------|
-  | `app/cbl/CO*.cbl` | Online CICS programs |
-  | `app/cbl/CB*.cbl` | Batch programs |
-  | `app/cpy/*Y.cpy` | Copybooks |
-  | `app/bms/*.bms` | BMS screen definitions |
-  | `app/jcl/*.jcl` | Batch job control |
+  | `app/cbl/CO*.[cC][bB][lL]` | Online CICS programs (case-insensitive) |
+  | `app/cbl/CB*.[cC][bB][lL]` | Batch programs (case-insensitive) |
+  | `app/app-*/cbl/*.[cC][bB][lL]` | Extension directory programs |
+  | `app/cpy/*.[cC][pP][yY]` | Copybooks (case-insensitive) |
+  | `app/cpy-bms/*.[cC][pP][yY]` | BMS-generated copybooks |
+  | `app/bms/*.[bB][mM][sS]` | BMS screen definitions (case-insensitive) |
+  | `app/jcl/*.[jJ][cC][lL]` | Batch job control (case-insensitive) |
+  | `app/app-*/jcl/*.[jJ][cC][lL]` | Extension JCL files |
   </discovery_commands>
 
   <grep_patterns>
@@ -1605,16 +1654,48 @@ Finding relevant source files in a mainframe codebase requires different search 
 discovery:
   last_updated: "2026-01-23T14:30:00Z"
 
+  # CRITICAL: Always record scope decision
+  scope: "core+extensions"  # or "core-only" with documented rationale
+  case_sensitivity:
+    note: "All find commands use -iname (case-insensitive)"
+    reason: "CardDemo has 2 uppercase .CBL files and 5 uppercase .JCL files"
+    verified: true
+
   counts:
-    cobol_programs: 39
-    copybooks: 41
-    bms_mapsets: 21
-    jcl_jobs: 38
+    cobol_programs:
+      core: 31          # app/cbl/ only
+      extensions: 13    # app/app-*/cbl/
+      total: 44         # Use THIS number in all documentation
+    copybooks:
+      core: 29          # app/cpy/
+      bms_generated: 17 # app/cpy-bms/
+      total: 46         # core + bms-generated (extensions may add more)
+    bms_mapsets: 17
+    jcl_jobs:
+      core: 33          # app/jcl/ lowercase .jcl
+      uppercase: 5      # app/jcl/ uppercase .JCL
+      extensions: 0     # app/app-*/jcl/ (verify at discovery time)
+      total: 38
+
+  extension_directories:
+    - path: "app/app-authorization-ims-db2-mq/"
+      integration: "IMS DB + DB2 + MQ"
+      program_count: 5
+      description: "Authorization processing with IMS, DB2, and MQ"
+    - path: "app/app-transaction-type-db2/"
+      integration: "DB2"
+      program_count: 4
+      description: "Transaction type management with DB2"
+    - path: "app/app-vsam-mq/"
+      integration: "MQ"
+      program_count: 4
+      description: "Account extraction with MQ"
 
   by_type:
     online_cics: 16
     batch: 10
     utility: 3
+    extension: 13
 
   large_files:
     - path: "app/cbl/COACTUPC.cbl"
@@ -2081,6 +2162,783 @@ batch_workflow_order:
   4: "INTCALC.jcl - Calculate interest"
   5: "COMBTRAN.jcl - Combine transactions"
   6: "OPENFIL.jcl - Reopen CICS files"
+
+# EXTENSION DIRECTORIES (29% of codebase — DO NOT OMIT)
+extension_directories:
+  app-authorization-ims-db2-mq:
+    path: "app/app-authorization-ims-db2-mq/"
+    integration_types: ["IMS DB", "DB2", "MQ"]
+    programs: 5
+    description: "Authorization processing demonstrating IMS hierarchical DB, DB2 relational queries, and MQ message queuing"
+    key_programs:
+      - "COAUTHLC: Authorization list (IMS+DB2+MQ)"
+      - "MNTTRDB2: Transaction type maintenance (DB2) — NOT a hallucination"
+  app-transaction-type-db2:
+    path: "app/app-transaction-type-db2/"
+    integration_types: ["DB2"]
+    programs: 4
+    description: "Transaction type management using DB2 tables instead of VSAM"
+  app-vsam-mq:
+    path: "app/app-vsam-mq/"
+    integration_types: ["MQ"]
+    programs: 4
+    description: "Account data extraction and MQ message queuing for external system integration"
+
+file_count_summary:
+  note: "ALWAYS use -iname (case-insensitive) for file discovery"
+  cobol_programs:
+    core: 31       # app/cbl/ (29 .cbl + 2 .CBL)
+    extensions: 13 # app/app-*/cbl/
+    total: 44
+  jcl_jobs:
+    core: 38       # app/jcl/ (33 .jcl + 5 .JCL)
+  copybooks:
+    core: 29       # app/cpy/
+    bms_generated: 17  # app/cpy-bms/
+```
+
+---
+
+## Validation-Focused Patterns for Multi-Document Generation
+
+When generating a multi-document suite (such as reverse-engineering documentation), systematic errors compound across documents. The patterns in this section address **root causes** identified through validation of CardDemo's 43-document reverse-engineering output (VL-000 through VL-008):
+
+| Validation Finding | Score | Root Cause | Pattern That Prevents It |
+|--------------------|-------|------------|--------------------------|
+| VL-000 Cross-Doc Consistency | 71.0/100 | No canonical definitions; each doc independently computed counts | Codebase Manifest, Cross-Document Consistency |
+| VL-006 Batch Workflows | 76.6/100 | Case-sensitive `find`, extension blind spots | Source Tree Exhaustive Discovery, Extension Directory Coverage |
+| COMMAREA size "~130" vs "~155" vs 160 | — | Estimated instead of computed from PIC clauses | Numeric Claim Verification |
+| MNTTRDB2 false hallucination | — | Extension directory not searched | Extension Directory Coverage, Hallucination Prevention |
+
+---
+
+### Codebase Manifest Pattern
+
+#### Problem
+When multiple documents independently count or list source files, they inevitably disagree. Document A says "29 COBOL programs," Document B says "39," Document C says "44" — all defensible depending on scope, but the inconsistency undermines credibility.
+
+#### Solution
+Create a single-source-of-truth **codebase manifest** during Phase 0 that ALL subsequent phases reference.
+
+#### Template
+
+```yaml
+# .work/CODEBASE-MANIFEST.yaml — Created in Phase 0, referenced by ALL phases
+# RULE: No document may independently compute file counts. All counts come from here.
+
+manifest:
+  created: "YYYY-MM-DDTHH:MM:SSZ"
+  created_by: "Phase 0 Discovery"
+  scope: "core+extensions"  # MUST document scope decision
+
+  case_sensitivity_note: >
+    All counts derived using -iname (case-insensitive). CardDemo contains
+    uppercase extensions (.CBL, .JCL) that -name would miss.
+
+  file_counts:
+    cobol_programs:
+      core: 31          # app/cbl/ only (29 .cbl + 2 .CBL)
+      extensions: 13    # app/app-*/cbl/
+      total: 44
+      scope_note: "Use 'core: 31' when discussing core app; use 'total: 44' when discussing full codebase"
+    copybooks:
+      core: 29          # app/cpy/
+      bms_generated: 17 # app/cpy-bms/
+      total: 46
+    bms_mapsets: 17     # app/bms/
+    jcl_jobs:
+      lowercase: 33     # app/jcl/*.jcl
+      uppercase: 5      # app/jcl/*.JCL
+      total: 38
+    assembler: 1        # app/asm/
+
+  extension_directories:
+    - path: "app/app-authorization-ims-db2-mq/"
+      integration: "IMS DB + DB2 + MQ"
+      programs: 5
+    - path: "app/app-transaction-type-db2/"
+      integration: "DB2"
+      programs: 4
+    - path: "app/app-vsam-mq/"
+      integration: "MQ"
+      programs: 4
+
+  known_anomalies:
+    - "2 files use uppercase .CBL extension (likely legacy tooling)"
+    - "5 files use uppercase .JCL extension"
+    - "MNTTRDB2 exists in app-authorization-ims-db2-mq, not in core app/cbl/"
+
+  # File lists (complete, for cross-referencing)
+  file_lists:
+    cobol_core: []      # Populated by: find app/cbl -type f \( -iname "*.cbl" \) | sort
+    cobol_extensions: [] # Populated by: find app/app-*/cbl -type f \( -iname "*.cbl" \) 2>/dev/null | sort
+    jcl_all: []         # Populated by: find app/jcl -type f \( -iname "*.jcl" \) | sort
+```
+
+#### Usage Rules
+
+1. **Phase 0 creates the manifest** — Discovery phase populates all counts and file lists from actual `find` commands
+2. **All subsequent phases read the manifest** — Never recount files; use `manifest.file_counts.*`
+3. **When citing counts, cite scope** — "31 core COBOL programs (44 including extensions)"
+4. **Manifest is versioned** — If files are added/removed during the project, update manifest and note the change
+
+---
+
+### Source Tree Exhaustive Discovery Pattern
+
+#### Problem
+Ad-hoc `find` commands lead to systematic omissions:
+- `find app/cbl -name "*.cbl"` misses 2 uppercase `.CBL` files (case sensitivity)
+- `find app/cbl -name "*.cbl"` misses 13 extension programs (path scope)
+- `find app/jcl -name "*.jcl"` misses 5 uppercase `.JCL` files
+
+#### Solution
+A mandatory, case-insensitive, extension-aware discovery protocol executed exactly once during Phase 0.
+
+#### Template
+
+```xml
+<source_tree_exhaustive_discovery>
+  <mandatory_rules>
+  1. ALWAYS use `-iname` not `-name` (catches .cbl, .CBL, .Cbl, etc.)
+  2. ALWAYS search `app/app-*/` in addition to core directories
+  3. ALWAYS record scope decision (core-only vs core+extensions) with rationale
+  4. ALWAYS write results to CODEBASE-MANIFEST.yaml before documentation begins
+  5. ALWAYS use `2>/dev/null` on extension globs (directories may not exist in all projects)
+  </mandatory_rules>
+
+  <discovery_protocol>
+  Execute these commands IN ORDER during Phase 0:
+
+  ```bash
+  # Step 1: Discover all source directories (don't assume structure)
+  find app -type d | sort
+
+  # Step 2: Count files by type (case-insensitive, all directories)
+  echo "=== COBOL Programs ==="
+  find app/cbl -type f \( -iname "*.cbl" \) | sort
+  find app/app-*/cbl -type f \( -iname "*.cbl" \) 2>/dev/null | sort
+
+  echo "=== Copybooks ==="
+  find app/cpy -type f \( -iname "*.cpy" \) | sort
+  find app/cpy-bms -type f \( -iname "*.cpy" \) 2>/dev/null | sort
+  find app/app-*/cpy -type f \( -iname "*.cpy" \) 2>/dev/null | sort
+
+  echo "=== BMS Mapsets ==="
+  find app/bms -type f \( -iname "*.bms" \) | sort
+
+  echo "=== JCL Jobs ==="
+  find app/jcl -type f \( -iname "*.jcl" \) | sort
+  find app/app-*/jcl -type f \( -iname "*.jcl" \) 2>/dev/null | sort
+
+  # Step 3: Identify case anomalies
+  echo "=== Uppercase Extensions (anomalies) ==="
+  find app -type f -name "*.CBL" -o -name "*.JCL" -o -name "*.CPY" -o -name "*.BMS" | sort
+  ```
+
+  # Step 4: Write all results to CODEBASE-MANIFEST.yaml
+  # Step 5: Verify counts match between find output and manifest
+  </discovery_protocol>
+
+  <scope_decision_template>
+  ```yaml
+  # Record in CODEBASE-MANIFEST.yaml
+  scope_decision:
+    scope: "core+extensions"  # or "core-only"
+    rationale: >
+      Including extension directories because they contain 13 programs (29% of total)
+      demonstrating DB2, IMS, and MQ integration patterns that are part of the
+      CardDemo demonstration application.
+    excluded_directories: []  # or list with rationale per directory
+  ```
+  </scope_decision_template>
+</source_tree_exhaustive_discovery>
+```
+
+---
+
+### Extension Directory Coverage Pattern
+
+#### Problem
+Mainframe demonstration applications frequently include extension directories showing enterprise integration patterns (DB2, IMS DB, MQ). These directories follow a different path structure and are invisible to standard discovery commands.
+
+In CardDemo, three extension directories contain 13 programs — 29% of the total codebase. Omitting them means:
+- 13 programs go entirely undocumented
+- Integration patterns (DB2 SQL, IMS DL/I, MQ messaging) are not captured
+- Programs in extensions may be falsely classified as hallucinations when referenced
+
+#### Template
+
+```xml
+<extension_directory_coverage>
+  <scope_decision_checklist>
+  Before beginning any documentation phase, explicitly decide and record:
+
+  - [ ] Have I searched for extension directories? (`find app -maxdepth 1 -type d -name "app-*"`)
+  - [ ] For EACH extension directory found:
+    - [ ] What integration type does it demonstrate?
+    - [ ] How many programs/JCL/copybooks does it contain?
+    - [ ] Am I including it in scope? If not, what is the documented rationale?
+  - [ ] Is my scope decision recorded in CODEBASE-MANIFEST.yaml?
+  - [ ] Do ALL `find` commands in this phase include `app/app-*/` paths?
+  </scope_decision_checklist>
+
+  <per_extension_inventory>
+  ```yaml
+  # .work/extension-inventory.yaml
+  extensions:
+    - directory: "app/app-authorization-ims-db2-mq"
+      in_scope: true
+      integration_types: ["IMS DB", "DB2", "MQ"]
+      file_counts:
+        cobol: 5
+        copybooks: 3
+        jcl: 0
+      key_programs:
+        - name: "COAUTHLC"
+          purpose: "Authorization list combining IMS, DB2, and MQ"
+        - name: "MNTTRDB2"
+          purpose: "Transaction type maintenance via DB2"
+      notes: "MNTTRDB2 only exists here — not in core app/cbl/"
+
+    - directory: "app/app-transaction-type-db2"
+      in_scope: true
+      integration_types: ["DB2"]
+      file_counts:
+        cobol: 4
+        copybooks: 2
+        jcl: 0
+      key_programs:
+        - name: "COTRN04C"
+          purpose: "Transaction type CRUD using DB2 tables"
+
+    - directory: "app/app-vsam-mq"
+      in_scope: true
+      integration_types: ["MQ"]
+      file_counts:
+        cobol: 4
+        copybooks: 1
+        jcl: 0
+      key_programs:
+        - name: "CBEXPORT"
+          purpose: "Account extraction to MQ queue"
+  ```
+  </per_extension_inventory>
+
+  <documentation_requirements>
+  When extension directories are IN SCOPE:
+  1. Every program in extensions MUST appear in program inventories
+  2. Integration patterns (DB2 SQL, IMS DL/I, MQ calls) MUST be documented
+  3. File counts MUST use "core + extensions = total" format
+  4. Cross-references between core and extension programs MUST be traced
+
+  When extension directories are OUT OF SCOPE:
+  1. The exclusion rationale MUST be recorded in CODEBASE-MANIFEST.yaml
+  2. All file counts MUST be qualified: "31 core programs (excluding 13 in extension directories)"
+  3. Any reference to an extension program MUST note it was excluded from scope
+  </documentation_requirements>
+</extension_directory_coverage>
+```
+
+---
+
+## Post-Generation Quality Assurance Patterns
+
+The patterns in this section add **mandatory quality gates** to multi-document generation prompts. They address the systematic validation failures found when the reverse-engineering output was tested against its own source material.
+
+**When to apply these patterns:** Any prompt that generates 3+ documents referencing the same codebase.
+
+---
+
+### Post-Generation Self-Validation Pattern
+
+#### Problem
+Multi-document generation prompts produce output that is internally consistent within each document but inconsistent ACROSS documents and sometimes inaccurate against the source tree. Without a self-validation step, these errors are only caught by expensive manual review.
+
+#### Solution
+Add a mandatory final phase to every multi-document generation prompt that cross-checks output against the source tree and the codebase manifest.
+
+#### Template
+
+```xml
+<post_generation_self_validation>
+  <validation_protocol>
+  ## Final Phase: Self-Validation (MANDATORY — do not skip)
+
+  After ALL documents are generated, execute this 5-step validation:
+
+  ### Step 1: Manifest Cross-Check
+  For every file count cited in any document:
+  - Compare against CODEBASE-MANIFEST.yaml
+  - Flag any mismatch as FAIL
+  ```bash
+  # Extract counts from documents and compare
+  grep -rn "programs" docs/reverse-engineering/ | grep -oP '\d+' > .work/cited-counts.txt
+  # Compare against manifest counts
+  ```
+
+  ### Step 2: File Reference Verification
+  For every source file path cited in any document:
+  - Verify the file exists on disk
+  - Flag missing files as FAIL (potential hallucination or stale reference)
+  ```bash
+  # Extract file references and verify each exists
+  grep -rohP 'app/[a-zA-Z0-9_/-]+\.\w+' docs/reverse-engineering/ | sort -u | while read f; do
+    [ ! -f "$f" ] && echo "MISSING: $f"
+  done
+  ```
+
+  ### Step 3: Cross-Document Consistency
+  For each entity that appears in multiple documents:
+  - Verify the description/count/size is identical everywhere
+  - Flag discrepancies as FAIL
+  Key entities to check:
+  - Total program count
+  - COMMAREA size
+  - VSAM file key lengths and record sizes
+  - Transaction ID mappings
+
+  ### Step 4: Numeric Claim Verification
+  For every numeric claim (byte sizes, field counts, key lengths):
+  - Verify against primary source (PIC clauses, DEFINE CLUSTER, copybook)
+  - Flag unverified estimates ("~130 bytes") as FAIL
+  ```bash
+  # Example: Verify COMMAREA size from COCOM01Y.cpy
+  # Count bytes from PIC clauses in the 01-level group
+  ```
+
+  ### Step 5: Completeness Check
+  For every file in CODEBASE-MANIFEST.yaml:
+  - Verify it is documented in at least one output document
+  - Flag undocumented files as FAIL (completeness gap)
+  </validation_protocol>
+
+  <validation_report_schema>
+  ```yaml
+  # .work/self-validation-report.yaml
+  validation:
+    timestamp: "YYYY-MM-DDTHH:MM:SSZ"
+    overall_status: "PASS | FAIL"
+    documents_validated: 43
+
+    step_1_manifest_crosscheck:
+      status: "PASS | FAIL"
+      checks_performed: 25
+      mismatches:
+        - document: "RE-001-domain-model.md"
+          claim: "29 COBOL programs"
+          manifest_value: "31 core / 44 total"
+          severity: "HIGH"
+
+    step_2_file_references:
+      status: "PASS | FAIL"
+      files_checked: 150
+      missing_files:
+        - cited_in: "RE-004-c4-architecture.md"
+          file_path: "app/cbl/NONEXIST.cbl"
+          severity: "CRITICAL"
+
+    step_3_cross_doc_consistency:
+      status: "PASS | FAIL"
+      entities_checked: 30
+      discrepancies:
+        - entity: "COMMAREA size"
+          values_found:
+            - document: "RE-001"
+              value: "~130 bytes"
+            - document: "RE-004"
+              value: "~155 bytes"
+          canonical_value: "160 bytes"
+          severity: "HIGH"
+
+    step_4_numeric_claims:
+      status: "PASS | FAIL"
+      claims_verified: 40
+      unverified:
+        - claim: "ACCTDAT record size 300 bytes"
+          source: "RE-002-data-model.md"
+          verification_method: "Sum PIC clauses in CVACT01Y.cpy"
+
+    step_5_completeness:
+      status: "PASS | FAIL"
+      manifest_files: 44
+      documented_files: 38
+      undocumented:
+        - "app/cbl/CBSTM03A.CBL"
+        - "app/cbl/CBSTM03B.CBL"
+  ```
+  </validation_report_schema>
+
+  <prompt_integration>
+  Add this to the END of any multi-document generation prompt:
+
+  ```
+  ## Final Phase: Self-Validation
+  After completing all documentation phases, execute the self-validation protocol:
+  1. Read .work/CODEBASE-MANIFEST.yaml
+  2. For each generated document, verify all counts match the manifest
+  3. Verify all cited file paths exist on disk
+  4. Verify COMMAREA size, VSAM key lengths, and record sizes against copybooks
+  5. Write results to .work/self-validation-report.yaml
+  6. If ANY check fails, fix the document before marking the phase complete
+  ```
+  </prompt_integration>
+</post_generation_self_validation>
+```
+
+---
+
+### Cross-Document Consistency Pattern
+
+#### Problem
+When generating a multi-document suite, the same entity (program count, COMMAREA size, VSAM key length) may be described in 5+ documents. Without a canonical definition, each document independently computes or estimates the value, leading to contradictions:
+- Document A: "The COMMAREA is approximately 130 bytes"
+- Document B: "COMMAREA totals ~155 bytes"
+- Actual (from PIC clauses): 160 bytes
+
+#### Solution
+Define canonical definitions for ALL shared entities in Phase 0 and reference them verbatim in all documents.
+
+#### Template
+
+```yaml
+# .work/canonical-definitions.yaml — Created in Phase 0
+# CARDINAL RULE: Documents must REFERENCE these values, never independently compute them.
+
+canonical_definitions:
+  created: "YYYY-MM-DDTHH:MM:SSZ"
+  source: "Computed from primary source files, not estimated"
+
+  commarea:
+    name: "CARDDEMO-COMMAREA"
+    copybook: "COCOM01Y.cpy"
+    size_bytes: 160            # Computed: sum of all PIC clause byte lengths
+    computation_method: >
+      CDEMO-GENERAL-INFO: 4+8+4+8+8+1+1 = 34 bytes
+      CDEMO-CUSTOMER-INFO: 9+25+25+25 = 84 bytes
+      CDEMO-ACCOUNT-INFO: 11+1 = 12 bytes
+      CDEMO-CARD-INFO: 16 bytes
+      CDEMO-MORE-INFO: 7+7 = 14 bytes
+      Total: 34+84+12+16+14 = 160 bytes
+    citation: "Source: app/cpy/COCOM01Y.cpy, all PIC clauses under 01 CARDDEMO-COMMAREA"
+
+  file_counts:
+    source: "CODEBASE-MANIFEST.yaml"
+    cobol_core: 31
+    cobol_extensions: 13
+    cobol_total: 44
+    jcl_total: 38
+    copybooks_core: 29
+    bms_mapsets: 17
+
+  vsam_files:
+    ACCTDAT:
+      key_field: "ACCT-ID"
+      key_length: 11
+      record_size: 300
+      source_copybook: "CVACT01Y.cpy"
+    CARDDAT:
+      key_field: "CARD-NUM"
+      key_length: 16
+      record_size: 150
+      source_copybook: "CVACT02Y.cpy"
+    CUSTDAT:
+      key_field: "CUST-ID"
+      key_length: 9
+      record_size: 500
+      source_copybook: "CVCUS01Y.cpy"
+    TRANSACT:
+      key_field: "TRAN-ID"
+      key_length: 16
+      record_size: 350
+      source_copybook: "CVTRA05Y.cpy"
+    CCXREF:
+      key_field: "XREF-CARD-NUM"
+      key_length: 16
+      record_size: 50
+      source_copybook: "CVACT03Y.cpy"
+
+  transaction_ids:
+    # Canonical mapping — use verbatim in all documents
+    CC00: {program: "COSGN00C", function: "Signon"}
+    CM00: {program: "COMEN01C", function: "User Menu"}
+    CA00: {program: "COADM01C", function: "Admin Menu"}
+    CA01: {program: "COACTVWC", function: "Account View"}
+    CA02: {program: "COACTUPC", function: "Account Update"}
+    CC01: {program: "COCRDLIC", function: "Card List"}
+    CC02: {program: "COCRDSLC", function: "Card View/Select"}
+    CC03: {program: "COCRDUPC", function: "Card Update"}
+    CT00: {program: "COTRN00C", function: "Transaction List"}
+    CT01: {program: "COTRN01C", function: "Transaction View"}
+    CT02: {program: "COTRN02C", function: "Transaction Add"}
+    CB00: {program: "COBIL00C", function: "Bill Payment"}
+```
+
+#### Usage Rules
+
+1. **Phase 0 computes all canonical definitions** from primary source (PIC clauses, DEFINE CLUSTER, actual `find` output)
+2. **Every subsequent phase reads canonical-definitions.yaml** before writing
+3. **Documents cite canonical values verbatim** — no independent computation, no approximation
+4. **If a canonical value needs updating**, update the YAML first, then update ALL documents that reference it
+5. **"~" (approximately) is NEVER acceptable** for values derivable from source code
+
+---
+
+### Numeric Claim Verification Pattern
+
+#### Problem
+Numeric claims (record sizes, field counts, byte calculations) are the most common source of cross-document inconsistency and factual errors. "~130 bytes" is a red flag — it means the author estimated rather than computed.
+
+#### Solution
+Every numeric claim must be computed from primary source and verified before writing.
+
+#### Rules
+
+1. **File counts come from the manifest** — never recomputed by individual phases
+2. **Record sizes computed from PIC clauses** — never estimated
+3. **VSAM keys extracted from DEFINE CLUSTER or SELECT statements** — never guessed
+4. **COMMAREA size computed from copybook** — never approximated
+5. **The tilde (~) prefix is a bug** — if you write "~130 bytes," you have not verified
+
+#### Verification Checklist Template
+
+```yaml
+# .work/numeric-verification.yaml
+numeric_claims:
+  - claim_type: "record_size"
+    entity: "ACCTDAT"
+    claimed_value: 300
+    verification_method: "Sum PIC clauses in CVACT01Y.cpy"
+    verified: true
+    source_file: "app/cpy/CVACT01Y.cpy"
+    computation: "PIC X(11) + PIC X(50) + ... = 300 bytes"
+
+  - claim_type: "commarea_size"
+    entity: "CARDDEMO-COMMAREA"
+    claimed_value: 160
+    verification_method: "Sum PIC clauses in COCOM01Y.cpy"
+    verified: true
+    source_file: "app/cpy/COCOM01Y.cpy"
+    computation: "34 + 84 + 12 + 16 + 14 = 160 bytes"
+
+  - claim_type: "file_count"
+    entity: "COBOL programs (total)"
+    claimed_value: 44
+    verification_method: "find -iname count matches CODEBASE-MANIFEST.yaml"
+    verified: true
+    source: "CODEBASE-MANIFEST.yaml"
+
+  - claim_type: "key_length"
+    entity: "ACCTDAT primary key"
+    claimed_value: 11
+    verification_method: "PIC 9(11) in CVACT01Y.cpy / RIDFLD in CICS READ"
+    verified: true
+    source_file: "app/cpy/CVACT01Y.cpy"
+```
+
+#### Common Red Flags
+
+| Red Flag | What It Means | What to Do |
+|----------|--------------|------------|
+| "~130 bytes" | Estimated, not computed | Compute exact size from PIC clauses |
+| "approximately 30 programs" | Counted informally | Run `find -iname` and record exact count |
+| "around 300 bytes per record" | Guessed from similar systems | Sum PIC clauses in record copybook |
+| "key length is probably 16" | Inferred, not verified | Check DEFINE CLUSTER or SELECT statement |
+| Inconsistent counts across documents | Independent computation | Use canonical-definitions.yaml |
+
+---
+
+### Hallucination Prevention Pattern
+
+#### Problem
+AI-generated documentation may reference files, programs, or fields that do not exist in the source tree. Conversely, it may classify real entities as hallucinations when they exist in directories not searched (e.g., extension directories).
+
+Both failure modes are damaging:
+- **False positive (hallucination):** Referencing `COAUTH99C.cbl` that doesn't exist → misleading documentation
+- **False negative (missed real entity):** Classifying `MNTTRDB2` as hallucinated when it exists in `app/app-authorization-ims-db2-mq/` → incorrect validation finding
+
+#### Solution
+Every file, program, or field reference must be verified to exist BEFORE being written to documentation.
+
+#### Template
+
+```xml
+<hallucination_prevention>
+  <citation_check_protocol>
+  Before writing ANY of these reference types, verify existence:
+
+  **Program references:**
+  ```bash
+  # Verify program exists (case-insensitive, all directories)
+  find app -iname "PROGRAMNAME.cbl" 2>/dev/null
+  # If not found → DO NOT reference it
+  # If found in extension directory → note the actual path
+  ```
+
+  **File/dataset references:**
+  ```bash
+  # Verify VSAM file is referenced in source
+  grep -rl "DATASET.*'ACCTDAT'" app/cbl/ app/app-*/cbl/ 2>/dev/null
+  # Or for batch:
+  grep -rl "ASSIGN TO ACCTFILE" app/cbl/ app/app-*/cbl/ 2>/dev/null
+  ```
+
+  **Copybook references:**
+  ```bash
+  # Verify copybook exists
+  find app/cpy app/cpy-bms app/app-*/cpy -iname "COPYNAME.cpy" 2>/dev/null
+  # Verify copybook is used by program
+  grep -l "COPY.*COPYNAME" app/cbl/PROGRAM.cbl
+  ```
+
+  **Field references:**
+  ```bash
+  # Verify field exists in copybook or program
+  grep -rn "FIELD-NAME" app/cpy/ app/cbl/PROGRAM.cbl
+  ```
+  </citation_check_protocol>
+
+  <verification_log>
+  ```yaml
+  # .work/hallucination-check.yaml
+  verification_log:
+    timestamp: "YYYY-MM-DDTHH:MM:SSZ"
+    total_references_checked: 250
+    verified: 248
+    failed: 2
+
+    checks:
+      - reference_type: "program"
+        name: "COACTUPC"
+        cited_in: "RE-001-domain-model.md"
+        found_at: "app/cbl/COACTUPC.cbl"
+        status: "VERIFIED"
+
+      - reference_type: "program"
+        name: "MNTTRDB2"
+        cited_in: "RE-008-integration.md"
+        found_at: "app/app-authorization-ims-db2-mq/cbl/MNTTRDB2.cbl"
+        status: "VERIFIED"
+        note: "In extension directory, not core — include path in documentation"
+
+      - reference_type: "program"
+        name: "COAUTH99C"
+        cited_in: "RE-004-c4-architecture.md"
+        found_at: null
+        status: "HALLUCINATION — REMOVE FROM DOCUMENT"
+  ```
+  </verification_log>
+
+  <critical_rules>
+  1. **Search ALL directories** — including `app/app-*/` — before concluding a file doesn't exist
+  2. **Use -iname** — a file may exist with different casing
+  3. **Log every verification** — the hallucination-check.yaml is an audit trail
+  4. **When in doubt, search** — false hallucination accusations (marking real files as fake) are as bad as actual hallucinations
+  5. **Extension programs need full paths** — reference as "MNTTRDB2 (app/app-authorization-ims-db2-mq/cbl/)" not just "MNTTRDB2"
+  </critical_rules>
+</hallucination_prevention>
+```
+
+---
+
+### Inline Confidence Annotation Pattern
+
+#### Problem
+Not all claims in generated documentation can be verified from source code. Some require:
+- Operational knowledge (how the batch schedule actually runs)
+- Business context (why a particular validation threshold was chosen)
+- Design rationale (why VSAM over DB2 for the core application)
+- Production behaviour (actual transaction volumes)
+
+Without confidence markers, SME reviewers waste time validating claims that are already source-verified, while uncertain claims slip through unreviewed.
+
+#### Solution
+During generation, annotate claims that cannot be fully verified with a confidence scale aligned with the SME Validation Strategy.
+
+#### 5-Point Confidence Scale
+
+| Level | Label | Meaning | SME Action Required |
+|-------|-------|---------|-------------------|
+| 5/5 | **Source-Verified** | Verified against source code (PIC clause, EXEC CICS, etc.) | None — skip during SME review |
+| 4/5 | **Pattern-Based** | Standard mainframe pattern, high confidence from expertise | Quick confirmation |
+| 3/5 | **Qualified** | Reasonable inference with stated assumptions | Review assumptions |
+| 2/5 | **Low Confidence** | Requires operational or business context to verify | Priority SME review |
+| 1/5 | **Inferred** | Educated guess based on limited evidence | Mandatory SME validation |
+
+#### When to Annotate
+
+| Claim Type | Typical Confidence | Example |
+|-----------|-------------------|---------|
+| File counts from `find` | 5/5 | "44 COBOL programs (verified by find -iname)" |
+| COMMAREA size from PIC clauses | 5/5 | "160 bytes (computed from COCOM01Y.cpy)" |
+| CICS pseudo-conversational pattern | 4/5 | "Standard pseudo-conversational — EIBCALEN check present" |
+| Business rule intent | 2/5 | "Interest likely calculated daily based on batch schedule" |
+| Design rationale | 1/5 | "VSAM chosen over DB2 possibly for performance in the demo context" |
+| Security exploitability | 2/5 | "Plain-text password storage — severity depends on production deployment" |
+| Batch schedule timing | 1/5 | "Batch cycle appears to run nightly — requires operational confirmation" |
+
+#### Template
+
+```xml
+<inline_confidence_annotation>
+  <annotation_format>
+  In generated documentation, annotate uncertain claims using this format:
+
+  **In prose:**
+  > The COMMAREA is 160 bytes [confidence: 5/5 — computed from PIC clauses in COCOM01Y.cpy].
+
+  > Interest calculations appear to run on a daily batch cycle
+  > [confidence: 2/5 — inferred from JCL naming; actual schedule requires operational confirmation].
+
+  **In YAML/structured output:**
+  ```yaml
+  commarea_size:
+    value: 160
+    unit: "bytes"
+    confidence: 5
+    source: "Computed from PIC clauses in COCOM01Y.cpy"
+
+  batch_schedule:
+    value: "daily"
+    confidence: 2
+    source: "Inferred from JCL naming convention (DALYTRAN)"
+    sme_validation_needed: true
+  ```
+
+  **In summary tables:**
+  | Claim | Value | Confidence | Source |
+  |-------|-------|-----------|--------|
+  | COMMAREA size | 160 bytes | 5/5 | PIC clauses in COCOM01Y.cpy |
+  | Batch schedule | Daily | 2/5 | JCL naming inference |
+  </annotation_format>
+
+  <when_to_annotate>
+  ALWAYS annotate when:
+  - Confidence is 3/5 or below
+  - The claim involves business rule INTENT (not just mechanics)
+  - The claim involves design RATIONALE (why, not what)
+  - The claim involves operational procedures
+  - The claim involves security risk severity or exploitability
+  - The claim involves production deployment characteristics
+
+  OPTIONAL annotation when:
+  - Confidence is 4/5 (annotate if the pattern has known exceptions)
+  - Confidence is 5/5 (annotate in summary tables for completeness)
+  </when_to_annotate>
+
+  <sme_review_optimization>
+  The purpose of confidence annotations is to OPTIMIZE SME review time:
+
+  - **5/5 claims:** SME can skip — source-verified
+  - **4/5 claims:** SME quick-scans — likely correct
+  - **3/5 claims:** SME reviews assumptions — may need correction
+  - **2/5 claims:** SME prioritizes — needs domain knowledge
+  - **1/5 claims:** SME validates first — highest value from expert time
+
+  Target: <20% of claims should be 3/5 or below. If more, the documentation
+  is relying too heavily on inference and needs more source verification.
+  </sme_review_optimization>
+</inline_confidence_annotation>
 ```
 
 ---
@@ -2172,4 +3030,5 @@ cat [OUTPUT_DIR]/.work/progress.yaml 2>/dev/null || echo "NO_PROGRESS_FILE"
 | 1.0 | 2026-01-06 | Initial rubric created from 01c, 01e, 01f patterns |
 | 1.2 | 2026-01-23 | Added Mainframe COBOL Codebase Patterns section with 8 navigation patterns, copybook dependency tracing, CICS flow diagrams, batch workflow templates, DB2/IMS/MQ extension patterns, and CardDemo quick reference |
 | 2.0 | 2026-02-06 | Removed Legacy C++ (Golgotha) and Tavily MCP sections irrelevant to CardDemo; replaced .cs/.csproj examples with COBOL equivalents; removed stale file references; renumbered TOC (~34% reduction) |
+| 2.1 | 2026-02-07 | Added 8 validation-focused patterns (Sections 12–13) addressing systematic failures found in VL-000 through VL-008. Fixed case-sensitivity bug in Source Discovery (-name → -iname). Added extension directory coverage to CardDemo Quick Reference and Avoiding Arbitrary Limits. |
 
