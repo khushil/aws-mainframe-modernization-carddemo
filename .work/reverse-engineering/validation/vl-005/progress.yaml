@@ -1,0 +1,33 @@
+validation: VL-005
+title: Screen Flow Validation
+target_document: docs/reverse-engineering/05-specialized/SCREEN-FLOWS.md
+output_report: docs/reverse-engineering/validation/VL-005-screen-flow-report.md
+status: final
+completed_at: 2026-02-06
+phases:
+  phase1_mapset_inventory:
+    status: complete
+    findings: All 17 mapsets verified correct
+  phase2_field_verification:
+    status: complete
+    findings: 5 screens spot-checked, all fields correct
+  phase3_pf_key_verification:
+    status: complete
+    findings: 15/17 exact match, 2 minor discrepancies (COUSR01 PF12, COUSR03 PF12)
+  phase4_navigation_flow:
+    status: complete
+    findings: All navigation paths verified via XCTL/RETURN statements
+  phase5_user_journeys:
+    status: complete
+    findings: 6 journeys documented, 2 gaps (no Reports journey, no Card Search journey)
+  phase6_documentation_quality:
+    status: complete
+    findings: Good structure, Mermaid diagrams, ASCII layouts present
+score:
+  source_reference_accuracy: 93
+  factual_accuracy: 91
+  completeness: 85
+  quantitative_accuracy: 93
+  documentation_quality: 90
+  weighted_total: 90.6
+verdict: FAIL
